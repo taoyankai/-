@@ -1,0 +1,14 @@
+/* pages/track/track.wxss */
+.wb {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #F5F6F8;
+}
+.wb:last-child {
+  border-bottom: none;
+}
+.wb-no {
+  font-size: 27rpx;
+  word-break: break-all;
+}

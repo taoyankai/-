@@ -1,0 +1,30 @@
+<!--pages/packages/packages.wxml-->
+<view class="page">
+  <view class="notice">{{canClaim ? '每人限领 1 份，请选择其中一个套餐。提交配送信息后套餐不可更改。' : '您已领取过慰问品，每人限领 1 份、不可重复领取。以下套餐仅供内容确认。'}}</view>
+
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+  <view class="empty" wx:elif="{{!list.length}}">暂无可选套餐</view>
+
+  <view wx:else>
+    <view
+      class="card"
+      wx:for="{{list}}"
+      wx:key="id"
+      bindtap="open"
+      data-id="{{item.id}}">
+      <view class="pkg-hd">
+        <view class="pkg-name">{{item.name}}</view>
+        <view class="tag tag-brand">包邮</view>
+      </view>
+      <view class="pkg-sub">{{item.sub}}</view>
+      <view class="pkg-items">
+        <text wx:for="{{item.goods}}" wx:for-item="g" wx:key="name"
+              class="pkg-item">{{g.name}}</text>
+      </view>
+      <view class="pkg-foot">
+        <text class="pkg-price">参考价 ¥{{item.price}}</text>
+        <text class="pkg-more">查看详情 ›</text>
+      </view>
+    </view>
+  </view>
+</view>

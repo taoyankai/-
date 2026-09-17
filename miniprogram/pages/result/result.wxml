@@ -1,0 +1,42 @@
+<!--pages/result/result.wxml-->
+<view class="page">
+  <view class="ok">
+    <view class="ok-icon">✓</view>
+    <view class="ok-t">{{editMode ? '修改成功' : '提交成功'}}</view>
+    <view class="ok-s">
+      {{editMode ? '收货地址已更新，发货时将按新地址配送' : '配送信息已登记，我们将于 10 日内安排发货'}}
+    </view>
+    <view class="ok-s">全国包邮 · 送货上门 · 无需支付任何费用</view>
+  </view>
+
+  <view class="card" wx:if="{{o}}">
+    <view class="row"><text class="k">订单编号</text><text class="v">{{o.orderNo}}</text></view>
+    <view class="row"><text class="k">套餐</text><text class="v">{{o.packageName}} ×{{o.quantity}}</text></view>
+    <view class="row"><text class="k">收货人</text><text class="v">{{o.receiver}} {{phoneMasked}}</text></view>
+    <view class="row">
+      <text class="k">收货地址</text>
+      <text class="v">{{o.province}}{{o.city}}{{o.district}}{{o.detail}}</text>
+    </view>
+    <view class="row">
+      <text class="k">代收点授权</text>
+      <text class="v {{o.allowStation ? '' : 'muted'}}">{{o.allowStation ? '已允许投放' : '不允许放代收点'}}</text>
+    </view>
+    <view class="row" wx:if="{{expectTime}}">
+      <text class="k">承诺发货</text>
+      <text class="v">{{expectTime}} 前</text>
+    </view>
+    <view class="row" wx:if="{{o.expectCarrierName}}">
+      <text class="k">期望承运商</text>
+      <text class="v">{{o.expectCarrierName}}</text>
+    </view>
+  </view>
+
+  <view class="acts">
+    <button class="btn btn-line" bindtap="goOrders">查看我的订单</button>
+    <button class="btn" bindtap="goHome">返回首页</button>
+  </view>
+
+  <view class="hint center mt">
+    如需查询配送进度，可在首页进入「物流查询」按运单号查询。
+  </view>
+</view>

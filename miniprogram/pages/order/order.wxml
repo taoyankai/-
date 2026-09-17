@@ -1,0 +1,85 @@
+<!--pages/order/order.wxml-->
+<view class="page" wx:if="{{o}}">
+  <view class="hdr">
+    <view class="hdr-t">{{o.statusName}}</view>
+    <view class="hdr-s">{{o.statusDesc}}</view>
+  </view>
+
+  <view class="card" wx:if="{{o.status === 0}}">
+    <view class="hint" style="color:#D98A18;font-size:26rpx">{{o.remainText}}</view>
+  </view>
+
+  <view class="card" wx:if="{{o.traces.length}}">
+    <view class="card-hd">
+      <text class="ttl">物流轨迹</text>
+      <text class="hint">{{o.carrierName}} {{o.waybillNo}}</text>
+    </view>
+    <view class="tl" wx:for="{{o.traces}}" wx:key="id">
+      <view class="tl-dot {{index === 0 ? 'on' : ''}}"></view>
+      <view class="tl-body">
+        <view class="tl-desc {{index === 0 ? 'on' : ''}}">{{item.desc}}</view>
+        <view class="hint">{{item.timeText}}</view>
+      </view>
+    </view>
+    <view class="hint mt">如需送货上门，请在配送员联系时告知；未经您允许不会投放至快递代收点。</view>
+  </view>
+
+  <view class="card">
+    <view class="card-hd">
+      <text class="ttl">套餐内容</text>
+      <text class="tag tag-brand">×{{o.quantity}}</text>
+    </view>
+    <view style="font-size:29rpx;font-weight:500;margin-bottom:16rpx">{{o.packageName}}</view>
+    <view class="gi" wx:for="{{o.goods}}" wx:key="name">
+      <text class="gi-n">{{item.name}}</text>
+      <text class="gi-s">{{item.spec}}</text>
+      <text class="gi-q">×{{item.qty}} {{item.unit}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row"><text class="k">订单编号</text><text class="v">{{o.orderNo}}</text></view>
+    <view class="row"><text class="k">收货人</text><text class="v">{{o.receiver}}　{{o.phone}}</text></view>
+    <view class="row">
+      <text class="k">收货地址</text>
+      <text class="v">{{o.province}}{{o.city}}{{o.district}}{{o.detail}}</text>
+    </view>
+    <view class="row">
+      <text class="k">代收点授权</text>
+      <text class="v {{o.allowStation ? '' : 'muted'}}">{{o.allowStation ? '已允许投放' : '不允许放代收点'}}</text>
+    </view>
+    <view class="row">
+      <text class="k">配送备注</text>
+      <text class="v {{o.remark ? '' : 'muted'}}">{{o.remark || '无'}}</text>
+    </view>
+    <view class="row" wx:if="{{o.expectCarrierName}}">
+      <text class="k">期望承运商</text>
+      <text class="v">{{o.expectCarrierName}}</text>
+    </view>
+    <view class="row" wx:if="{{o.waybillNo}}">
+      <text class="k">实际承运商</text>
+      <text class="v">{{o.carrierName}}</text>
+    </view>
+    <view class="row" wx:if="{{o.waybillNo}}">
+      <text class="k">运单号</text>
+      <text class="v">{{o.waybillNo}}</text>
+    </view>
+    <view class="row"><text class="k">提交时间</text><text class="v">{{o.createTimeText}}</text></view>
+  </view>
+
+  <block wx:if="{{o.status === 0}}">
+    <view class="acts">
+      <view class="abtn" wx:if="{{o.canEditAddr}}" bindtap="editAddr">修改地址</view>
+      <view class="abtn danger" bindtap="cancel">取消订单</view>
+    </view>
+    <view class="hint center mt">
+      {{o.canEditAddr ? '尚未发货，可自助修改 1 次收货地址，或取消订单'
+                      : '收货地址已自助修改过 1 次，如需再次修改请联系配送中心客服'}}
+    </view>
+  </block>
+  <view class="hint center mt" wx:else>
+    如需查询配送进度，可在首页进入「物流查询」按运单号查询。
+  </view>
+</view>
+
+<view class="loading" wx:else>加载中…</view>

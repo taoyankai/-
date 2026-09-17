@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="0ArenkL0dfAzCmDYc1c0AO">
+<head data-page-node-id="BTXZ4AKCA0byyJ2cg6kmCh">
+<meta charset="UTF-8" data-page-node-id="7NN0khEk6mp3WVfLgCd7cx">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" data-page-node-id="paUzo9TdFXQiyFiNOT7KEE">
+<title>华中商贸配送中心 · 教职工慰问品领取</title>
+<style>
+:root{
+  --brand:#C93B32;
+  --brand-dark:#A62B24;
+  --brand-light:#FDF0EE;
+  --brand-line:#F3D6D2;
+  --gold:#C8912F;
+  --gold-light:#FBF3E2;
+  --text-1:#1F2226;
+  --text-2:#5B6169;
+  --text-3:#9AA0A6;
+  --line:#EBEDF0;
+  --bg:#F5F6F8;
+  --ok:#15A05A;
+  --ok-light:#E8F6EE;
+  --warn:#D98A18;
+  --warn-light:#FDF4E4;
+  --danger:#D64040;
+  --danger-light:#FCEEEE;
+  --radius:12px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:#EEF0F3;
+  color:var(--text-1);
+  display:flex;flex-direction:column;align-items:center;
+  padding:28px 16px 48px;
+  min-height:100vh;
+}
+.stage-head{width:100%;max-width:900px;margin-bottom:18px;text-align:center;}
+.stage-head h1{font-size:17px;font-weight:500;margin:0 0 6px;color:#1F2226;letter-spacing:.2px;}
+.stage-head p{font-size:13px;color:#7A8087;margin:0;line-height:1.6;}
+.stage-head .tools{margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.ghost-btn{
+  font-size:12px;padding:7px 14px;border-radius:999px;border:1px solid #D6DAE0;
+  background:#fff;color:#4A5058;cursor:pointer;font-family:inherit;
+}
+.ghost-btn:hover{border-color:var(--brand);color:var(--brand);}
+
+/* ---------- phone ---------- */
+.phone{
+  width:375px;height:760px;background:#fff;border-radius:38px;
+  border:1px solid #D9DDE3;
+  box-shadow:0 18px 50px rgba(24,30,40,.14), 0 2px 8px rgba(24,30,40,.06);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;
+}
+
+/* ---------- 手机端全屏适配 ----------
+   本页最初按桌面演示页设计：中间一个固定 375×760 的手机壳，顶部还有演示工具条，
+   全文没有任何媒体查询。直接用手机打开会出现三个问题：顶部多出一块演示信息、
+   手机壳固定高度把底部导航截断、内容区与页面形成双层滚动。
+   因此在触屏设备或窄屏下切换为真正的全屏应用。
+
+   判定条件三选一（命中任一即生效）：
+     · max-width:640px —— 竖屏手机
+     · pointer:coarse   —— 任何触屏设备，用于横屏手机
+     · max-height:520px —— 横屏手机兜底（headless 等无法上报 pointer 的场景） */
+@media (max-width:640px),(pointer:coarse),(max-height:520px){
+  body{padding:0;display:block;background:var(--bg);min-height:100vh;}
+  .stage-head{display:none;}
+  .phone{
+    width:100%;height:100vh;height:100dvh;max-width:none;
+    border:none;border-radius:0;box-shadow:none;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+}
+.navbar{
+  height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  position:relative;font-size:16px;font-weight:500;background:#fff;z-index:3;
+  border-bottom:1px solid var(--line);
+}
+.navbar .nav-back{
+  position:absolute;left:10px;top:0;height:44px;display:flex;align-items:center;
+  padding:0 10px;cursor:pointer;color:#33383E;
+}
+
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);position:relative;scrollbar-width:thin;}
+.screen::-webkit-scrollbar{width:0;}
+.page{padding-bottom:22px;animation:fade .18s ease;}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- tabbar ---------- */
+.tabbar{
+  height:56px;flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--line);
+  padding-bottom:2px;z-index:3;
+}
+.tabbar .tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:10.5px;color:#9AA0A6;cursor:pointer;user-select:none;
+}
+.tabbar .tab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.tabbar .tab.on{color:var(--brand);}
+
+/* ---------- common ---------- */
+.sec{padding:14px;}
+.card{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.card.tight{padding:0;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.card-hd h3{margin:0;font-size:14.5px;font-weight:500;}
+.card-hd .more{font-size:12px;color:var(--text-3);cursor:pointer;}
+.row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13.5px;}
+.row:last-child{border-bottom:none;}
+.row .k{color:var(--text-2);flex-shrink:0;margin-right:12px;}
+.row .v{color:var(--text-1);text-align:right;word-break:break-all;}
+.row .v.muted{color:var(--text-3);}
+.btn{
+  display:block;width:100%;border:none;border-radius:10px;padding:13px;
+  font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;background:var(--brand);color:#fff;
+  transition:opacity .15s;
+}
+.btn:active{opacity:.85;}
+.btn.sec{background:#fff;color:var(--brand);border:1px solid var(--brand-line);}
+.btn.line{background:#fff;color:var(--text-2);border:1px solid #E0E3E8;}
+.btn[disabled]{background:#E6E8EB;color:#A8AEB5;cursor:not-allowed;}
+.btn.sm{padding:8px 14px;font-size:12.5px;width:auto;display:inline-block;border-radius:8px;}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;line-height:1.5;}
+.tag.brand{background:var(--brand-light);color:var(--brand);}
+.tag.gold{background:var(--gold-light);color:var(--gold);}
+.tag.ok{background:var(--ok-light);color:var(--ok);}
+.tag.warn{background:var(--warn-light);color:var(--warn);}
+.tag.gray{background:#F1F3F5;color:#7A8087;}
+.tag.danger{background:var(--danger-light);color:var(--danger);}
+.muted{color:var(--text-3);}
+.hint{font-size:11.5px;color:var(--text-3);line-height:1.6;}
+
+/* ---------- login ---------- */
+.login-wrap{padding:34px 26px 26px;}
+.brand-block{text-align:center;margin-bottom:30px;}
+.brand-logo{
+  width:64px;height:64px;border-radius:18px;background:var(--brand);color:#fff;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;letter-spacing:1px;
+}
+.brand-block h2{margin:0 0 6px;font-size:19px;font-weight:500;}
+.brand-block p{margin:0;font-size:12.5px;color:var(--text-3);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--text-2);margin-bottom:6px;}
+.field .box{display:flex;align-items:center;background:#F6F7F9;border:1px solid #EDEFF2;border-radius:10px;padding:0 12px;}
+.field .box:focus-within{border-color:var(--brand-line);background:#fff;}
+.field input,.field select,.field textarea{
+  flex:1;border:none;background:transparent;outline:none;font-size:14px;padding:12px 0;
+  font-family:inherit;color:var(--text-1);width:100%;
+}
+.field textarea{resize:none;line-height:1.6;padding:12px 0;}
+.field .code-btn{
+  font-size:12.5px;color:var(--brand);background:none;border:none;cursor:pointer;
+  padding:6px 0 6px 12px;border-left:1px solid #E6E9ED;font-family:inherit;white-space:nowrap;
+}
+.field .code-btn:disabled{color:var(--text-3);cursor:default;}
+.err-tip{font-size:11.5px;color:var(--danger);margin-top:6px;line-height:1.5;display:none;}
+.err-tip.show{display:block;}
+
+/* ---------- home ---------- */
+.hero{
+  background:var(--brand);padding:18px 16px 46px;color:#fff;position:relative;
+}
+.hero .greet{font-size:12.5px;opacity:.85;margin-bottom:6px;}
+.hero h2{margin:0;font-size:19px;font-weight:500;letter-spacing:.3px;}
+.hero .org{font-size:12px;opacity:.82;margin-top:7px;}
+.hero .promise{
+  position:absolute;left:16px;right:16px;bottom:-30px;background:#fff;border-radius:var(--radius);
+  padding:13px 14px;box-shadow:0 4px 14px rgba(24,30,40,.08);display:flex;align-items:center;gap:11px;
+}
+.hero .promise .ic{width:34px;height:34px;border-radius:9px;background:var(--gold-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hero .promise .tx b{display:block;font-size:13px;color:var(--text-1);font-weight:500;margin-bottom:2px;}
+.hero .promise .tx span{font-size:11.5px;color:var(--text-3);}
+.hero-pad{height:44px;}
+
+.steps{display:flex;padding:6px 4px 2px;}
+.steps .st{flex:1;text-align:center;position:relative;}
+.steps .st .dot{
+  width:26px;height:26px;border-radius:50%;background:var(--brand-light);color:var(--brand);
+  font-size:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-weight:500;
+}
+.steps .st.done .dot{background:var(--brand);color:#fff;}
+.steps .st.active .dot{background:var(--brand);color:#fff;box-shadow:0 0 0 4px rgba(201,59,50,.12);}
+.steps .st span{font-size:11px;color:var(--text-2);}
+.steps .st::after{
+  content:"";position:absolute;top:13px;left:calc(50% + 18px);width:calc(100% - 36px);height:1px;background:#E6E9ED;
+}
+.steps .st:last-child::after{display:none;}
+
+.notice-bar{
+  display:flex;align-items:center;gap:8px;background:var(--gold-light);border-radius:10px;
+  padding:10px 12px;font-size:12px;color:var(--gold);line-height:1.5;
+}
+.notice-bar svg{flex-shrink:0;}
+
+/* ---------- package ---------- */
+.pkg{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;
+  display:flex;flex-direction:column;
+}
+.pkg .thumb{
+  height:112px;background:#FAFBFC;border-bottom:1px solid var(--line);position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+}
+.pkg .thumb .ph-ic{
+  width:38px;height:38px;border-radius:11px;background:var(--brand-light);
+  display:flex;align-items:center;justify-content:center;
+}
+.pkg .thumb .ph{font-size:11px;color:#B0B6BD;letter-spacing:.5px;}
+.pkg .thumb .no{
+  position:absolute;top:9px;right:10px;font-size:10.5px;color:var(--text-3);
+  background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+}
+.pkg .thumb .sold-out{
+  position:absolute;inset:0;background:rgba(255,255,255,.78);display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:#7A8087;font-weight:500;
+}
+.pkg .body{padding:13px 14px 14px;}
+.pkg .body h4{margin:0 0 4px;font-size:15px;font-weight:500;}
+.pkg .body .sub{font-size:12px;color:var(--text-3);margin-bottom:9px;}
+.pkg .goods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;}
+.pkg .goods span{font-size:11.5px;color:var(--text-2);background:#F5F6F8;border-radius:6px;padding:4px 8px;}
+.pkg .foot{display:flex;align-items:center;justify-content:space-between;padding-top:11px;border-top:1px solid var(--line);}
+.pkg .foot .stock{font-size:12px;color:var(--text-3);}
+.pkg.disabled{opacity:.72;}
+
+.stepper{display:flex;align-items:center;gap:0;border:1px solid #E3E6EA;border-radius:8px;overflow:hidden;}
+.stepper button{
+  width:32px;height:30px;border:none;background:#fff;font-size:16px;color:var(--text-2);
+  cursor:pointer;font-family:inherit;line-height:1;
+}
+.stepper button:disabled{color:#CFD4D9;cursor:not-allowed;}
+.stepper .num{width:40px;text-align:center;font-size:14px;border-left:1px solid #E3E6EA;border-right:1px solid #E3E6EA;line-height:30px;}
+
+.goods-table{width:100%;border-collapse:collapse;font-size:13px;}
+.goods-table th{
+  text-align:left;font-weight:400;color:var(--text-3);font-size:11.5px;padding:0 0 8px;
+  border-bottom:1px solid var(--line);
+}
+.goods-table td{padding:9px 0;border-bottom:1px solid #F4F5F7;color:var(--text-1);}
+.goods-table tr:last-child td{border-bottom:none;}
+.goods-table td:nth-child(2),.goods-table th:nth-child(2){text-align:center;color:var(--text-2);}
+.goods-table td:nth-child(3),.goods-table th:nth-child(3){text-align:right;color:var(--text-2);}
+
+/* ---------- timeline ---------- */
+.timeline{position:relative;padding-left:22px;}
+.timeline .ti{position:relative;padding-bottom:16px;}
+.timeline .ti:last-child{padding-bottom:0;}
+.timeline .ti::before{
+  content:"";position:absolute;left:-22px;top:4px;width:9px;height:9px;border-radius:50%;
+  background:#D8DCE1;border:2px solid #fff;
+}
+.timeline .ti:first-child::before{background:var(--brand);}
+.timeline .ti::after{
+  content:"";position:absolute;left:-18px;top:15px;bottom:0;width:1px;background:#E6E9ED;
+}
+.timeline .ti:last-child::after{display:none;}
+.timeline .ti .tt{font-size:13px;color:var(--text-1);line-height:1.55;}
+.timeline .ti:first-child .tt{color:var(--brand);font-weight:500;}
+.timeline .ti .tm{font-size:11.5px;color:var(--text-3);margin-top:3px;}
+
+/* ---------- order card ---------- */
+.ord{background:#fff;border-radius:var(--radius);padding:13px 14px;margin-bottom:12px;}
+.ord .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ord .top .no{font-size:11.5px;color:var(--text-3);}
+.ord .mid{display:flex;gap:11px;padding-bottom:11px;border-bottom:1px solid var(--line);}
+.ord .mid .th{width:58px;height:58px;border-radius:9px;background:#F2F4F7;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#B4BAC1;}
+.ord .mid .info h4{margin:0 0 5px;font-size:14px;font-weight:500;}
+.ord .mid .info p{margin:0;font-size:12px;color:var(--text-3);line-height:1.6;}
+.ord .bot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;font-size:12px;color:var(--text-3);}
+
+.countdown{
+  display:flex;align-items:center;gap:8px;background:var(--warn-light);border-radius:9px;
+  padding:10px 12px;font-size:12.5px;color:var(--warn);margin-bottom:12px;
+}
+.countdown.urgent{background:var(--danger-light);color:var(--danger);}
+.countdown.ok{background:var(--ok-light);color:var(--ok);}
+
+.promise-box{background:var(--brand-light);border-radius:var(--radius);padding:14px;}
+.promise-box .pi{display:flex;gap:9px;font-size:12.5px;color:var(--brand);line-height:1.6;margin-bottom:9px;}
+.promise-box .pi:last-child{margin-bottom:0;}
+.promise-box .pi svg{flex-shrink:0;margin-top:2px;}
+
+/* ---------- 承运物流选择 ---------- */
+.carrier-list{display:flex;flex-direction:column;gap:9px;}
+.carrier-item{display:flex;align-items:center;gap:12px;border:1.5px solid #EDEFF2;border-radius:11px;padding:11px 13px;cursor:pointer;transition:all .15s;background:#fff;}
+.carrier-item:active{transform:scale(.99);}
+.carrier-item .ci-radio{width:18px;height:18px;border-radius:50%;border:2px solid #C9CFD6;flex-shrink:0;position:relative;transition:all .15s;}
+.carrier-item.on{border-color:var(--brand);background:var(--brand-light);}
+.carrier-item.on .ci-radio{border-color:var(--brand);background:var(--brand);}
+.carrier-item.on .ci-radio::after{content:'';position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.carrier-item .ci-info{flex:1;min-width:0;}
+.carrier-item .ci-name{font-size:13.5px;font-weight:500;color:var(--text-1);}
+.carrier-item .ci-desc{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+.carrier-item .ci-badge{flex-shrink:0;font-size:11px;color:var(--brand);background:#fff;border:1px solid var(--brand-line);border-radius:20px;padding:3px 9px;}
+.carrier-item.on .ci-badge{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+/* ---------- address ---------- */
+.addr{background:#fff;border-radius:var(--radius);padding:13px 14px;margin-bottom:10px;position:relative;}
+.addr .nm{font-size:14px;font-weight:500;margin-bottom:5px;}
+.addr .nm span{font-size:12.5px;font-weight:400;color:var(--text-2);margin-left:8px;}
+.addr .ad{font-size:12.5px;color:var(--text-2);line-height:1.6;padding-right:44px;}
+.addr .ops{position:absolute;right:12px;bottom:11px;display:flex;gap:12px;font-size:12px;color:var(--text-3);}
+.addr .ops span{cursor:pointer;}
+.addr .ops span:hover{color:var(--brand);}
+.switch{width:44px;height:25px;border-radius:13px;background:#DFE3E8;position:relative;flex-shrink:0;cursor:pointer;transition:background .18s;}
+.switch.on{background:var(--brand);}
+.switch::after{content:"";position:absolute;top:2.5px;left:2.5px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.14);}
+.switch.on::after{transform:translateX(19px);}
+
+/* ---------- mine ---------- */
+.mine-hd{background:#fff;padding:20px 16px;display:flex;align-items:center;gap:13px;}
+.mine-hd .av{width:54px;height:54px;border-radius:50%;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:500;}
+.mine-hd .tx h3{margin:0 0 4px;font-size:16px;font-weight:500;}
+.mine-hd .tx p{margin:0;font-size:12px;color:var(--text-3);}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;}
+.list-item:last-child{border-bottom:none;}
+.list-item .li-l{display:flex;align-items:center;gap:10px;}
+.list-item .arw{color:#C8CDD3;font-size:13px;}
+.list-item:active{background:#FAFBFC;}
+
+/* ---------- toast ---------- */
+.toast{
+  position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.96);
+  background:rgba(28,32,38,.86);color:#fff;font-size:13px;padding:11px 18px;border-radius:9px;
+  max-width:250px;text-align:center;line-height:1.55;opacity:0;pointer-events:none;transition:all .2s;z-index:99;
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+.footbar{
+  position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:11px 14px;
+  display:flex;gap:10px;align-items:center;
+}
+.footbar .fb-l{flex:1;font-size:12px;color:var(--text-3);line-height:1.5;}
+.footbar .btn{width:auto;padding:12px 26px;flex-shrink:0;}
+
+.center{padding:60px 30px;text-align:center;}
+.center .i{width:60px;height:60px;border-radius:50%;background:var(--ok-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.center h3{margin:0 0 8px;font-size:17px;font-weight:500;}
+.center p{margin:0 0 22px;font-size:13px;color:var(--text-3);line-height:1.7;}
+.center .acts{display:flex;gap:10px;justify-content:center;}
+.center .acts .btn{width:auto;padding:11px 24px;}
+</style>
+</head>
+<body data-page-node-id="GIheUFNaGGP8D6aGah5p53">
+
+<div class="stage-head" data-page-node-id="lS8kWSTqFLjmFlZ43tl1cD">
+  <h1 data-page-node-id="YrqLbX5q5CA1aeIy36V6OC">华中商贸配送中心 · 教职工慰问品领取</h1>
+  <p data-page-node-id="2jYF2vMeJ673hzvuBzch1U">教职工慰问品线上选购与配送信息采集系统 · 支持小程序 / H5 双端</p>
+</div>
+
+<div class="phone" data-page-node-id="P9LBC52ylIcIoxG3k4rtPt">
+  <div class="navbar" id="navbar" data-page-node-id="HSnCFDWjJesbVZKDQq2y9L"></div>
+  <div class="screen" id="screen" data-page-node-id="ddI8qDxNlnT6gyCYea6zCP"></div>
+  <div class="tabbar" id="tabbar" data-page-node-id="Nkkhez2gDWPyea9etibiu5"></div>
+  <div class="toast" id="toast" data-page-node-id="EW9JL3AwkU1KeUlpXN2UGr"></div>
+</div>
+
+<script>
+/* =========================================================
+   数据层（演示用 mock，实际由后端接口提供）
+   ========================================================= */
+const DAY = 86400000;
+const now = () => Date.now();
+const fmt = (ts) => {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const fmtShort = (ts) => {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+const SEED = {
+  /* 已登录后的身份与订单一律来自后端接口。这里只留空骨架：
+     接口不可达时宁可显示空态，也不能把演示身份当成真实数据渲染给教职工看。 */
+  grantee: {
+    empNo:'', name:'', phone:'', org:'', dept:'', quota:1, used:0
+  },
+  packages: [
+    {
+      id:1, no:'PKA2026', name:'温暖关怀套餐 A', sub:'米面粮油 · 家庭日常必备',
+      goods:[
+        {name:'五常稻花香大米',spec:'5kg/袋',qty:1,unit:'袋'},
+        {name:'一级压榨菜籽油',spec:'5L/桶',qty:1,unit:'桶'},
+        {name:'新疆和田红枣',spec:'500g/袋',qty:2,unit:'袋'}
+      ],
+      price:328, stock:1280, warn:200, sort:1, status:1
+    },
+    {
+      id:2, no:'PKB2026', name:'品质生活套餐 B', sub:'高端食油 · 有机杂粮组合',
+      goods:[
+        {name:'特级初榨橄榄油',spec:'750ml/瓶',qty:2,unit:'瓶'},
+        {name:'有机杂粮礼盒',spec:'2.4kg/盒',qty:1,unit:'盒'},
+        {name:'东北黑木耳',spec:'250g/袋',qty:2,unit:'袋'}
+      ],
+      price:458, stock:860, warn:150, sort:2, status:1
+    },
+    {
+      id:3, no:'PKC2026', name:'健康养生套餐 C', sub:'滋补养生 · 关怀长辈首选',
+      goods:[
+        {name:'多功能养生壶',spec:'1.5L/台',qty:1,unit:'台'},
+        {name:'宁夏枸杞原浆',spec:'300ml/盒',qty:2,unit:'盒'},
+        {name:'洋槐花蜂蜜',spec:'500g/瓶',qty:1,unit:'瓶'},
+        {name:'九蒸九晒黑芝麻丸',spec:'200g/罐',qty:1,unit:'罐'}
+      ],
+      price:398, stock:640, warn:120, sort:3, status:1
+    },
+    {
+      id:4, no:'PKD2026', name:'团圆礼遇套餐 D', sub:'坚果茶饮 · 节庆走亲必备',
+      goods:[
+        {name:'每日坚果混合装',spec:'750g/盒',qty:1,unit:'盒'},
+        {name:'恩施玉露茶叶礼盒',spec:'250g/盒',qty:1,unit:'盒'},
+        {name:'新疆葡萄干',spec:'500g/袋',qty:2,unit:'袋'}
+      ],
+      price:368, stock:0, warn:100, sort:4, status:1
+    }
+  ],
+  notices: [
+    {type:2, title:'配送说明', content:'本项目慰问品由华中商贸配送中心统一供货，全国范围包邮配送（港澳台地区除外）。收到您提交的配送信息后 10 日内安排发货。为保证送达质量，全部订单均要求快递送达至您填写的门牌地址，默认不允许投放至快递代收点；如您确实不便当面签收，可在提交时开启「允许放代收点」授权。'},
+    {type:3, title:'偏远地区配送时效说明', content:'新疆、西藏、内蒙古部分区域、青海、甘肃部分地区因地理位置及物流资源限制，配送时效较全国其他地区延长 3-5 天，但仍在收到配送信息后 10 日发货承诺范围内，敬请理解。'}
+  ],
+  addresses: [],
+  orders: [],
+  carriers: [],
+  /* 登录方式由服务端 /client/auth/mode 下发：name=手机号+姓名核验，sms=短信验证码 */
+  loginMode: 'name',
+  loginModeInfo: null
+};
+
+/* =========================================================
+   状态
+   ========================================================= */
+const STORE_KEY = 'hz_delivery_demo_v3';
+/* 部分浏览器（如以 file:// 打开时的 Chrome）会禁用 localStorage，
+   这里做一层降级：不可用时退回内存存储，保证页面依然可用 */
+const store = (() => {
+  let ok = true;
+  try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); }
+  catch (e) { ok = false; }
+  const mem = {};
+  return {
+    available: ok,
+    get(k){ try { return ok ? localStorage.getItem(k) : (mem[k] ?? null); } catch(e){ return mem[k] ?? null; } },
+    set(k, v){ try { ok ? localStorage.setItem(k, v) : (mem[k] = v); } catch(e){ mem[k] = v; } },
+    del(k){ try { ok ? localStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
+  };
+})();
+let S = load();
+
+function freshState(){
+  const s = JSON.parse(JSON.stringify(SEED));
+  s.logged = false;
+  s.grantee.used = 0;
+  return s;
+}
+function load(){
+  const base = freshState();
+  try{
+    const raw = store.get(STORE_KEY);
+    if(!raw) return base;
+    const d = JSON.parse(raw);
+    return Object.assign(base, {
+      logged: !!d.logged,
+      addresses: d.addresses || base.addresses,
+      orders: d.orders || base.orders,
+      packages: d.packages || base.packages,
+      grantee: Object.assign(base.grantee, {used: d.granteeUsed || 0})
+    });
+  }catch(e){
+    return base;
+  }
+}
+function save(){
+  // 只持久化用户态数据
+  store.set(STORE_KEY, JSON.stringify({
+    logged: S.logged, granteeUsed: S.grantee.used,
+    addresses: S.addresses, orders: S.orders, packages: S.packages
+  }));
+}
+
+/* =========================================================
+   路由
+   ========================================================= */
+const TABS = [
+  {key:'home', label:'首页', path:'#/home', icon:'<path d="M3.5 10.6 12 4l8.5 6.6V20a.6.6 0 0 1-.6.6h-5.1V14H9.2v6.6H4.1a.6.6 0 0 1-.6-.6z"/>'},
+  {key:'packages', label:'选套餐', path:'#/packages', icon:'<rect x="3.5" y="8.5" width="17" height="12" rx="1.8"/><path d="M3.5 12.6h17M12 8.5v12"/><path d="M12 8.5S10.6 3.6 8.2 3.6a2.3 2.3 0 0 0 0 4.9M12 8.5s1.4-4.9 3.8-4.9a2.3 2.3 0 0 1 0 4.9"/>'},
+  {key:'orders', label:'我的订单', path:'#/orders', icon:'<rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M8.5 8.6h7M8.5 12.6h7M8.5 16.6h4"/>'},
+  {key:'mine', label:'我的', path:'#/mine', icon:'<circle cx="12" cy="8" r="3.7"/><path d="M4.8 20.5c0-3.5 3.2-5.9 7.2-5.9s7.2 2.4 7.2 5.9"/>'}
+];
+
+let route = {name:'login', params:{}};
+
+function parseHash(){
+  const h = (location.hash || '#/login').replace(/^#/,'');
+  const parts = h.split('/').filter(Boolean);
+  const name = parts[0] || 'login';
+  return {name, params:{id:parts[1]||null}};
+}
+function jump(hash){
+  if(location.hash === hash){ render(); } else { location.hash = hash; }
+}
+window.addEventListener('hashchange', () => { route = parseHash(); render(); });
+
+/* =========================================================
+   工具
+   ========================================================= */
+function toast(msg, ms=1800){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), ms);
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const STATUS_NAME = {0:'待发货',10:'已发货',20:'运输中',30:'派送中',40:'已签收',50:'已取消',60:'配送异常',70:'已退回'};
+function statusTag(o){
+  const m = {
+    0:['brand','待发货'], 10:['gray','已发货'], 20:['gray','运输中'],
+    30:['warn','派送中'], 40:['ok','已签收'], 50:['gray','已取消'],
+    60:['danger','配送异常'], 70:['danger','已退回']
+  }[o.status] || ['gray','未知'];
+  return `<span class="tag ${m[0]}">${m[1]}</span>`;
+}
+function remainText(deadline){
+  const ms = deadline - now();
+  if(ms <= 0) return {text:'已超出承诺发货时间', cls:'urgent'};
+  const d = Math.floor(ms/DAY), h = Math.floor(ms%DAY/3600000);
+  if(d >= 4) return {text:`距承诺发货截止还有 ${d} 天`, cls:''};
+  if(d >= 1) return {text:`距承诺发货截止还有 ${d} 天 ${h} 小时`, cls:'urgent'};
+  return {text:`距承诺发货截止不足 24 小时`, cls:'urgent'};
+}
+function quotaLeft(){ return S.grantee.quota - S.grantee.used; }
+
+/* =========================================================
+   后端接口适配层
+   同源部署走相对路径；直接以 file:// 打开时指向本地后端
+   ========================================================= */
+/* 接口地址候选：
+   1. 与页面同源（经 Nginx 部署的标准入口）
+   2. http://localhost/api（file:// 打开、或从静态预览面板打开时的兜底）
+   首个请求若遇到「网络失败 / 返回的不是接口 JSON」会自动切到下一个候选并记住。 */
+const API_CANDIDATES = (function(){
+  const list = [];
+  if(location.protocol === 'file:') list.push('http://localhost/api');
+  else list.push(location.origin + '/api');
+  if(list.indexOf('http://localhost/api') < 0) list.push('http://localhost/api');
+  return list;
+})();
+const TOKEN_KEY = 'hz_client_token';
+
+const API = {
+  token: null,
+  base: null,          // 已探测出的可用接口地址
+  restore(){
+    try { this.token = localStorage.getItem(TOKEN_KEY) || null; } catch(e) { this.token = null; }
+  },
+  setToken(t){
+    this.token = t || null;
+    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch(e) {}
+  },
+  bases(){
+    const list = API_CANDIDATES.slice();
+    if(this.base && list[0] !== this.base){
+      const i = list.indexOf(this.base);
+      if(i > 0){ list.splice(i, 1); }
+      list.unshift(this.base);
+    }
+    return list;
+  },
+  async req(method, path, body){
+    let offlineErr = null;
+    for(const base of this.bases()){
+      const opt = { method, headers: {} };
+      if(this.token) opt.headers['X-Token'] = this.token;
+      if(body !== undefined){
+        opt.headers['Content-Type'] = 'application/json';
+        opt.body = JSON.stringify(body);
+      }
+      let resp;
+      try {
+        resp = await fetch(base + path, opt);
+      } catch(e) {
+        offlineErr = new Error('无法连接服务端，请通过 http://localhost/ 访问并确认服务已启动');
+        offlineErr.offline = true;
+        continue;                       // 网络失败，换下一个候选地址
+      }
+      let data;
+      try { data = await resp.json(); }
+      catch(e) {
+        // 返回的不是接口 JSON（如静态预览面板的 404/HTML 页），视作地址不可用
+        offlineErr = new Error('无法连接服务端，请通过 http://localhost/ 访问并确认服务已启动');
+        offlineErr.offline = true;
+        continue;
+      }
+      this.base = base;
+      if(!data || data.code !== 0){
+        const err = new Error((data && data.msg) || ('请求失败（HTTP ' + resp.status + '）'));
+        err.code = data && data.code;
+        throw err;
+      }
+      return data.data;
+    }
+    throw offlineErr || new Error('无法连接服务端，请通过 http://localhost/ 访问并确认服务已启动');
+  },
+  get(p){ return this.req('GET', p); },
+  post(p, b){ return this.req('POST', p, b === undefined ? {} : b); },
+  del(p){ return this.req('DELETE', p); }
+};
+API.restore();
+
+/* 后端时间字符串 -> 毫秒时间戳（iOS 不识别 yyyy-MM-dd HH:mm:ss，需换分隔符） */
+/* 后端时间字符串 -> 毫秒时间戳。
+   后端返回 ISO-8601（2026-09-01T11:20:04），iOS Safari 与部分浏览器
+   不识别这种格式，需先归一化为 yyyy/MM/dd HH:mm:ss；带时区后缀的串走原生解析兜底 */
+function ts(v){
+  if(!v) return null;
+  const t = new Date(String(v).replace(/-/g, '/').replace('T', ' ')).getTime();
+  if(!isNaN(t)) return t;
+  const n = new Date(String(v)).getTime();
+  return isNaN(n) ? null : n;
+}
+
+function normOrder(o){
+  if(!o) return o;
+  ['createTime','slaDeadline','shipTime','signTime','cancelTime'].forEach(function(k){ o[k] = ts(o[k]); });
+  /* 轨迹字段统一：后端返回 {description, trackTime}，演示数据用 {desc, time}。
+     渲染层统一读 t.desc / t.time，两种来源都补齐别名，避免出现 NaN-NaN-NaN。 */
+  (o.traces || []).forEach(function(t){
+    t.trackTime = ts(t.trackTime != null ? t.trackTime : t.time);
+    t.time = t.trackTime;
+    t.description = (t.description != null ? t.description : t.desc) || '';
+    t.desc = t.description;
+  });
+  if(o.slaDeadline) o.remainDays = Math.ceil((o.slaDeadline - now()) / DAY);
+  return o;
+}
+function normGrantee(g){
+  return {empNo:g.empNo, name:g.name, phone:g.phone, org:g.org, dept:g.dept, quota:g.quota, used:g.used};
+}
+
+/* 拉取全部业务数据 */
+async function loadAll(){
+  const arr = await Promise.all([
+    API.get('/client/packages'),
+    API.get('/client/orders'),
+    API.get('/client/notices'),
+    API.get('/client/addresses'),
+    API.get('/client/profile'),
+    API.get('/client/carriers')
+  ]);
+  S.packages  = arr[0] || [];
+  S.orders    = (arr[1] || []).map(normOrder);
+  S.notices   = arr[2] || [];
+  S.addresses = (arr[3] || []).map(function(a){ a.id = String(a.id); return a; });
+  S.grantee   = normGrantee(arr[4]);
+  S.carriers  = arr[5] || [];
+  S.logged    = true;
+  return S;
+}
+
+/* 本地存在 token 时尝试恢复登录态 */
+async function tryRestoreSession(){
+  if(!API.token) return false;
+  try {
+    await loadAll();
+    return true;
+  } catch(e) {
+    if(e.code === 401) API.setToken(null);
+    return false;
+  }
+}
+
+/* =========================================================
+   通用片段
+   ========================================================= */
+const IC = {
+  shield:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.3 2.9 7.9 7 9.5 4.1-1.6 7-5.2 7-9.5V6z"/><path d="M9.2 12.1l2 2 3.6-3.9"/></svg>',
+  truck:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5h10v10h-10z"/><path d="M12.5 10h4l3 3v3.5h-7z"/><circle cx="6.5" cy="18" r="1.8"/><circle cx="16.5" cy="18" r="1.8"/></svg>',
+  door:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V21"/><path d="M3.5 21h17"/><circle cx="12.6" cy="13" r="1"/></svg>',
+  ban:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></svg>',
+  bell:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z"/><path d="M10.3 19a2 2 0 0 0 3.4 0"/></svg>',
+  tick:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#15A05A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>',
+  gift:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8.6" width="17" height="11.9" rx="1.8"/><path d="M3.5 12.7h17M12 8.6v11.9"/><path d="M12 8.6S10.6 3.7 8.2 3.7a2.3 2.3 0 0 0 0 4.9M12 8.6s1.4-4.9 3.8-4.9a2.3 2.3 0 0 1 0 4.9"/></svg>',
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>'
+};
+
+/* =========================================================
+   页面：登录核验
+   登录方式由服务端下发，前端不写死：
+     name = 手机号 + 姓名（名单登记姓名），不依赖短信通道
+     sms  = 手机号 + 短信验证码
+   ========================================================= */
+let loginPhone = '', loginCode = '', loginName = '', loginErr = '';
+
+function pageLogin(){
+  const sms = S.loginMode === 'sms';
+  return `
+  <div class="page login-wrap">
+    <div class="brand-block">
+      <div class="brand-logo">华中</div>
+      <h2>华中商贸配送中心</h2>
+      <p>教职工慰问品选购与配送信息登记</p>
+    </div>
+
+    <div class="field">
+      <label>手机号</label>
+      <div class="box"><input id="phone" type="tel" maxlength="11" placeholder="请输入本人手机号" value="${loginPhone}"></div>
+    </div>
+    ${sms ? `
+    <div class="field">
+      <label>短信验证码</label>
+      <div class="box">
+        <input id="code" type="tel" maxlength="6" placeholder="请输入 6 位验证码" value="${loginCode}">
+        <button class="code-btn" id="codeBtn" onclick="sendCode()">获取验证码</button>
+      </div>
+    </div>` : `
+    <div class="field">
+      <label>姓名</label>
+      <div class="box"><input id="loginName" maxlength="20" placeholder="请输入本人姓名，须与单位登记一致" value="${esc(loginName)}"></div>
+    </div>`}
+
+    <div class="err-tip ${loginErr?'show':''}" id="errTip">${esc(loginErr)}</div>
+
+    <button class="btn" style="margin-top:8px" onclick="doLogin()">核验身份并登录</button>
+
+    <div style="margin-top:22px" class="hint">
+      仅限本次慰问品领取名单内的教职工登录。系统将比对您的手机号与${sms?'短信验证码':'名单登记的姓名'}，若提示不在名单中，请联系所在单位工会核实。
+    </div>
+  </div>`;
+}
+
+async function sendCode(){
+  if(S.loginMode !== 'sms'){ loginErr = '当前登录方式无需短信验证码'; render(); return; }
+  const p = (document.getElementById('phone').value||'').trim();
+  if(!/^1\d{10}$/.test(p)){ loginErr='请输入正确的 11 位手机号'; loginPhone=p; render(); return; }
+  loginPhone = p;
+  const btn = document.getElementById('codeBtn');
+  btn.disabled = true; btn.textContent = '发送中...';
+  try{
+    const r = await API.post('/client/auth/send-code?phone=' + encodeURIComponent(p));
+    let s = 60;
+    btn.textContent = `${s}s 后重发`;
+    const t = setInterval(()=>{
+      s--; if(s<=0){ clearInterval(t); btn.disabled=false; btn.textContent='获取验证码'; }
+      else btn.textContent = `${s}s 后重发`;
+    },1000);
+    loginErr = '';
+    toast(r && r.mockCode ? `验证码已发送，演示验证码：${r.mockCode}` : '验证码已发送，请查收短信');
+  }catch(e){
+    // 名单外手机号等业务错误：直接提示，不进入倒计时
+    loginErr = e.message;
+    render();
+  }
+}
+async function doLogin(){
+  const p = (document.getElementById('phone').value||'').trim();
+  loginPhone = p;
+  if(!/^1\d{10}$/.test(p)){ loginErr='请输入正确的 11 位手机号'; render(); return; }
+
+  let body;
+  if(S.loginMode === 'sms'){
+    const c = (document.getElementById('code').value||'').trim();
+    loginCode = c;
+    if(!/^\d{6}$/.test(c)){ loginErr='请输入 6 位数字验证码'; render(); return; }
+    body = {phone:p, code:c};
+  }else{
+    const n = (document.getElementById('loginName').value||'').trim();
+    loginName = n;
+    if(n.length < 2){ loginErr='请输入本人姓名（须与单位登记一致）'; render(); return; }
+    body = {phone:p, name:n};
+  }
+
+  loginErr = '';
+  try{
+    const r = await API.post('/client/auth/login', body);
+    API.setToken(r.token);
+    S.grantee = normGrantee(r);
+    S.logged = true;
+    await loadAll();
+    toast('身份核验通过');
+    jump('#/home');
+  }catch(e){
+    loginErr = e.message;
+    render();
+  }
+}
+
+/* =========================================================
+   页面：首页
+   ========================================================= */
+function pageHome(){
+  const orders = S.orders;
+  const active = orders.find(o=>o.status===0);
+  const done = orders.some(o=>o.status===40);
+  const step = active ? 3 : (done ? 4 : (S.grantee.used>0 ? 2 : 1));
+  const remain = active ? remainText(active.slaDeadline) : null;
+
+  return `
+  <div class="page">
+    <div class="hero">
+      <div class="greet">您好，欢迎回来</div>
+      <h2>${esc(S.grantee.name)}</h2>
+      <div class="org">${esc(S.grantee.org)} · ${esc(S.grantee.dept)}　工号 ${esc(S.grantee.empNo)}</div>
+      <div class="promise">
+        <div class="ic">${IC.truck.replace('currentColor','#C8912F')}</div>
+        <div class="tx">
+          <b>全国包邮 · 10 日内发货 · 送货上门</b>
+          <span>华中商贸配送中心 统一配送履约</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-pad"></div>
+
+    <div class="sec">
+      <div class="card">
+        <div class="card-hd"><h3>办理进度</h3><span class="more" onclick="jump('#/packages')">去选套餐 ›</span></div>
+        <div class="steps">
+          <div class="st ${step>1?'done':''} ${step===1?'active':''}"><div class="dot">1</div><span>选择套餐</span></div>
+          <div class="st ${step>2?'done':''} ${step===2?'active':''}"><div class="dot">2</div><span>填写配送信息</span></div>
+          <div class="st ${step>3?'done':''} ${step===3?'active':''}"><div class="dot">3</div><span>等待发货</span></div>
+          <div class="st ${step===4?'active':''}"><div class="dot">4</div><span>收货签收</span></div>
+        </div>
+        ${active ? `
+          <div class="countdown ${remain.cls}" style="margin-top:14px;margin-bottom:0">
+            ${IC.bell}<span>订单 ${esc(active.orderNo.slice(-6))} ${remain.text}</span>
+          </div>` : ''}
+      </div>
+
+      <div class="card tight">
+        <div class="list-item" onclick="jump('#/packages')">
+          <div class="li-l"><span style="color:var(--brand)">${IC.gift}</span><span>我要选套餐</span></div>
+          <span class="arw">›</span>
+        </div>
+        <div class="list-item" onclick="jump('#/orders')">
+          <div class="li-l"><span style="color:var(--brand)">${IC.truck}</span><span>我的订单与物流</span></div>
+          <span class="arw">›</span>
+        </div>
+        <div class="list-item" onclick="jump('#/track')">
+          <div class="li-l"><span style="color:var(--brand)">${IC.search || IC.truck}</span><span>物流进度查询</span></div>
+          <span class="arw">›</span>
+        </div>
+        <div class="list-item" onclick="jump('#/notice')">
+          <div class="li-l"><span style="color:var(--brand)">${IC.door}</span><span>配送说明与时效</span></div>
+          <span class="arw">›</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>服务承诺</h3></div>
+        <div class="promise-box">
+          <div class="pi">${IC.truck}<span>配送范围覆盖全国（港澳台除外），全程包邮，无需支付任何费用</span></div>
+          <div class="pi">${IC.door}<span>快递送货上门，送达至您填写的门牌地址</span></div>
+          <div class="pi">${IC.ban}<span>未经您允许，不得投放至快递代收点</span></div>
+        </div>
+      </div>
+
+      <div class="notice-bar" onclick="jump('#/notice')">
+        ${IC.bell}<span>${esc(S.notices[0].title)}：${esc(S.notices[0].content.slice(0,34))}…</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：套餐列表
+   ========================================================= */
+function pagePackages(){
+  const left = quotaLeft();
+  const list = S.packages.filter(p=>p.status===1).sort((a,b)=>a.sort-b.sort);
+  return `
+  <div class="page">
+    <div class="sec">
+      <div class="card" style="background:var(--brand);color:#fff">
+        <div style="font-size:12.5px;opacity:.85;margin-bottom:5px">您的领取额度</div>
+        <div style="font-size:20px;font-weight:500">剩余 ${left} 份 <span style="font-size:12.5px;font-weight:400;opacity:.85">/ 共 ${S.grantee.quota} 份</span></div>
+        <div style="font-size:11.5px;opacity:.8;margin-top:7px">套餐内容由发放单位统一确定，不支持自行调整内容</div>
+      </div>
+
+      ${list.map(p=>{
+        const out = p.stock <= 0;
+        return `
+        <div class="pkg ${out?'disabled':''}">
+          <div class="thumb">
+            <div class="ph-ic">${IC.gift.replace('currentColor','#C93B32')}</div>
+            <span class="ph">套餐展示图</span>
+            <span class="no">${esc(p.no)}</span>
+            ${out?'<div class="sold-out">已售罄</div>':''}
+          </div>
+          <div class="body">
+            <h4>${esc(p.name)}</h4>
+            <div class="sub">${esc(p.sub)}</div>
+            <div class="goods">
+              ${p.goods.slice(0,3).map(g=>`<span>${esc(g.name)} ×${g.qty}</span>`).join('')}
+              ${p.goods.length>3?`<span>等 ${p.goods.length} 件</span>`:''}
+            </div>
+            <div class="foot">
+              <span class="stock">库存 ${p.stock>0?p.stock+' 份':'—'}</span>
+              <button class="btn sm ${out?'':'sec'}" ${out||left<=0?'disabled':''}
+                onclick="event.stopPropagation();jump('#/package/${p.id}')">
+                ${out?'已售罄':(left<=0?'额度已用完':'查看并选择')}
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+
+      <div class="notice-bar">${IC.shield}<span>选择套餐后需填写收货地址与联系电话，请确保地址详细到门牌号，以便快递送货上门。</span></div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：套餐详情
+   ========================================================= */
+let detailQty = 1;
+function pagePackageDetail(id){
+  const p = S.packages.find(x=>String(x.id)===String(id));
+  if(!p) return `<div class="center"><h3>套餐不存在</h3></div>`;
+  const out = p.stock <= 0;
+  const left = quotaLeft();
+  const max = Math.min(p.stock, left);
+  if(detailQty > max) detailQty = Math.max(1, max);
+
+  return `
+  <div class="page">
+    <div style="background:#fff">
+      <div style="height:150px;background:#FAFBFC;border-bottom:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px">
+        <div style="width:46px;height:46px;border-radius:13px;background:var(--brand-light);display:flex;align-items:center;justify-content:center">
+          ${IC.gift.replace('currentColor','#C93B32').replace('width="17" height="17"','width="23" height="23"')}
+        </div>
+        <span style="font-size:11.5px;color:#B0B6BD;letter-spacing:.5px">套餐展示图</span>
+      </div>
+      <div style="padding:15px 14px">
+        <h3 style="margin:0 0 6px;font-size:17px;font-weight:500">${esc(p.name)}</h3>
+        <div style="font-size:12.5px;color:var(--text-3)">${esc(p.sub)}</div>
+        <div style="margin-top:11px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag brand">全国包邮</span>
+          <span class="tag gold">10 日内发货</span>
+          <span class="tag ok">送货上门</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="padding-top:12px">
+      <div class="card">
+        <div class="card-hd"><h3>套餐内容清单</h3><span class="tag gray">编号 ${esc(p.no)}</span></div>
+        <table class="goods-table">
+          <thead><tr><th>品名</th><th>规格</th><th>数量</th></tr></thead>
+          <tbody>
+            ${p.goods.map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.spec)}</td><td>×${g.qty} ${esc(g.unit)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="hint" style="margin-top:12px">套餐内容由发放单位统一确定，一经选定不可自行更改。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>选择数量</h3></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:13px;color:var(--text-2)">剩余可领额度 ${left} 份</div>
+          <div class="stepper">
+            <button onclick="changeQty(-1)" ${detailQty<=1?'disabled':''}>−</button>
+            <div class="num">${detailQty}</div>
+            <button onclick="changeQty(1)" ${detailQty>=max?'disabled':''}>+</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:10px">当前库存 ${p.stock} 份。超出额度或库存时无法提交。</div>
+      </div>
+
+      <div class="footbar">
+        <div class="fb-l">${out?'该套餐已售罄':`已选 <b style="color:var(--brand)">${detailQty}</b> 份`}</div>
+        <button class="btn" ${out||left<=0?'disabled':''} onclick="goConfirm(${p.id})">
+          ${out?'已售罄':(left<=0?'额度已用完':'填写配送信息')}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+function changeQty(d){
+  const id = route.params.id;
+  const p = S.packages.find(x=>String(x.id)===String(id));
+  const max = Math.min(p.stock, quotaLeft());
+  detailQty = Math.max(1, Math.min(max, detailQty + d));
+  render();
+}
+let pending = null;
+function goConfirm(id){
+  const p = S.packages.find(x=>String(x.id)===String(id));
+  pending = {packageId:p.id, packageName:p.name, quantity:detailQty, goods:p.goods};
+  // 仅在进入页面时用默认地址预填一次，避免在渲染过程中改动状态
+  if(!formAddr.province){
+    const dft = S.addresses.find(a=>a.isDefault) || S.addresses[0];
+    if(dft){
+      formAddr = { name:dft.name, phone:dft.phone, province:dft.province, city:dft.city,
+        district:dft.district, detail:dft.detail, allowStation:dft.allowStation, remark:'', carrier:'' };
+    }
+  }
+  jump('#/confirm');
+}
+
+/* =========================================================
+   页面：填写配送信息
+   ========================================================= */
+const REGION = {
+  '河北省':{'保定市':['莲池区','竞秀区','满城区','清苑区','徐水区'],'石家庄市':['长安区','桥西区','裕华区','新华区'],'唐山市':['路北区','路南区'],'廊坊市':['广阳区','安次区']},
+  '湖北省':{'武汉市':['洪山区','武昌区','江夏区','东湖高新区','汉阳区'],'宜昌市':['西陵区','伍家岗区'],'襄阳市':['襄城区','樊城区']},
+  '北京市':{'北京市':['海淀区','朝阳区','东城区','西城区','昌平区']},
+  '上海市':{'上海市':['浦东新区','徐汇区','静安区','杨浦区']},
+  '广东省':{'广州市':['天河区','越秀区','番禺区'],'深圳市':['南山区','福田区','宝安区']},
+  '江苏省':{'南京市':['鼓楼区','玄武区','江宁区'],'苏州市':['姑苏区','工业园区']},
+  '河南省':{'郑州市':['金水区','中原区','郑东新区'],'洛阳市':['涧西区','洛龙区']},
+  '湖南省':{'长沙市':['岳麓区','芙蓉区','雨花区'],'株洲市':['天元区','荷塘区']}
+};
+let formAddr = { name:'', phone:'', province:'', city:'', district:'', detail:'', allowStation:false, remark:'', carrier:'' };
+let formErr = '';
+
+function pageConfirm(){
+  if(!pending) return `<div class="center"><h3>请先选择套餐</h3><div class="acts"><button class="btn" onclick="jump('#/packages')">去选套餐</button></div></div>`;
+  const cities = formAddr.province ? Object.keys(REGION[formAddr.province]||{}) : [];
+  const districts = (formAddr.province && formAddr.city) ? (REGION[formAddr.province][formAddr.city]||[]) : [];
+  /* 期望承运物流：默认取第一家合作物流（不改动 formAddr，避免渲染副作用） */
+  const carriers = S.carriers || [];
+  const effCarrier = formAddr.carrier || ((carriers[0]||{}).code || '');
+
+  return `
+  <div class="page">
+    <div class="sec">
+      <div class="card">
+        <div class="card-hd"><h3>已选套餐</h3><span class="tag brand">×${pending.quantity}</span></div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:8px">${esc(pending.packageName)}</div>
+        <div class="goods" style="display:flex;flex-wrap:wrap;gap:6px">
+          ${pending.goods.map(g=>`<span style="font-size:11.5px;color:var(--text-2);background:#F5F6F8;border-radius:6px;padding:4px 8px">${esc(g.name)} ×${g.qty}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>收货信息</h3><span class="more" onclick="jump('#/address')">地址簿 ›</span></div>
+
+        <div class="field">
+          <label>收货人姓名</label>
+          <div class="box"><input id="f_name" placeholder="请填写收货人姓名" value="${esc(formAddr.name)}"></div>
+        </div>
+        <div class="field">
+          <label>联系电话</label>
+          <div class="box"><input id="f_phone" type="tel" maxlength="11" placeholder="请填写手机号，用于配送联系" value="${esc(formAddr.phone)}"></div>
+        </div>
+        <div class="field">
+          <label>所在地区</label>
+          <div style="display:flex;gap:8px">
+            <div class="box" style="flex:1">
+              <select id="f_province" onchange="onProvince(this.value)">
+                <option value="">省份</option>
+                ${Object.keys(REGION).map(p=>`<option ${p===formAddr.province?'selected':''}>${p}</option>`).join('')}
+              </select>
+            </div>
+            <div class="box" style="flex:1">
+              <select id="f_city" onchange="onCity(this.value)">
+                <option value="">城市</option>
+                ${cities.map(c=>`<option ${c===formAddr.city?'selected':''}>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="box" style="flex:1">
+              <select id="f_district" onchange="onDistrict(this.value)">
+                <option value="">区/县</option>
+                ${districts.map(d=>`<option ${d===formAddr.district?'selected':''}>${d}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>详细地址 <span style="color:var(--brand)">（必须填写到门牌号）</span></label>
+          <div class="box" style="align-items:flex-start;padding-top:2px">
+            <textarea id="f_detail" rows="2" placeholder="例：五四东路180号河北大学南院3栋502室">${esc(formAddr.detail)}</textarea>
+          </div>
+          <div class="hint" style="margin-top:6px">为保证快递能够送货上门，请务必填写到楼栋、单元、门牌号。</div>
+        </div>
+        <div class="field">
+          <label>配送备注（选填）</label>
+          <div class="box"><input id="f_remark" placeholder="如：工作日 9:00-18:00 在家" value="${esc(formAddr.remark)}"></div>
+        </div>
+
+        <div class="err-tip ${formErr?'show':''}" id="formErr">${esc(formErr)}</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500;margin-bottom:5px">允许投放快递代收点</div>
+            <div class="hint">默认关闭。关闭时快递须送达您填写的门牌地址；开启后，配送员可在您不便签收时投放至代收点。</div>
+          </div>
+          <div class="switch ${formAddr.allowStation?'on':''}" onclick="toggleStation()"></div>
+        </div>
+      </div>
+
+      ${carriers.length ? `
+      <div class="card">
+        <div class="card-hd"><h3>选择承运物流</h3><span class="tag brand">包邮</span></div>
+        <div class="carrier-list">
+          ${carriers.map(c=>`
+          <div class="carrier-item ${effCarrier===c.code?'on':''}" onclick="pickCarrier('${c.code}')">
+            <div class="ci-radio"></div>
+            <div class="ci-info">
+              <div class="ci-name">${esc(c.name)}</div>
+              <div class="ci-desc">合作物流 · 送货上门</div>
+            </div>
+            <div class="ci-badge">包邮</div>
+          </div>`).join('')}
+        </div>
+        <div class="hint" style="margin-top:8px">可任选一家合作物流，我们将按其时效为您送货上门，全程免费。</div>
+      </div>` : ''}
+
+      <div class="promise-box" style="margin-bottom:12px">
+        <div class="pi">${IC.truck}<span>提交后我们将于 <b>10 日内</b>安排发货，全国包邮，无需支付任何费用</span></div>
+        <div class="pi">${IC.door}<span>快递将送货上门，送达至您填写的门牌地址</span></div>
+        <div class="pi">${IC.ban}<span>${formAddr.allowStation?'您已开启代收点授权':'未经您允许，不会投放至快递代收点'}</span></div>
+      </div>
+
+      <div class="footbar">
+        <div class="fb-l">${pending.editingOrder ? '套餐不变 · 仅限修改 1 次' : `共 ${pending.quantity} 份 · 包邮`}</div>
+        <button class="btn" id="submitOrderBtn" onclick="submitOrder()">${pending.editingOrder?'保存修改':'提交配送信息'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* 注意：切换地区或开关时，先把已输入的文本收回 formAddr，避免重渲染丢输入 */
+function onProvince(v){ collectForm(); formAddr.province=v; formAddr.city=''; formAddr.district=''; render(); }
+function onCity(v){ collectForm(); formAddr.city=v; formAddr.district=''; render(); }
+function onDistrict(v){ collectForm(); formAddr.district=v; render(); }
+function toggleStation(){ collectForm(); formAddr.allowStation = !formAddr.allowStation; render(); }
+/* 选择期望承运物流（包邮，合作物流中自选） */
+function pickCarrier(code){ collectForm(); formAddr.carrier = code; render(); }
+
+function collectForm(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  if(!document.getElementById('f_name')) return;   // 未处于表单页时不动数据
+  formAddr.name = g('f_name'); formAddr.phone = g('f_phone');
+  formAddr.detail = g('f_detail'); formAddr.remark = g('f_remark');
+  const pv = document.getElementById('f_province'), ct = document.getElementById('f_city'), dt = document.getElementById('f_district');
+  if(pv && pv.value) formAddr.province = pv.value;
+  if(ct && ct.value) formAddr.city = ct.value;
+  if(dt && dt.value) formAddr.district = dt.value;
+}
+/* 地址完整度校验：对应招标要求「快递上楼到家入户」 */
+function validateAddress(addr){
+  if(!addr.name) return '请填写收货人姓名';
+  if(!/^1\d{10}$/.test(addr.phone)) return '请填写正确的 11 位手机号';
+  if(!addr.province || !addr.city || !addr.district) return '请选择完整的省 / 市 / 区信息';
+  const d = addr.detail.replace(/\s/g,'');
+  if(!d) return '请填写详细地址';
+  if(d.length < 8) return '详细地址太短，请补充到楼栋与门牌号，例：五四东路180号3栋502室';
+  if(!/\d/.test(d)) return '详细地址缺少门牌号，请补充数字门牌，以免快递无法上门';
+  if(!/(室|栋|幢|号楼|单元|号|巷|组|村|大厦|公寓|小区|组团|座)/.test(d))
+    return '详细地址缺少楼栋/门牌信息，请补充「X栋X单元XXX室」等内容';
+  return '';
+}
+async function submitOrder(){
+  collectForm();
+  const err = validateAddress(formAddr);
+  if(err){ formErr = err; render(); toast(err); return; }
+  formErr = '';
+  if(!pending){ toast('请先选择套餐'); jump('#/packages'); return; }
+
+  const btn = document.getElementById('submitOrderBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '提交中...'; }
+
+  const editingId = pending.editingOrder;   // 有值 = 从订单详情进来的「修改地址」
+  try{
+    // 修改地址走更新分支：后端限制仅「待发货」可改、仅 1 次，并写入物流轨迹留痕
+    if(editingId){
+      await API.post('/client/orders/' + editingId + '/address', {
+        receiver: formAddr.name,
+        phone: formAddr.phone,
+        province: formAddr.province,
+        city: formAddr.city,
+        district: formAddr.district,
+        detail: formAddr.detail,
+        allowStation: !!formAddr.allowStation,
+        remark: formAddr.remark || ''
+      });
+      await loadAll();
+      pending = null;
+      formAddr = {name:'',phone:'',province:'',city:'',district:'',detail:'',allowStation:false,remark:'',carrier:''};
+      jump('#/order/' + editingId);
+      setTimeout(()=>toast('收货地址已修改，发货时将按新地址配送'), 260);
+      return;
+    }
+
+    // 库存校验、额度扣减、每人限领 1 份，全部由服务端在事务内完成
+    const order = await API.post('/client/orders', {
+      packageId: pending.packageId,
+      quantity: pending.quantity || 1,
+      receiver: formAddr.name,
+      phone: formAddr.phone,
+      province: formAddr.province,
+      city: formAddr.city,
+      district: formAddr.district,
+      detail: formAddr.detail,
+      allowStation: !!formAddr.allowStation,
+      carrierCode: formAddr.carrier || undefined,
+      remark: formAddr.remark || '',
+      saveAddress: true
+    });
+    await loadAll();
+    pending = null;
+    formAddr = {name:'',phone:'',province:'',city:'',district:'',detail:'',allowStation:false,remark:'',carrier:''};
+    jump('#/result/'+order.id);
+    setTimeout(()=>toast('配送信息已提交，我们将在 10 日内发货'), 260);
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = editingId ? '保存修改' : '提交配送信息'; }
+    formErr = e.message;
+    render();
+    toast(e.message);
+  }
+}
+
+/* =========================================================
+   页面：提交成功
+   ========================================================= */
+function pageResult(id){
+  const o = S.orders.find(x=>String(x.id)===String(id)) || S.orders[0];
+  if(!o) return `<div class="center"><h3>未找到订单</h3></div>`;
+  return `
+  <div class="page">
+    <div class="center" style="padding-bottom:26px">
+      <div class="i">${IC.tick}</div>
+      <h3>提交成功</h3>
+      <p>配送信息已登记，我们将于 10 日内安排发货<br>全国包邮 · 送货上门 · 无需支付任何费用</p>
+    </div>
+    <div class="sec" style="padding-top:0">
+      <div class="card tight">
+        <div class="row"><span class="k">订单编号</span><span class="v">${esc(o.orderNo)}</span></div>
+        <div class="row"><span class="k">套餐</span><span class="v">${esc(o.packageName)} ×${o.quantity}</span></div>
+        <div class="row"><span class="k">收货人</span><span class="v">${esc(o.receiver)} ${esc(o.phone.slice(0,3))}****${esc(o.phone.slice(-4))}</span></div>
+        <div class="row"><span class="k">收货地址</span><span class="v">${esc(o.province+o.city+o.district+o.detail)}</span></div>
+        <div class="row"><span class="k">代收点授权</span><span class="v ${o.allowStation?'':'muted'}">${o.allowStation?'已允许':'不允许放代收点'}</span></div>
+        <div class="row"><span class="k">承诺发货时间</span><span class="v">${fmt(o.slaDeadline)} 前</span></div>
+      </div>
+      <div class="center" style="padding:0">
+        <div class="acts">
+          <button class="btn sec" onclick="jump('#/orders')">查看我的订单</button>
+          <button class="btn" onclick="jump('#/home')">返回首页</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：物流进度查询
+   ========================================================= */
+let trackQuery = '';
+let trackResult = null;
+let trackErr = '';
+let trackLoading = false;
+
+function trackOrderRow(o){
+  const latest = (o.traces && o.traces[0]) || null;
+  return `
+  <div class="list-item" onclick="jump('#/order/${o.id}')">
+    <div class="li-l" style="flex-direction:column;align-items:flex-start;gap:3px">
+      <span style="font-size:13.5px;font-weight:500">${esc(o.packageName)} ×${o.quantity}</span>
+      <span style="font-size:11.5px;color:var(--text-3)">${esc(o.carrierName||'')} ${esc(o.waybillNo||'')}</span>
+      ${latest?`<span style="font-size:11.5px;color:var(--text-2)">${esc(latest.desc).slice(0,30)}…</span>`:''}
+    </div>
+    <span class="arw">›</span>
+  </div>`;
+}
+
+function pageTrack(){
+  const shipped = S.orders.filter(o=>o.status>=10 && o.status!==50);
+  return `
+  <div class="page">
+    <div class="sec">
+      <div class="card">
+        <div class="card-hd"><h3>运单号查询</h3></div>
+        <div class="field" style="margin-bottom:10px">
+          <div class="box"><input id="trackNo" placeholder="请输入运单号（快递单上的单号）" value="${esc(trackQuery)}"></div>
+        </div>
+        <button class="btn" style="width:100%" id="trackBtn" onclick="doTrackQuery()">${trackLoading?'查询中…':'查询物流进度'}</button>
+        <div class="err-tip ${trackErr?'show':''}">${esc(trackErr)}</div>
+        <div class="hint" style="margin-top:8px">仅可查询您本人订单的物流进度。</div>
+      </div>
+
+      ${trackResult ? `
+      <div class="card">
+        <div class="card-hd"><h3>查询结果</h3>${statusTag(trackResult)}</div>
+        <div class="row"><span class="k">承运商</span><span class="v">${esc(trackResult.carrierName||'')}</span></div>
+        <div class="row"><span class="k">运单号</span><span class="v">${esc(trackResult.waybillNo||'')}</span></div>
+        <div class="row"><span class="k">收货地址</span><span class="v">${esc(trackResult.province+trackResult.city+trackResult.district+trackResult.detail)}</span></div>
+        ${trackResult.traces && trackResult.traces.length ? `
+        <div class="timeline" style="margin-top:12px">
+          ${trackResult.traces.map(t=>`
+            <div class="ti"><div class="tt">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}
+        </div>` : '<div class="hint" style="margin-top:10px">商家已发货，正在等待承运商揽收，稍后将有轨迹更新。</div>'}
+        <div class="acts" style="margin-top:12px"><button class="btn sec" style="width:100%" onclick="jump('#/order/${trackResult.id}')">查看订单详情</button></div>
+      </div>` : ''}
+
+      <div class="card tight">
+        <div class="card-hd"><h3>我的运单</h3><span class="more" onclick="jump('#/orders')">全部订单 ›</span></div>
+        ${shipped.length===0?`<div class="center" style="padding:20px;color:var(--text-3)">暂无运单，发货后可在此查询物流进度</div>`:''}
+        ${shipped.map(trackOrderRow).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function doTrackQuery(){
+  const no = (document.getElementById('trackNo')?.value || '').trim();
+  trackQuery = no;
+  if(!no){ trackErr = '请输入运单号'; render(); return; }
+  trackErr = '';
+  trackLoading = true;
+  render();
+  try{
+    const o = await API.get('/client/orders/track?waybillNo=' + encodeURIComponent(no));
+    trackResult = normOrder(o);
+    trackErr = '';
+  }catch(e){
+    trackResult = null;
+    trackErr = e.message;
+  }
+  trackLoading = false;
+  render();
+}
+
+/* =========================================================
+   页面：订单列表
+   ========================================================= */
+let orderFilter = 'all';
+function pageOrders(){
+  let list = S.orders.slice();
+  if(orderFilter==='pending') list = list.filter(o=>o.status===0);
+  if(orderFilter==='shipped') list = list.filter(o=>[10,20,30].includes(o.status));
+  if(orderFilter==='done') list = list.filter(o=>[40,70].includes(o.status));
+
+  const T = (k,l)=>`<span onclick="orderFilter='${k}';render()" style="display:inline-block;padding:6px 13px;border-radius:999px;font-size:12.5px;margin-right:8px;
+     background:${orderFilter===k?'var(--brand)':'#fff'};color:${orderFilter===k?'#fff':'var(--text-2)'};
+     border:1px solid ${orderFilter===k?'var(--brand)':'#E6E9ED'}">${l}</span>`;
+
+  return `
+  <div class="page">
+    <div class="sec">
+      <div style="margin-bottom:12px">${T('all','全部')}${T('pending','待发货')}${T('shipped','配送中')}${T('done','已完成')}</div>
+
+      ${list.length===0 ? `
+        <div class="center" style="padding:70px 30px">
+          <h3 style="color:var(--text-2);font-size:15px">暂无订单</h3>
+          <p>去挑选一份慰问品吧</p>
+          <div class="acts"><button class="btn" onclick="jump('#/packages')">去选套餐</button></div>
+        </div>` : ''}
+
+      ${list.map(o=>{
+        const remain = o.status===0 ? remainText(o.slaDeadline) : null;
+        return `
+        <div class="ord" onclick="jump('#/order/${o.id}')">
+          <div class="top">
+            <span class="no">订单号 ${esc(o.orderNo)}</span>
+            ${statusTag(o)}
+          </div>
+          <div class="mid">
+            <div class="th">套餐图</div>
+            <div class="info">
+              <h4>${esc(o.packageName)} ×${o.quantity}</h4>
+              <p>${esc(o.receiver)} · ${esc(o.phone.slice(0,3))}****${esc(o.phone.slice(-4))}</p>
+              <p>${esc(o.province+o.city+o.district+o.detail).slice(0,26)}</p>
+            </div>
+          </div>
+          <div class="bot">
+            <span>${o.shipTime ? '发货时间 '+fmt(o.shipTime) : '提交时间 '+fmt(o.createTime)}</span>
+            <span style="${remain?'color:var(--warn)':''}">${remain?remain.text.replace('距承诺发货截止还有','剩余')+'：':''}${o.waybillNo?esc(o.carrierName+' '+o.waybillNo):'查看详情 ›'}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：订单详情
+   ========================================================= */
+function pageOrderDetail(id){
+  const o = S.orders.find(x=>String(x.id)===String(id));
+  if(!o) return `<div class="center"><h3>订单不存在</h3></div>`;
+  const remain = o.status===0 ? remainText(o.slaDeadline) : null;
+
+  return `
+  <div class="page">
+    <div style="background:var(--brand);color:#fff;padding:18px 16px 20px">
+      <div style="font-size:18px;font-weight:500;margin-bottom:6px">${STATUS_NAME[o.status] || '订单状态'}</div>
+      <div style="font-size:12.5px;opacity:.88;line-height:1.6">
+        ${o.status===0?'我们将在承诺时间内为您安排发货'
+          :o.status===40?'快件已送达，感谢您的耐心等待'
+          :o.status===50?'订单已取消'
+          :'快件正在配送途中，请保持电话畅通'}
+      </div>
+    </div>
+
+    <div class="sec" style="padding-top:12px">
+      ${remain ? `<div class="countdown ${remain.cls}" style="margin-bottom:12px">${IC.bell}<span>${remain.text}（${fmt(o.slaDeadline)} 前）</span></div>` : ''}
+      ${o.shipTime ? `<div class="countdown ok" style="margin-bottom:12px">${IC.truck}<span>已于 ${fmt(o.shipTime)} 发货，用时 ${Math.floor((o.shipTime-o.createTime)/DAY)} 天，符合 10 日发货承诺</span></div>` : ''}
+
+      ${o.traces && o.traces.length ? `
+      <div class="card">
+        <div class="card-hd"><h3>物流轨迹</h3><span class="more">${esc(o.carrierName)} ${esc(o.waybillNo)}</span></div>
+        <div class="timeline">
+          ${o.traces.map((t,i)=>`
+            <div class="ti">
+              <div class="tt">${esc(t.desc)}</div>
+              <div class="tm">${fmt(t.time)}</div>
+            </div>`).join('')}
+        </div>
+        <div class="hint" style="margin-top:14px">如需送货上门，请在配送员联系时告知；未经您允许不会投放至快递代收点。</div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card-hd"><h3>套餐内容</h3><span class="tag brand">×${o.quantity}</span></div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:10px">${esc(o.packageName)}</div>
+        <table class="goods-table">
+          <thead><tr><th>品名</th><th>规格</th><th>数量</th></tr></thead>
+          <tbody>${o.goods.map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.spec)}</td><td>×${g.qty} ${esc(g.unit)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+
+      <div class="card tight">
+        <div class="row"><span class="k">订单编号</span><span class="v">${esc(o.orderNo)}</span></div>
+        <div class="row"><span class="k">收货人</span><span class="v">${esc(o.receiver)}　${esc(o.phone)}</span></div>
+        <div class="row"><span class="k">收货地址</span><span class="v">${esc(o.province+o.city+o.district+o.detail)}</span></div>
+        <div class="row"><span class="k">代收点授权</span><span class="v ${o.allowStation?'':'muted'}">${o.allowStation?'已允许投放':'不允许放代收点'}</span></div>
+        <div class="row"><span class="k">配送备注</span><span class="v ${o.remark?'':'muted'}">${o.remark?esc(o.remark):'无'}</span></div>
+        ${o.expectCarrierName?`<div class="row"><span class="k">期望承运商</span><span class="v">${esc(o.expectCarrierName)}${o.waybillNo && o.carrierName && o.carrier!==o.expectCarrier?`<span style="color:var(--text-3);font-size:11.5px">（实际由 ${esc(o.carrierName)} 承运）</span>`:''}</span></div>`:''}
+        <div class="row"><span class="k">提交时间</span><span class="v">${fmt(o.createTime)}</span></div>
+        ${o.waybillNo?`<div class="row"><span class="k">承运商</span><span class="v">${esc(o.carrierName)}</span></div>
+        <div class="row"><span class="k">运单号</span><span class="v">${esc(o.waybillNo)}</span></div>`:''}
+      </div>
+
+      ${o.status===0 ? `
+      <div style="display:flex;gap:10px">
+        ${(o.addrChangeCount||0) < 1 ? `<button class="btn line" onclick="editAddress('${o.id}')">修改地址</button>` : ''}
+        <button class="btn line" style="color:var(--danger);border-color:#F3D6D2" onclick="cancelOrder('${o.id}')">取消订单</button>
+      </div>
+      <div class="hint" style="margin-top:12px;text-align:center">${(o.addrChangeCount||0) < 1 ? '尚未发货，可自助修改 1 次收货地址，或取消订单' : '收货地址已自助修改过 1 次，如需再次修改请联系客服 <span style="white-space:nowrap">400-000-0000</span>'}</div>` : `
+      <div class="hint" style="margin-top:12px;text-align:center">订单已发货，如需修改地址请联系客服 400-000-0000</div>`}
+    </div>
+  </div>`;
+}
+async function cancelOrder(id){
+  const o = S.orders.find(x=>String(x.id)===String(id));
+  if(!o || o.status!==0){ toast('该订单当前不可取消'); return; }
+  if(!confirm('确认取消该订单？取消后领取额度与库存将释放。')) return;
+  try{
+    await API.post('/client/orders/'+id+'/cancel', {reason:'用户主动取消'});
+    await loadAll();
+    render();
+    toast('订单已取消，额度已释放');
+  }catch(e){
+    toast(e.message);
+  }
+}
+function editAddress(id){
+  const o = S.orders.find(x=>String(x.id)===String(id));
+  if(!o){ toast('未找到该订单，请刷新后重试'); return; }
+  if(o.status!==0){ toast('订单已发货，如需改派请联系客服 400-000-0000'); return; }
+  pending = {packageId:o.packageId, packageName:o.packageName, quantity:o.quantity, goods:o.goods, editingOrder:o.id};
+  formAddr = {name:o.receiver, phone:o.phone, province:o.province, city:o.city,
+    district:o.district, detail:o.detail, allowStation:o.allowStation, remark:o.remark||'',
+    carrier:o.expectCarrier||''};
+  jump('#/confirm');
+}
+
+/* =========================================================
+   页面：地址簿
+   ========================================================= */
+function pageAddress(){
+  return `
+  <div class="page">
+    <div class="sec">
+      ${S.addresses.length===0?`<div class="center" style="padding:60px 30px"><h3 style="font-size:15px;color:var(--text-2)">暂无收货地址</h3></div>`:''}
+      ${S.addresses.map(a=>`
+        <div class="addr">
+          <div class="nm">${esc(a.name)}<span>${esc(a.phone)}</span>${a.isDefault?'<span class="tag brand" style="margin-left:8px">默认</span>':''}</div>
+          <div class="ad">${esc(a.province+a.city+a.district+a.detail)}</div>
+          <div class="ad" style="margin-top:4px;font-size:11.5px;color:var(--text-3)">
+            ${a.allowStation?'已允许投放代收点':'不允许放代收点'}
+          </div>
+          <div class="ops">
+            ${a.isDefault?'':`<span onclick="setDefault('${a.id}')">设为默认</span>`}
+            <span onclick="delAddress('${a.id}')">删除</span>
+          </div>
+        </div>`).join('')}
+      <button class="btn sec" onclick="newAddress()">+ 新增收货地址</button>
+      <div class="hint" style="margin-top:14px">为保证快递送货上门，请将地址填写到楼栋与门牌号。</div>
+    </div>
+  </div>`;
+}
+async function setDefault(id){
+  const a = S.addresses.find(x=>String(x.id)===String(id));
+  if(!a) return;
+  try{
+    await API.post('/client/addresses', {
+      id: Number(a.id), name:a.name, phone:a.phone, province:a.province, city:a.city,
+      district:a.district, detail:a.detail, allowStation:!!a.allowStation, isDefault:true
+    });
+    await loadAll(); render(); toast('已设为默认地址');
+  }catch(e){ toast(e.message); }
+}
+async function delAddress(id){
+  if(!confirm('确认删除该地址？')) return;
+  try{
+    await API.del('/client/addresses/'+id);
+    await loadAll(); render(); toast('已删除');
+  }catch(e){ toast(e.message); }
+}
+function newAddress(){
+  pending = pending || null;
+  formAddr = {name:S.grantee.name, phone:S.grantee.phone, province:'', city:'', district:'', detail:'', allowStation:false, remark:''};
+  jump(pending ? '#/confirm' : '#/home');
+  if(!pending) toast('请从「填写配送信息」进入新增地址');
+}
+
+/* =========================================================
+   页面：配送说明
+   ========================================================= */
+function pageNotice(){
+  return `
+  <div class="page">
+    <div class="sec">
+      ${S.notices.map(n=>`
+        <div class="card">
+          <div class="card-hd"><h3>${esc(n.title)}</h3><span class="tag ${n.type===2?'brand':'gold'}">${n.type===2?'配送政策':'时效说明'}</span></div>
+          <div style="font-size:13px;line-height:1.85;color:var(--text-2)">${esc(n.content)}</div>
+        </div>`).join('')}
+
+      <div class="card">
+        <div class="card-hd"><h3>常见问题</h3></div>
+        <div style="font-size:13px;line-height:1.85;color:var(--text-2)">
+          <p style="margin:0 0 12px"><b style="color:var(--text-1);font-weight:500">Q：需要付费吗？</b><br>不需要。本项目慰问品全国包邮，全程不向教职工收取任何费用。</p>
+          <p style="margin:0 0 12px"><b style="color:var(--text-1);font-weight:500">Q：多久能收到？</b><br>我们会在收到配送信息后 10 日内安排发货，快递送达时间以承运方实际时效为准。</p>
+          <p style="margin:0 0 12px"><b style="color:var(--text-1);font-weight:500">Q：可以放快递柜或代收点吗？</b><br>默认不可以。如您确实不便当面签收，可在提交配送信息时开启「允许投放代收点」授权。</p>
+          <p style="margin:0"><b style="color:var(--text-1);font-weight:500">Q：填错地址怎么办？</b><br>订单未发货前，可在「我的订单」中自行修改；已发货请联系客服 400-000-0000。</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：我的
+   ========================================================= */
+function pageMine(){
+  const g = S.grantee;
+  return `
+  <div class="page">
+    <div class="mine-hd">
+      <div class="av">${esc(g.name.slice(0,1))}</div>
+      <div class="tx">
+        <h3>${esc(g.name)}</h3>
+        <p>${esc(g.org)} · ${esc(g.dept)}</p>
+        <p style="margin-top:3px">工号 ${esc(g.empNo)}　${esc(g.phone.slice(0,3))}****${esc(g.phone.slice(-4))}</p>
+      </div>
+    </div>
+    <div class="sec" style="padding-top:12px">
+      <div class="card tight">
+        <div class="row"><span class="k">可领份数</span><span class="v">${g.quota} 份</span></div>
+        <div class="row"><span class="k">已领份数</span><span class="v">${g.used} 份</span></div>
+        <div class="row"><span class="k">剩余额度</span><span class="v" style="color:var(--brand)">${quotaLeft()} 份</span></div>
+      </div>
+
+      <div class="card tight">
+        <div class="list-item" onclick="jump('#/orders')"><div class="li-l"><span>我的订单</span></div><span class="arw">›</span></div>
+        <div class="list-item" onclick="jump('#/address')"><div class="li-l"><span>收货地址簿</span></div><span class="arw">›</span></div>
+        <div class="list-item" onclick="jump('#/notice')"><div class="li-l"><span>配送说明与时效</span></div><span class="arw">›</span></div>
+        <div class="list-item" onclick="toast('客服电话：400-000-0000')"><div class="li-l"><span>联系客服</span></div><span class="arw">›</span></div>
+      </div>
+
+      <div class="card tight">
+      </div>
+
+      <button class="btn line" onclick="logout()">退出登录</button>
+    </div>
+  </div>`;
+}
+function logout(){
+  API.post('/client/auth/logout').catch(()=>{});
+  API.setToken(null);
+  S.logged = false;
+  jump('#/login');
+  toast('已退出登录');
+}
+
+/* =========================================================
+   渲染
+   ========================================================= */
+const TITLE_MAP = {
+  login:'', home:'华中商贸配送中心', packages:'选择慰问品套餐', package:'套餐详情',
+  confirm:'填写配送信息', result:'提交成功', orders:'我的订单', order:'订单详情', track:'物流查询',
+  address:'收货地址簿', notice:'配送说明', mine:'我的'
+};
+const TAB_PAGES = ['home','packages','orders','mine'];
+
+/* 订单列表接口不返回轨迹明细，进入订单详情页时按需拉取一次（每个订单只拉一次） */
+const tracesInflight = new Map();
+function ensureTraces(orderId){
+  const key = String(orderId);
+  const o = S.orders.find(x=>String(x.id)===key);
+  if(!o || (o.traces && o.traces.length)) return Promise.resolve(o);
+  if(tracesInflight.has(key)) return tracesInflight.get(key);
+  const p = API.get('/client/orders/' + key).then(function(full){
+    full = normOrder(full || {});
+    o.traces      = full.traces || [];
+    o.carrier     = full.carrier     || o.carrier;
+    o.carrierName = full.carrierName || o.carrierName;
+    o.waybillNo   = full.waybillNo   || o.waybillNo;
+    tracesInflight.delete(key);
+    if(route.name === 'order') render();
+    return o;
+  }).catch(function(){
+    o.traces = o.traces || [];
+    tracesInflight.delete(key);
+    if(route.name === 'order') render();
+    return o;
+  });
+  tracesInflight.set(key, p);
+  return p;
+}
+
+function render(){
+  route = parseHash();
+  const {name, params} = route;
+  if(name!=='login' && !S.logged){
+    location.hash = '#/login';
+    return;
+  }
+
+  let html = '';
+  switch(name){
+    case 'login': html = pageLogin(); break;
+    case 'home': html = pageHome(); break;
+    case 'packages': html = pagePackages(); break;
+    case 'package': html = pagePackageDetail(params.id); break;
+    case 'confirm': html = pageConfirm(); break;
+    case 'result': html = pageResult(params.id); break;
+    case 'orders': html = pageOrders(); break;
+    case 'track': html = pageTrack(); break;
+    case 'order': html = pageOrderDetail(params.id); break;
+    case 'address': html = pageAddress(); break;
+    case 'notice': html = pageNotice(); break;
+    case 'mine': html = pageMine(); break;
+    default: html = pageHome();
+  }
+
+  document.getElementById('screen').innerHTML = html;
+  document.getElementById('screen').scrollTop = 0;
+
+  // 详情页轨迹按需加载（列表接口不含 traces）
+  if(name === 'order' && params.id) ensureTraces(params.id);
+
+  // 导航栏
+  const title = TITLE_MAP[name] || '';
+  const showBack = !['login','home','packages','orders','mine'].includes(name);
+  document.getElementById('navbar').innerHTML = `
+    ${showBack?`<div class="nav-back" onclick="history.back()">${IC.back}</div>`:''}
+    <span>${esc(title)}</span>`;
+
+  // 底部 tabbar：仅 4 个 tab 页显示，其余页面（详情/表单等）隐藏，与微信小程序行为一致
+  const tb = document.getElementById('tabbar');
+  const showTab = TAB_PAGES.includes(name);
+  tb.style.display = showTab ? 'flex' : 'none';
+  tb.innerHTML = showTab ? TAB_HTML(name) : '';
+}
+function TAB_HTML(active){
+  return TABS.map(t=>`
+    <div class="tab ${t.key===active?'on':''}" onclick="jump('${t.path}')">
+      <svg viewBox="0 0 24 24">${t.icon}</svg>
+      <span>${t.label}</span>
+    </div>`).join('');
+}
+
+/* 启动：先向服务端确认登录方式（免短信 / 短信），再用本地 token 恢复会话，最后决定页面 */
+route = parseHash();
+const bootReady = (async function boot(){
+  try{
+    const m = await API.get('/client/auth/mode');
+    if(m && m.mode){ S.loginMode = m.mode; S.loginModeInfo = m; }
+  }catch(e){
+    /* 接口不可达时保持默认登录方式，保证登录页仍能渲染（错误会在提交时提示） */
+  }
+  const ok = await tryRestoreSession();
+  if(!ok){
+    S.logged = false;
+    if(location.hash !== '#/login'){ location.hash = '#/login'; }
+  }
+  render();
+})();
+</script>
+</body>
+</html>

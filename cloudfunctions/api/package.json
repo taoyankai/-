@@ -1,0 +1,7 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "统一转发云函数：把小程序请求转发到现有 Spring Boot 后端（免备案通道）。零第三方依赖，只用 Node 内置 http/https。",
+  "main": "index.js",
+  "dependencies": {}
+}

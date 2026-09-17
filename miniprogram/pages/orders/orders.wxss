@@ -1,0 +1,5 @@
+/* pages/orders/orders.wxss */
+.o-pkg {
+  font-size: 30rpx;
+  font-weight: 500;
+}

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/packages/packages",
+    "pages/package/package",
+    "pages/confirm/confirm",
+    "pages/result/result",
+    "pages/orders/orders",
+    "pages/order/order",
+    "pages/track/track",
+    "pages/mine/mine"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#C93B32",
+    "navigationBarTitleText": "华中商贸配送中心",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F6F8",
+    "enablePullDownRefresh": false
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>华中商贸配送中心 · 管理后台</title>
+<style>
+:root{
+  --brand:#C93B32; --brand-dark:#A62B24; --brand-light:#FDF0EE; --brand-line:#F3D6D2;
+  --ok:#15A05A; --ok-light:#E8F6EE;
+  --warn:#D98A18; --warn-light:#FDF4E4;
+  --danger:#D64040; --danger-light:#FCEEEE;
+  --info:#2563A8; --info-light:#EAF2FB;
+  --text-1:#1F2226; --text-2:#5B6169; --text-3:#9AA0A6;
+  --line:#E7EAEE; --bg:#F4F6F8; --sidebar:#FFFFFF;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{
+  font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text-1);font-size:13px;
+  display:flex;flex-direction:column;
+}
+button{font-family:inherit;}
+/* ---------- topbar ---------- */
+.topbar{
+  height:56px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;
+  padding:0 20px;flex-shrink:0;z-index:20;
+}
+.topbar .logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;flex:1;}
+.topbar .logo .mk{
+  width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;letter-spacing:.5px;
+}
+.topbar .logo span.sub{font-size:12px;color:var(--text-3);font-weight:400;margin-left:2px;}
+.topbar .who{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--text-2);}
+.topbar .who .av{width:28px;height:28px;border-radius:50%;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:12px;}
+/* ---------- layout ---------- */
+.body{flex:1;display:flex;min-height:0;}
+.sidebar{
+  width:212px;background:var(--sidebar);border-right:1px solid var(--line);flex-shrink:0;
+  padding:12px 10px;overflow-y:auto;
+}
+.nav-group{font-size:11px;color:var(--text-3);padding:10px 10px 6px;letter-spacing:.5px;}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;cursor:pointer;
+  color:var(--text-2);font-size:13.5px;margin-bottom:2px;user-select:none;
+}
+.nav-item:hover{background:#F5F6F8;color:var(--text-1);}
+.nav-item.on{background:var(--brand-light);color:var(--brand);font-weight:500;}
+.nav-item .badge{
+  margin-left:auto;background:var(--danger);color:#fff;font-size:10.5px;padding:1px 6px;border-radius:9px;
+  line-height:1.6;font-weight:400;
+}
+.nav-item.on .badge{background:var(--brand);}
+.main{flex:1;overflow-y:auto;padding:18px 22px 40px;min-width:0;}
+/* ---------- page head ---------- */
+.phead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;gap:16px;flex-wrap:wrap;}
+.phead h2{margin:0 0 4px;font-size:17px;font-weight:500;}
+.phead p{margin:0;font-size:12.5px;color:var(--text-3);}
+.phead .acts{display:flex;gap:9px;flex-wrap:wrap;}
+/* ---------- buttons ---------- */
+.btn{
+  border:1px solid var(--brand);background:var(--brand);color:#fff;font-size:13px;padding:8px 15px;
+  border-radius:8px;cursor:pointer;line-height:1.4;white-space:nowrap;
+}
+.btn:hover{opacity:.9;}
+.btn.sec{background:#fff;color:var(--text-2);border-color:#DDE1E6;}
+.btn.sec:hover{border-color:var(--brand);color:var(--brand);opacity:1;}
+.btn.ghost{background:#fff;color:var(--brand);border-color:var(--brand-line);}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+.btn[disabled]{background:#EBEDF0;border-color:#EBEDF0;color:#A8AEB5;cursor:not-allowed;}
+.link{color:var(--brand);cursor:pointer;font-size:12.5px;}
+.link:hover{text-decoration:underline;}
+.link.danger{color:var(--danger);}
+.link.muted{color:var(--text-3);cursor:default;}
+/* ---------- cards ---------- */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;}
+.card-hd h3{margin:0;font-size:14px;font-weight:500;}
+.card-hd .hint{font-size:12px;color:var(--text-3);}
+.grid{display:grid;gap:14px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+@media(max-width:1180px){.g4{grid-template-columns:repeat(2,1fr);}.g3{grid-template-columns:repeat(2,1fr);}.g2{grid-template-columns:1fr;}}
+/* ---------- stat ---------- */
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;}
+.stat .lb{font-size:12.5px;color:var(--text-3);margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.stat .vl{font-size:25px;font-weight:500;line-height:1;letter-spacing:-.5px;}
+.stat .vl small{font-size:12px;font-weight:400;color:var(--text-3);margin-left:4px;letter-spacing:0;}
+.stat .ft{font-size:11.5px;color:var(--text-3);margin-top:8px;}
+.stat.accent{background:var(--brand);border-color:var(--brand);}
+.stat.accent .lb,.stat.accent .ft{color:rgba(255,255,255,.82);}
+.stat.accent .vl{color:#fff;}
+.stat.danger{background:var(--danger-light);border-color:#F5CFCF;}
+.stat.danger .vl{color:var(--danger);}
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff;}
+table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
+table.tbl th{
+  text-align:left;font-weight:400;color:var(--text-3);font-size:12px;padding:10px 12px;
+  background:#FAFBFC;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+table.tbl td{padding:11px 12px;border-bottom:1px solid #F2F4F6;vertical-align:middle;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tbody tr:hover{background:#FCFCFD;}
+table.tbl td.nowrap,table.tbl th.nowrap{white-space:nowrap;}
+table.tbl .num{font-variant-numeric:tabular-nums;}
+.empty{padding:46px;text-align:center;color:var(--text-3);font-size:13px;}
+/* ---------- tag ---------- */
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+.t-gray{background:#F1F3F5;color:#6B7178;}
+.t-brand{background:var(--brand-light);color:var(--brand);}
+.t-ok{background:var(--ok-light);color:var(--ok);}
+.t-warn{background:var(--warn-light);color:var(--warn);}
+.t-danger{background:var(--danger-light);color:var(--danger);}
+.t-info{background:var(--info-light);color:var(--info);}
+/* ---------- filters ---------- */
+.filters{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.filters input,.filters select{
+  font-size:13px;padding:8px 11px;border:1px solid #DDE1E6;border-radius:8px;background:#fff;
+  color:var(--text-1);outline:none;font-family:inherit;min-width:130px;
+}
+.filters input:focus,.filters select:focus{border-color:var(--brand-line);}
+.filters input.search{min-width:210px;}
+.filters .sp{flex:1;}
+/* ---------- bars ---------- */
+.bar-row{display:flex;align-items:center;gap:11px;margin-bottom:11px;font-size:12.5px;}
+.bar-row .nm{width:96px;color:var(--text-2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-row .bar{flex:1;height:8px;background:#F1F3F5;border-radius:5px;overflow:hidden;}
+.bar-row .bar i{display:block;height:100%;border-radius:5px;background:var(--brand);}
+.bar-row .vl{width:74px;text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.bar-row .vl b{color:var(--text-1);font-weight:500;}
+/* ---------- progress seg ---------- */
+.seg{display:flex;height:12px;border-radius:7px;overflow:hidden;background:#F1F3F5;margin:4px 0 12px;}
+.seg i{display:block;height:100%;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-2);}
+.legend span{display:flex;align-items:center;gap:6px;}
+.legend i{width:9px;height:9px;border-radius:3px;display:block;}
+/* ---------- chart ---------- */
+.chart{display:flex;align-items:flex-end;gap:10px;height:132px;padding-top:8px;}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+.chart .col .bar{width:100%;max-width:46px;background:var(--brand);border-radius:5px 5px 0 0;min-height:3px;position:relative;}
+.chart .col .bar span{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:11px;color:var(--text-2);}
+.chart .col .lb{font-size:11.5px;color:var(--text-3);}
+/* ---------- modal ---------- */
+.mask{
+  position:fixed;inset:0;background:rgba(24,28,34,.42);display:none;align-items:center;justify-content:center;
+  z-index:100;padding:24px;
+}
+.mask.show{display:flex;}
+.modal{
+  background:#fff;border-radius:12px;width:640px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.modal.wide{width:860px;}
+.modal .mh{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.modal .mh h3{margin:0;font-size:14.5px;font-weight:500;}
+.modal .mh .x{cursor:pointer;color:var(--text-3);font-size:19px;line-height:1;padding:2px 6px;border-radius:6px;}
+.modal .mh .x:hover{background:#F4F6F8;color:var(--text-1);}
+.modal .mb{padding:18px;overflow-y:auto;}
+.modal .mf{padding:13px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;background:#FAFBFC;}
+/* ---------- dl ---------- */
+.dl{display:grid;grid-template-columns:96px 1fr;gap:10px 14px;font-size:13px;}
+.dl dt{color:var(--text-3);}
+.dl dd{margin:0;color:var(--text-1);word-break:break-all;}
+.sub-h{font-size:12.5px;color:var(--text-3);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line);}
+.sub-h:first-child{margin-top:0;padding-top:0;border-top:none;}
+/* ---------- form ---------- */
+.frow{display:flex;gap:12px;margin-bottom:13px;flex-wrap:wrap;}
+.fitem{flex:1;min-width:150px;}
+.fitem label{display:block;font-size:12.5px;color:var(--text-2);margin-bottom:6px;}
+.fitem input,.fitem select,.fitem textarea{
+  width:100%;font-size:13px;padding:8px 11px;border:1px solid #DDE1E6;border-radius:8px;outline:none;
+  font-family:inherit;background:#fff;color:var(--text-1);
+}
+.fitem textarea{resize:vertical;min-height:96px;line-height:1.6;}
+.fitem input:focus,.fitem select:focus,.fitem textarea:focus{border-color:var(--brand-line);}
+/* ---------- timeline ---------- */
+.tl{position:relative;padding-left:20px;}
+.tl .n{position:relative;padding-bottom:14px;}
+.tl .n:last-child{padding-bottom:0;}
+.tl .n::before{content:"";position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:#D8DCE1;border:2px solid #fff;}
+.tl .n:first-child::before{background:var(--brand);}
+.tl .n::after{content:"";position:absolute;left:-16.5px;top:14px;bottom:0;width:1px;background:#E7EAEE;}
+.tl .n:last-child::after{display:none;}
+.tl .n .tx{font-size:12.5px;line-height:1.6;}
+.tl .n:first-child .tx{color:var(--brand);}
+.tl .n .tm{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+/* ---------- misc ---------- */
+.notice{background:#fff;border-left:3px solid var(--brand);border-radius:8px;padding:12px 15px;font-size:12.5px;color:var(--text-2);line-height:1.7;margin-bottom:16px;}
+.notice b{color:var(--text-1);font-weight:500;}
+.toast{
+  position:fixed;left:50%;top:22px;transform:translateX(-50%) translateY(-14px);background:#22262C;color:#fff;
+  font-size:13px;padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:all .2s;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;}
+.tabs .tb{padding:9px 15px;font-size:13px;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tabs .tb:hover{color:var(--text-1);}
+.tabs .tb.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:500;}
+.kv{display:flex;gap:8px;font-size:12.5px;color:var(--text-2);}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;}
+.pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 4px 0;font-size:12.5px;color:var(--text-2);}
+.pager .pg{padding:5px 10px;border:1px solid #DDE1E6;border-radius:6px;background:#fff;cursor:pointer;}
+.pager .pg.on{border-color:var(--brand);color:var(--brand);}
+.pager .pg[disabled]{color:#C4C9CF;cursor:not-allowed;background:#FAFBFC;}
+.chk{width:15px;height:15px;cursor:pointer;accent-color:var(--brand);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="mk">华中</div>
+    华中商贸配送中心 <span class="sub">慰问品发放与配送管理平台</span>
+  </div>
+  <div class="who">
+    <span id="today"></span>
+    <span style="color:#E7EAEE">|</span>
+    <span id="whoInfo">未登录</span>
+    <span class="link" id="logoutBtn" style="display:none" onclick="adminLogout()">退出</span>
+    <div class="av" id="whoAv">管</div>
+  </div>
+</div>
+
+<div id="roBanner" class="notice"
+  style="display:none;margin:0;border-radius:0;border-left:4px solid var(--warn, #D98A18);background:#FFF9EF">
+  <b>只读账号：</b>当前账号仅可查看与导出数据，新增 / 修改 / 上下架 / 发货 / 导入等写操作均已禁用。
+</div>
+
+<div class="body">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main" id="main"></div>
+</div>
+
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+
+<div class="mask" id="loginMask">
+  <div class="modal" style="width:400px">
+    <div class="mh"><h3>华中商贸配送中心 · 管理后台</h3></div>
+    <div class="mb">
+      <div class="notice" style="border-left-color:var(--brand);margin-bottom:16px">
+        请使用管理端账号登录。如忘记密码，请联系配送中心系统管理员重置。
+      </div>
+      <div class="fitem" style="margin-bottom:12px">
+        <label>账号</label>
+        <input id="lgUser" autocomplete="username">
+      </div>
+      <div class="fitem" style="margin-bottom:12px">
+        <label>密码</label>
+        <input id="lgPass" type="password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doAdminLogin()">
+      </div>
+      <div id="lgMsg" style="font-size:12.5px;color:var(--danger);min-height:18px"></div>
+      <button class="btn" id="lgBtn" style="width:100%" onclick="doAdminLogin()">登 录</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   后端接口适配层
+   同源部署走相对路径；直接以 file:// 打开时指向本地后端
+   ========================================================= */
+const DAY = 86400000, HOUR = 3600000;
+let clock = Date.now();
+const now = () => clock;
+const P = n => String(n).padStart(2,'0');
+function fmt(ts){
+  if(!ts) return '—';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${P(d.getMonth()+1)}-${P(d.getDate())} ${P(d.getHours())}:${P(d.getMinutes())}`;
+}
+function fmtD(ts){
+  if(!ts) return '—';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${P(d.getMonth()+1)}-${P(d.getDate())}`;
+}
+
+/* 接口地址候选：
+   1. 与页面同源（经 Nginx 部署的标准入口）
+   2. http://localhost/api（file:// 打开、或从静态预览面板打开时的兜底）
+   首个请求若遇到「网络失败 / 返回的不是接口 JSON」会自动切到下一个候选并记住。 */
+const API_CANDIDATES = (function(){
+  const list = [];
+  if(location.protocol === 'file:') list.push('http://localhost/api');
+  else list.push(location.origin + '/api');
+  if(list.indexOf('http://localhost/api') < 0) list.push('http://localhost/api');
+  return list;
+})();
+const TOKEN_KEY = 'hz_admin_token';
+
+const API = {
+  token: null,
+  profile: null,
+  base: null,          // 已探测出的可用接口地址
+  restore(){
+    try { this.token = localStorage.getItem(TOKEN_KEY) || null; } catch(e) { this.token = null; }
+  },
+  setToken(t){
+    this.token = t || null;
+    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch(e) {}
+  },
+  bases(){
+    const list = API_CANDIDATES.slice();
+    if(this.base && list[0] !== this.base){
+      const i = list.indexOf(this.base);
+      if(i > 0){ list.splice(i, 1); }
+      list.unshift(this.base);
+    }
+    return list;
+  },
+  resolveBase(){ return this.base || this.bases()[0]; },
+  _offline(){
+    const e = new Error('无法连接服务端，请通过 http://localhost/admin/ 访问并确认服务已启动');
+    e.offline = true;
+    return e;
+  },
+  async raw(method, path, body, isForm){
+    let offlineErr = null;
+    for(const base of this.bases()){
+      const opt = { method, headers: {} };
+      if(this.token) opt.headers['X-Token'] = this.token;
+      if(body !== undefined && body !== null){
+        if(isForm){ opt.body = body; }
+        else { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+      }
+      let resp;
+      try {
+        resp = await fetch(base + path, opt);
+      } catch(e) {
+        offlineErr = this._offline();
+        continue;                       // 网络失败，换下一个候选地址
+      }
+      if(resp.status === 401){
+        this.setToken(null);
+        this.profile = null;
+        showLogin('登录已失效，请重新登录');
+        const err = new Error('登录已失效，请重新登录');
+        err.code = 401;
+        throw err;
+      }
+      let data;
+      try { data = await resp.json(); }
+      catch(e) {
+        // 返回的不是接口 JSON（如静态预览面板的 404/HTML 页），视作地址不可用
+        offlineErr = this._offline();
+        continue;
+      }
+      this.base = base;
+      if(!data || data.code !== 0){
+        /* 后端鉴权失败以 HTTP 200 + code 401 返回，需据此清登录态 */
+        if(data && data.code === 401){
+          this.setToken(null);
+          this.profile = null;
+          showLogin('登录已失效，请重新登录');
+        }
+        const err = new Error((data && data.msg) || ('请求失败（HTTP ' + resp.status + '）'));
+        err.code = data && data.code;
+        throw err;
+      }
+      return data.data;
+    }
+    throw offlineErr || this._offline();
+  },
+  get(p){ return this.raw('GET', p); },
+  /* 只读账号（viewer）在界面层直接拦截写操作，后端拦截器同样会拒绝 */
+  post(p, b){
+    if(!canWrite()) return Promise.reject(new Error('当前为只读账号，无操作权限'));
+    return this.raw('POST', p, b === undefined ? {} : b);
+  },
+  del(p){
+    if(!canWrite()) return Promise.reject(new Error('当前为只读账号，无操作权限'));
+    return this.raw('DELETE', p);
+  },
+  upload(p, file){
+    if(!canWrite()) return Promise.reject(new Error('当前为只读账号，无操作权限'));
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.raw('POST', p, fd, true);
+  },
+  /* 带鉴权头的文件下载：导出接口需校验 X-Token，不能用普通 <a href> */
+  async download(path, fallbackName){
+    let resp = null, offlineErr = null;
+    for(const base of this.bases()){
+      try {
+        const opt = { method:'GET', headers:{} };
+        if(this.token) opt.headers['X-Token'] = this.token;
+        const r = await fetch(base + path, opt);
+        if(r.status === 401){ this.setToken(null); showLogin('登录已失效，请重新登录'); throw new Error('登录已失效'); }
+        if(!r.ok){
+          const e = new Error('导出失败（HTTP ' + r.status + '）');
+          if(r.status === 404){ e.offline = true; offlineErr = e; continue; }   // 预览面板的 404，换候选地址
+          throw e;
+        }
+        resp = r;
+        this.base = base;
+        break;
+      } catch(e) {
+        if(e.offline){ offlineErr = e; continue; }
+        if(e.name === 'TypeError'){ offlineErr = this._offline(); continue; }
+        throw e;
+      }
+    }
+    if(!resp) throw offlineErr || this._offline();
+    const cd = resp.headers.get('Content-Disposition') || '';
+    let name = fallbackName;
+    const m = /filename\*=UTF-8''([^;]+)/i.exec(cd) || /filename="?([^";]+)"?/i.exec(cd);
+    if(m){ try { name = decodeURIComponent(m[1].trim()); } catch(e){ name = m[1].trim(); } }
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    return name;
+  }
+};
+API.restore();
+
+/* 是否具备写权限（viewer 为只读账号） */
+function canWrite(){ return !API.profile || API.profile.role !== 'viewer'; }
+
+/* 后端时间字符串 -> 毫秒时间戳。
+   后端返回 ISO-8601（2026-09-01T11:20:04），需归一化为 yyyy/MM/dd HH:mm:ss 才能
+   在所有浏览器（尤其 iOS Safari）稳定解析；带时区后缀的串走原生解析兜底 */
+function ts(v){
+  if(!v) return null;
+  const t = new Date(String(v).replace(/-/g, '/').replace('T', ' ')).getTime();
+  if(!isNaN(t)) return t;
+  const n = new Date(String(v)).getTime();
+  return isNaN(n) ? null : n;
+}
+
+/* =========================================================
+   业务数据（全部来自后端接口，不再本地造数）
+   ========================================================= */
+const CARRIERS = [];   // 承运商字典
+const PACKAGES = [];   // 套餐
+const GRANTEES = [];   // 甲方提供的名单
+const ORDERS   = [];   // 领取订单
+const ORG_TREE = [];   // 单位 / 部门两级（由名单推导）
+const NOTICES  = [];   // 公告
+
+const NOTICE_TYPE = {1:'首页公告', 2:'配送说明', 3:'偏远地区说明'};
+const NOTICE_TYPE_CODE = {'首页公告':1, '配送说明':2, '偏远地区说明':3};
+
+function normPackage(p){
+  p.goods = p.goods || [];
+  /* 后端只存最近一次变更原因 + 更新时间；套餐不允许私自改内容，这里据此还原留痕展示 */
+  p.changeLogs = [{
+    v: 1,
+    type: p.changeReason ? '修改' : '初始',
+    at: ts(p.updateTime || p.createTime),
+    by: '系统',
+    reason: p.changeReason || '项目启动配置',
+    detail: `库存 ${p.stock} 份 · ${p.status ? '已上架' : '已下架'}`
+  }];
+  return p;
+}
+function normGrantee(g){
+  g.pickStatus = 0;
+  return g;
+}
+function normOrder(o){
+  ['createTime','slaDeadline','shipTime','signTime','cancelTime'].forEach(k=>{ o[k] = ts(o[k]); });
+  o.carrierCode = o.carrier || null;              // 承运商编码
+  o.delayReason = o.exceptionReason || '';        // 超时 / 异常说明
+  o.cancelReason = o.status === 50
+    ? ('订单已取消' + (o.cancelTime ? '（' + fmt(o.cancelTime) + '）' : ''))
+    : '';
+  o.traces = [];
+  return o;
+}
+function normNotice(n){
+  n.typeCode = n.type;
+  n.type = NOTICE_TYPE[n.type] || '首页公告';
+  return n;
+}
+
+/* 由名单推导单位 / 部门，供筛选下拉使用 */
+function buildOrgTree(){
+  ORG_TREE.length = 0;
+  const m = new Map();
+  GRANTEES.forEach(g=>{
+    if(!m.has(g.org)) m.set(g.org, new Set());
+    if(g.dept) m.get(g.org).add(g.dept);
+  });
+  m.forEach((depts, org)=>ORG_TREE.push({org, depts:[...depts]}));
+  ORG_TREE.sort((a,b)=>String(a.org).localeCompare(String(b.org),'zh'));
+}
+
+/* 领取状态由订单推导：0 未提交 / 1 已提交待发货 / 2 已发货 / 3 已签收 */
+function applyPickStatus(){
+  const map = {};
+  ORDERS.forEach(o=>{
+    if(o.status === 50 || o.status === 70) return;
+    let nv;
+    if(o.status === 40) nv = 3;
+    else if(o.status >= 10) nv = 2;
+    else nv = 1;
+    map[o.granteeId] = Math.max(map[o.granteeId] || 0, nv);
+  });
+  GRANTEES.forEach(g=>{ g.pickStatus = map[g.id] || 0; });
+}
+
+/* 拉取后台全部业务数据 */
+async function loadAll(){
+  clock = Date.now();
+  const arr = await Promise.all([
+    API.get('/admin/grantees?page=1&size=1000'),
+    API.get('/admin/orders?page=1&size=1000'),
+    API.get('/admin/packages'),
+    API.get('/admin/notices'),
+    API.get('/admin/orders/carriers')
+  ]);
+
+  const gPage = arr[0] || {}, oPage = arr[1] || {};
+
+  GRANTEES.length = 0;
+  (gPage.list || []).forEach(g=>GRANTEES.push(normGrantee(g)));
+
+  ORDERS.length = 0;
+  (oPage.list || []).forEach(o=>ORDERS.push(normOrder(o)));
+
+  PACKAGES.length = 0;
+  (arr[2] || []).forEach(p=>PACKAGES.push(normPackage(p)));
+
+  NOTICES.length = 0;
+  (arr[3] || []).forEach(n=>NOTICES.push(normNotice(n)));
+
+  CARRIERS.length = 0;
+  (arr[4] || []).forEach(c=>CARRIERS.push({code:c.code, name:c.name, phone:c.phone}));
+
+  buildOrgTree();
+  applyPickStatus();
+  await loadTraces();
+  return {granteeTotal: gPage.total || 0, orderTotal: oPage.total || 0};
+}
+
+/*
+ * 物流跟踪与订单详情需要轨迹。逐单轮询会产生 N 次请求，
+ * 这里用 /admin/orders/tracks/batch 一次取回。
+ * 待发货订单只有登记过超时原因才有轨迹，因此一并纳入但受上限约束。
+ * （真实大规模场景应在订单表冗余「最新轨迹」字段，避免回查轨迹表）
+ */
+async function loadTraces(){
+  const need = ORDERS
+    .filter(o => (o.status >= 10 && o.status !== 50) || (o.status === 0 && o.exceptionReason))
+    .slice(0, 500)
+    .map(o => o.id);
+  if(!need.length) return;
+  try {
+    const tr = await API.get('/admin/orders/tracks/batch?ids=' + need.join(','));
+    ORDERS.forEach(o=>{
+      const list = (tr && tr[String(o.id)]) || [];
+      o.traces = list.map(t=>({desc:t.description, time:ts(t.trackTime)}));
+    });
+  } catch(e) {
+    console.warn('轨迹加载失败，不影响其它数据', e);
+  }
+}
+
+
+/* SLA 计算：10 日发货承诺 */
+const SLA = {SAFE:0, WARN:1, URGENT:2, OVER:3, SHIPPED:9};
+const SLA_META = {
+  0:{label:'安全',cls:'t-ok',color:'#15A05A'},
+  1:{label:'预警',cls:'t-warn',color:'#D98A18'},
+  2:{label:'紧急',cls:'t-danger',color:'#D64040'},
+  3:{label:'超时',cls:'t-danger',color:'#D64040'},
+  9:{label:'已发货',cls:'t-gray',color:'#9AA0A6'}
+};
+function slaInfo(o){
+  if(o.status !== 0) return {key:9, ...SLA_META[9], remainMs:null, remainDays:null, over:false};
+  const ms = o.slaDeadline - now();
+  const days = ms / DAY;
+  let key;
+  if(ms <= 0) key = 3;
+  else if(days <= 1) key = 2;
+  else if(days <= 3) key = 1;
+  else key = 0;
+  return {key, ...SLA_META[key], remainMs:ms, remainDays:days, over: ms<=0};
+}
+function remainText(o){
+  const s = slaInfo(o);
+  if(s.key === 9) return '已发货';
+  if(s.over) return '已超时 ' + Math.abs(Math.floor(s.remainDays)) + ' 天';
+  if(s.remainDays < 1) return '剩余 ' + Math.max(0,Math.floor(s.remainMs/HOUR)) + ' 小时';
+  return '剩余 ' + Math.floor(s.remainDays) + ' 天';
+}
+const STATUS_META = {
+  0:{label:'待发货',cls:'t-brand'},
+  10:{label:'已发货',cls:'t-info'},
+  20:{label:'运输中',cls:'t-info'},
+  30:{label:'派送中',cls:'t-warn'},
+  40:{label:'已签收',cls:'t-ok'},
+  50:{label:'已取消',cls:'t-gray'},
+  60:{label:'配送异常',cls:'t-danger'},
+  70:{label:'已退回',cls:'t-gray'}
+};
+const stTag = o => `<span class="tag ${STATUS_META[o.status].cls}">${STATUS_META[o.status].label}</span>`;
+const maskPhone = p => p.slice(0,3) + '****' + p.slice(-4);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* =========================================================
+   页面状态
+   ========================================================= */
+let page = 'dashboard';
+const F = { // 各页筛选条件
+  grantee:{kw:'', org:'', status:''},
+  order:{kw:'', status:'', org:'', pkg:'', sla:''},
+  ship:{kw:'', org:'', carrier:''},
+  logistics:{kw:'', status:''},
+  sla:{filter:'all'},
+  report:{tab:'org'},
+  audit:{kw:'', module:'', action:'', date:''}
+};
+let orderSel = new Set();     // 发货页勾选
+let reportCache = null;
+
+/* =========================================================
+   导航
+   ========================================================= */
+const NAV = [
+  {group:'总览'},
+  {key:'dashboard', label:'数据看板'},
+  {group:'发放管理'},
+  {key:'grantees', label:'教职工名单'},
+  {key:'packages', label:'套餐管理'},
+  {key:'orders', label:'订单汇总'},
+  {key:'ship', label:'发货管理', badge:()=>ORDERS.filter(o=>o.status===0).length},
+  {group:'履约跟踪'},
+  {key:'logistics', label:'物流跟踪'},
+  {key:'sla', label:'SLA 监控', badge:()=>ORDERS.filter(o=>o.status===0 && slaInfo(o).key>=2).length},
+  {key:'report', label:'报表中心'},
+  {group:'系统'},
+  {key:'notice', label:'公告与说明'},
+  {key:'audit', label:'操作日志'}
+];
+function renderSidebar(){
+  document.getElementById('sidebar').innerHTML = NAV.map(n=>{
+    if(n.group) return `<div class="nav-group">${n.group}</div>`;
+    const b = n.badge ? n.badge() : 0;
+    return `<div class="nav-item ${page===n.key?'on':''}" onclick="go('${n.key}')">
+      ${n.label}${b?`<span class="badge">${b}</span>`:''}
+    </div>`;
+  }).join('');
+}
+function go(k){ page = k; orderSel.clear(); render(); document.getElementById('main').scrollTop = 0; }
+
+/* =========================================================
+   工具
+   ========================================================= */
+function toast(msg, ms=2000){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), ms);
+}
+function openModal(title, bodyHtml, footHtml, wide){
+  document.getElementById('modal').className = 'modal' + (wide?' wide':'');
+  document.getElementById('modal').innerHTML = `
+    <div class="mh"><h3>${title}</h3><span class="x" onclick="closeModal()">×</span></div>
+    <div class="mb">${bodyHtml}</div>
+    ${footHtml?`<div class="mf">${footHtml}</div>`:''}`;
+  document.getElementById('mask').classList.add('show');
+}
+function closeModal(){ document.getElementById('mask').classList.remove('show'); }
+document.getElementById('mask').addEventListener('click', e => { if(e.target.id==='mask') closeModal(); });
+
+function exportCSV(filename, headers, rows){
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => {
+    const v = String(c==null?'':c).replace(/"/g,'""');
+    return /[",\n]/.test(v) ? `"${v}"` : v;
+  }).join(','))].join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 200);
+  toast('已导出 ' + filename);
+}
+
+/* =========================================================
+   页面：数据看板
+   ========================================================= */
+function pageDashboard(){
+  const total = GRANTEES.length;
+  const submitted = GRANTEES.filter(g=>g.pickStatus>0).length;
+  const claimRate = total ? (submitted/total*100).toFixed(1) : '0.0';
+  const pending = ORDERS.filter(o=>o.status===0).length;
+  const shipped = ORDERS.filter(o=>o.status>=10 && o.status!==50).length;
+  const signed = ORDERS.filter(o=>o.status===40).length;
+
+  const slaCount = {0:0,1:0,2:0,3:0};
+  ORDERS.filter(o=>o.status===0).forEach(o=>{ slaCount[slaInfo(o).key]++; });
+  const slaTotal = pending || 1;
+
+  const pkgStat = PACKAGES.map(p=>({
+    name:p.name,
+    cnt: ORDERS.filter(o=>o.packageId===p.id && o.status!==50).length
+  })).sort((a,b)=>b.cnt-a.cnt);
+  const pkgMax = Math.max(1, ...pkgStat.map(x=>x.cnt));
+
+  const orgStat = ORG_TREE.map(x=>{
+    const gs = GRANTEES.filter(g=>g.org===x.org);
+    const done = gs.filter(g=>g.pickStatus>0).length;
+    return {org:x.org, total:gs.length, done, rate: gs.length? done/gs.length : 0};
+  }).sort((a,b)=>b.rate-a.rate);
+
+  // 近 7 日提交趋势
+  const trend = [];
+  for(let i=6;i>=0;i--){
+    const start = now() - (i+1)*DAY, end = now() - i*DAY;
+    trend.push({
+      lb: fmtD(end).slice(5),
+      cnt: ORDERS.filter(o=>o.createTime>=start && o.createTime<end).length
+    });
+  }
+  const trendMax = Math.max(1, ...trend.map(t=>t.cnt));
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>数据看板</h2>
+      <p>慰问品发放与配送履约总览 · 数据更新时间 ${fmt(now())}</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="go('report')">查看报表</button>
+      <button class="btn" onclick="go('ship')">去发货</button>
+    </div>
+  </div>
+
+  ${slaCount[3] > 0 ? `<div class="notice" style="border-left-color:var(--danger)">
+    <b>发货时限预警：</b>当前有 <b style="color:var(--danger)">${slaCount[3]}</b> 笔订单已超出「收到配送信息后 10 日内发货」的承诺时间，请立即安排发货或登记原因。<span class="link" style="margin-left:6px" onclick="go('sla')">前往处理 ›</span>
+  </div>` : ''}
+
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="stat accent">
+      <div class="lb">待发货订单</div>
+      <div class="vl">${pending}<small>笔</small></div>
+      <div class="ft">需在 10 日内完成发货</div>
+    </div>
+    <div class="stat">
+      <div class="lb">已提交领取</div>
+      <div class="vl">${submitted}<small>/ ${total} 人</small></div>
+      <div class="ft">覆盖率 ${claimRate}%</div>
+    </div>
+    <div class="stat">
+      <div class="lb">已发货 / 已签收</div>
+      <div class="vl">${shipped}<small>/ ${signed}</small></div>
+      <div class="ft">签收率 ${shipped? (signed/shipped*100).toFixed(1):'0.0'}%</div>
+    </div>
+    <div class="stat ${slaCount[3]>0?'danger':''}">
+      <div class="lb">超时未发货</div>
+      <div class="vl">${slaCount[3]}<small>笔</small></div>
+      <div class="ft">${slaCount[2]} 笔进入紧急状态</div>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd"><h3>发货时限（SLA）分布</h3><span class="hint">按 10 日承诺剩余天数</span></div>
+      <div class="seg">
+        <i style="width:${slaCount[0]/slaTotal*100}%;background:#15A05A"></i>
+        <i style="width:${slaCount[1]/slaTotal*100}%;background:#D98A18"></i>
+        <i style="width:${slaCount[2]/slaTotal*100}%;background:#D64040"></i>
+        <i style="width:${slaCount[3]/slaTotal*100}%;background:#A62B24"></i>
+      </div>
+      <div class="legend" style="margin-bottom:16px">
+        <span><i style="background:#15A05A"></i>安全（&gt;3天） ${slaCount[0]}</span>
+        <span><i style="background:#D98A18"></i>预警（≤3天） ${slaCount[1]}</span>
+        <span><i style="background:#D64040"></i>紧急（≤1天） ${slaCount[2]}</span>
+        <span><i style="background:#A62B24"></i>超时 ${slaCount[3]}</span>
+      </div>
+      <div class="sub-h">近 7 日信息提交量</div>
+      <div class="chart">
+        ${trend.map(t=>`<div class="col">
+          <div class="bar" style="height:${Math.max(3, t.cnt/trendMax*100)}%"><span>${t.cnt}</span></div>
+          <div class="lb">${t.lb}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd"><h3>套餐选择分布</h3><span class="hint">用于备货参考</span></div>
+      ${pkgStat.map(x=>`
+        <div class="bar-row">
+          <div class="nm" title="${esc(x.name)}">${esc(x.name)}</div>
+          <div class="bar"><i style="width:${x.cnt/pkgMax*100}%"></i></div>
+          <div class="vl"><b>${x.cnt}</b> 份</div>
+        </div>`).join('')}
+      <div class="sub-h">各单位领取进度</div>
+      ${orgStat.map(x=>`
+        <div class="bar-row">
+          <div class="nm" title="${esc(x.org)}">${esc(x.org)}</div>
+          <div class="bar"><i style="width:${x.rate*100}%;background:${x.rate>0.7?'#15A05A':x.rate>0.4?'#D98A18':'#D64040'}"></i></div>
+          <div class="vl"><b>${x.done}</b>/${x.total}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h3>最近提交的订单</h3><span class="link" onclick="go('orders')">查看全部 ›</span></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>订单号</th><th>领取人</th><th>所属单位</th><th>套餐</th><th>状态</th><th>发货时限</th><th>提交时间</th></tr></thead>
+        <tbody>
+          ${ORDERS.slice(0,6).map(o=>`<tr>
+            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="nowrap">${esc(o.granteeName)}</td>
+            <td class="nowrap">${esc(o.org)}</td>
+            <td class="nowrap">${esc(o.packageName)}</td>
+            <td>${stTag(o)}</td>
+            <td class="nowrap">${o.status===0?`<span class="tag ${slaInfo(o).cls}">${remainText(o)}</span>`:'—'}</td>
+            <td class="nowrap">${fmt(o.createTime)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   页面：教职工名单
+   ========================================================= */
+function pageGrantees(){
+  const f = F.grantee;
+  let list = GRANTEES.slice();
+  if(f.kw) list = list.filter(g => (g.name+g.empNo+g.phone+g.dept).includes(f.kw));
+  if(f.org) list = list.filter(g => g.org === f.org);
+  if(f.status === 'done') list = list.filter(g => g.pickStatus > 0);
+  if(f.status === 'todo') list = list.filter(g => g.pickStatus === 0);
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>教职工名单</h2>
+      <p>共 ${GRANTEES.length} 人 · 已提交 ${GRANTEES.filter(g=>g.pickStatus>0).length} 人 · 未提交 ${GRANTEES.filter(g=>g.pickStatus===0).length} 人</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="downloadTemplate()">下载导入模板</button>
+      <button class="btn sec" onclick="openImportDialog()">导入名单</button>
+      <button class="btn" onclick="exportGrantees()">导出名单</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input class="search" placeholder="搜索姓名 / 工号 / 手机号 / 部门" value="${esc(f.kw)}"
+      oninput="setFilter('grantee.kw', this.value, this)">
+    <select onchange="F.grantee.org=this.value;render()">
+      <option value="">全部单位</option>
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+    </select>
+    <select onchange="F.grantee.status=this.value;render()">
+      <option value="">全部状态</option>
+      <option value="done" ${f.status==='done'?'selected':''}>已提交</option>
+      <option value="todo" ${f.status==='todo'?'selected':''}>未提交</option>
+    </select>
+    <div class="sp"></div>
+    <span class="hint" style="font-size:12px;color:var(--text-3)">筛选结果 ${list.length} 条</span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th>工号</th><th>姓名</th><th>手机号</th><th>所属单位</th><th>部门</th>
+        <th class="nowrap">可领 / 已领</th><th>领取状态</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">没有符合条件的教职工</div></td></tr>` : ''}
+        ${list.map(g=>`<tr>
+          <td class="mono">${g.empNo}</td>
+          <td>${esc(g.name)}</td>
+          <td class="mono">${maskPhone(g.phone)}</td>
+          <td>${esc(g.org)}</td>
+          <td>${esc(g.dept)}</td>
+          <td class="num">${g.quota} / ${g.used}</td>
+          <td>${['<span class="tag t-gray">未提交</span>','<span class="tag t-brand">已提交·待发货</span>','<span class="tag t-info">已发货</span>','<span class="tag t-ok">已签收</span>'][g.pickStatus]}</td>
+          <td class="nowrap">
+            <span class="link" onclick="granteeDetail(${g.id})">详情</span>
+            ${g.used>0?`<span class="link danger" style="margin-left:9px" onclick="resetQuota(${g.id})">重置额度</span>`:''}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function granteeDetail(id){
+  const g = GRANTEES.find(x=>x.id===id);
+  const os = ORDERS.filter(o=>o.granteeId===id);
+  openModal('教职工详情 · ' + esc(g.name), `
+    <dl class="dl">
+      <dt>工号</dt><dd class="mono">${g.empNo}</dd>
+      <dt>姓名</dt><dd>${esc(g.name)}</dd>
+      <dt>手机号</dt><dd class="mono">${g.phone}</dd>
+      <dt>所属单位</dt><dd>${esc(g.org)}</dd>
+      <dt>部门</dt><dd>${esc(g.dept)}</dd>
+      <dt>领取额度</dt><dd>${g.quota} 份（已领 ${g.used} 份）</dd>
+      <dt>领取状态</dt><dd>${['未提交','已提交·待发货','已发货','已签收'][g.pickStatus]}</dd>
+    </dl>
+    <div class="sub-h">关联订单（${os.length}）</div>
+    ${os.length === 0 ? '<div class="empty" style="padding:22px">暂无订单</div>' : `
+    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+      <thead><tr><th>订单号</th><th>套餐</th><th>状态</th><th>提交时间</th></tr></thead>
+      <tbody>${os.map(o=>`<tr>
+        <td class="mono">${o.orderNo}</td><td>${esc(o.packageName)}</td>
+        <td>${stTag(o)}</td><td>${fmt(o.createTime)}</td></tr>`).join('')}</tbody>
+    </table></div>`}
+  `, `<button class="btn sec" onclick="closeModal()">关闭</button>`);
+}
+async function resetQuota(id){
+  const g = GRANTEES.find(x=>x.id===id);
+  if(!g) return;
+  if(!confirm('确认重置 ' + g.name + ' 的领取额度？\n适用于订单取消或地址作废后需重新领取的场景，其名下未发货订单将一并作废。')) return;
+  try {
+    await API.post('/admin/grantees/' + id + '/reset-quota');
+    await reload();
+    toast('已重置 ' + g.name + ' 的领取额度');
+  } catch(e) {
+    toast('重置失败：' + e.message);
+  }
+}
+async function downloadTemplate(){
+  try {
+    toast('已下载 ' + await API.download('/admin/grantees/template', '慰问品领取名单导入模板.xlsx'));
+  } catch(e) { toast('下载失败：' + e.message); }
+}
+
+/* 名单由甲方以 Excel 提供，导入走后端解析 + 校验 + 批次留痕 */
+function openImportDialog(){
+  openModal('导入教职工名单', `
+    <div class="notice" style="border-left-color:var(--brand);margin-bottom:16px">
+      按甲方提供的 Excel 名单导入。必填列：<b>姓名、手机号</b>；建议同时提供工号、所属单位、部门、可领份数。<br>
+      系统会校验手机号格式、文件内重复、名单内已存在，并生成失败明细；每次导入都会记录批次，便于追溯。
+    </div>
+    <div class="fitem" style="margin-bottom:14px">
+      <label>选择文件（.xlsx / .xls）</label>
+      <input type="file" id="importFile" accept=".xlsx,.xls">
+    </div>
+    <div class="fitem" style="margin-bottom:6px">
+      <label>手机号已存在时</label>
+      <select id="importMode">
+        <option value="true">覆盖更新原有记录</option>
+        <option value="false">跳过，保留原记录</option>
+      </select>
+    </div>
+    <div id="importResult"></div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button class="btn sec" onclick="downloadTemplate()">下载模板</button>
+      <button class="btn" onclick="doImport()">开始导入</button>`, true);
+}
+async function doImport(){
+  const input = document.getElementById('importFile');
+  const f = input && input.files && input.files[0];
+  if(!f){ toast('请先选择名单文件'); return; }
+  const box = document.getElementById('importResult');
+  box.innerHTML = '<div class="hint" style="padding:14px 0;color:var(--text-3)">正在导入，请稍候…</div>';
+  try {
+    const up = document.getElementById('importMode').value;
+    const r = await API.upload('/admin/grantees/import?updateExists=' + up, f);
+    const fails = r.failList || [];
+    box.innerHTML = `
+      <div class="sub-h">导入结果 · 批次 <span class="mono">${esc(r.batchNo||'')}</span></div>
+      <div class="kv" style="gap:16px;margin-bottom:10px;flex-wrap:wrap">
+        <span>文件共 <b>${r.total}</b> 行</span>
+        <span>新增 <b style="color:var(--ok)">${r.insertCount||0}</b> 条</span>
+        <span>更新 <b style="color:var(--brand)">${r.updateCount||0}</b> 条</span>
+        <span>失败 <b style="color:var(--danger)">${r.failCount||0}</b> 条</span>
+      </div>
+      ${fails.length ? `<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl" style="min-width:auto">
+        <thead><tr><th>失败明细</th></tr></thead>
+        <tbody>${fails.map(x=>`<tr><td>${esc(x)}</td></tr>`).join('')}</tbody>
+      </table></div>` : '<div class="tag t-ok">全部校验通过</div>'}
+    `;
+    await reload();
+    toast('导入完成：成功 ' + (r.successCount||0) + ' 条，失败 ' + (r.failCount||0) + ' 条');
+  } catch(e) {
+    box.innerHTML = '<div class="notice" style="border-left-color:var(--danger)">' + esc(e.message) + '</div>';
+    toast('导入失败：' + e.message);
+  }
+}
+
+/* 导出：按当前筛选条件导出 Excel（含收货地址、承运商、运单号） */
+async function exportGrantees(){
+  const f = F.grantee, qs = [];
+  if(f.kw) qs.push('keyword=' + encodeURIComponent(f.kw));
+  if(f.org) qs.push('org=' + encodeURIComponent(f.org));
+  if(f.status === 'done') qs.push('claimStatus=1');
+  if(f.status === 'todo') qs.push('claimStatus=0');
+  try {
+    toast('已导出 ' + await API.download('/admin/grantees/export' + (qs.length ? '?' + qs.join('&') : ''),
+      '慰问品领取名单.xlsx'));
+  } catch(e) { toast('导出失败：' + e.message); }
+}
+
+
+/* =========================================================
+   页面：套餐管理
+   ========================================================= */
+function pagePackages(){
+  return `
+  <div class="phead">
+    <div>
+      <h2>套餐管理</h2>
+      <p>套餐内容一经发布不允许私自更改；所有变更均记录留痕，可作为履约凭证</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="openChangeLogs()">查看变更留痕</button>
+      <button class="btn" onclick="editPackage(0)">新建套餐</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    <b>合规提示：</b>按招标要求，中标人须保证方案货品充足且<b>不允许私自更改方案内容</b>。本系统对套餐的每一次修改强制记录操作人、时间与变更原因，订单提交时保存套餐快照，历史订单不受后续修改影响。
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th class="nowrap">编号</th><th>套餐名称</th><th class="nowrap">内容清单</th>
+        <th class="nowrap">库存</th><th class="nowrap">状态</th><th class="nowrap">已选份数</th>
+        <th class="nowrap">最近修改</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${PACKAGES.map(p=>{
+          const cnt = ORDERS.filter(o=>o.packageId===p.id && o.status!==50).length;
+          const warn = p.stock > 0 && p.stock <= p.warn;
+          return `<tr>
+            <td class="mono nowrap">${p.no}</td>
+            <td>
+              <div style="font-weight:500">${esc(p.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${esc(p.sub)}</div>
+            </td>
+            <td class="nowrap">${p.goods.length} 项</td>
+            <td class="num nowrap">
+              <span style="color:${p.stock<=0?'var(--danger)':warn?'var(--warn)':'inherit'};font-weight:500">${p.stock}</span> 份
+              ${p.stock<=0?'<span class="tag t-danger" style="margin-left:5px">售罄</span>':warn?'<span class="tag t-warn" style="margin-left:5px">库存偏低</span>':''}
+            </td>
+            <td class="nowrap">${p.status? '<span class="tag t-ok">已上架</span>' : '<span class="tag t-gray">已下架</span>'}</td>
+            <td class="num nowrap">${cnt} 份</td>
+            <td class="nowrap" style="font-size:11.5px;color:var(--text-3)">${p.changeLogs[0] ? fmt(p.changeLogs[0].at) + ' · ' + esc(p.changeLogs[0].by) : '—'}</td>
+            <td class="nowrap">
+              <span class="link" onclick="packageDetail(${p.id})">明细</span>
+              <span class="link" style="margin-left:9px" onclick="editPackage(${p.id})">调整库存</span>
+              <span class="link ${p.status?'danger':''}" style="margin-left:9px" onclick="togglePackage(${p.id})">${p.status?'下架':'上架'}</span>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function packageDetail(id){
+  const p = PACKAGES.find(x=>x.id===id);
+  openModal('套餐明细 · ' + esc(p.name), `
+    <dl class="dl">
+      <dt>套餐编号</dt><dd class="mono">${p.no}</dd>
+      <dt>套餐名称</dt><dd>${esc(p.name)}</dd>
+      <dt>副标题</dt><dd>${esc(p.sub)}</dd>
+      <dt>库存</dt><dd>${p.stock} 份（预警阈值 ${p.warn}）</dd>
+      <dt>状态</dt><dd>${p.status?'已上架':'已下架'}</dd>
+    </dl>
+    <div class="sub-h">内容清单（共 ${p.goods.length} 项）</div>
+    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+      <thead><tr><th>品名</th><th>规格</th><th>数量</th></tr></thead>
+      <tbody>${p.goods.map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.spec)}</td><td>×${g.qty} ${esc(g.unit)}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="sub-h">变更留痕</div>
+    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+      <thead><tr><th>版本</th><th>类型</th><th>变更内容</th><th>原因</th><th>操作人</th><th>时间</th></tr></thead>
+      <tbody>${p.changeLogs.map(l=>`<tr>
+        <td>v${l.v}</td><td>${esc(l.type)}</td><td>${esc(l.detail)}</td>
+        <td>${esc(l.reason)}</td><td>${esc(l.by)}</td><td class="nowrap">${fmt(l.at)}</td></tr>`).join('')}</tbody>
+    </table></div>
+  `, `<button class="btn sec" onclick="closeModal()">关闭</button>`);
+}
+function openChangeLogs(){
+  const all = [];
+  PACKAGES.forEach(p => p.changeLogs.forEach(l => all.push({pkg:p.name, ...l})));
+  all.sort((a,b)=>b.at-a.at);
+  openModal('套餐变更留痕（全部）', `
+    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+      <thead><tr><th>套餐</th><th>版本</th><th>类型</th><th>变更内容</th><th>原因</th><th>操作人</th><th>时间</th></tr></thead>
+      <tbody>${all.map(l=>`<tr>
+        <td>${esc(l.pkg)}</td><td>v${l.v}</td><td>${esc(l.type)}</td>
+        <td>${esc(l.detail)}</td><td>${esc(l.reason)}</td><td>${esc(l.by)}</td>
+        <td class="nowrap">${fmt(l.at)}</td></tr>`).join('')}</tbody>
+    </table></div>
+  `, `<button class="btn sec" onclick="closeModal()">关闭</button>`, true);
+}
+function editPackage(id){
+  const p = id ? PACKAGES.find(x=>x.id===id) : null;
+  openModal(p ? '调整套餐库存 · ' + esc(p.name) : '新建套餐', p ? `
+    <dl class="dl" style="margin-bottom:14px">
+      <dt>套餐编号</dt><dd class="mono">${esc(p.no)}</dd>
+      <dt>当前库存</dt><dd>${p.stock} 份（预警阈值 ${p.warn}）</dd>
+      <dt>内容清单</dt><dd>${p.goods.length} 项</dd>
+    </dl>
+    <div class="fitem" style="margin-bottom:13px">
+      <label>本次入库数量（负数表示调减）</label>
+      <input id="pkgAdd" type="number" value="0">
+    </div>
+    <div class="fitem">
+      <label>变更原因（必填，将记入留痕）</label>
+      <textarea id="pkgReason" placeholder="如：供应商补货入库"></textarea>
+    </div>` : `
+    <div class="frow">
+      <div class="fitem"><label>套餐编号</label><input id="pkgNo" placeholder="如 PKE2026"></div>
+      <div class="fitem"><label>套餐名称</label><input id="pkgName" placeholder="如 温馨家庭套餐 E"></div>
+    </div>
+    <div class="frow">
+      <div class="fitem"><label>副标题</label><input id="pkgSub" placeholder="如 米面粮油 · 家庭日常必备"></div>
+      <div class="fitem"><label>初始库存</label><input id="pkgStock" type="number" value="0"></div>
+      <div class="fitem"><label>预警阈值</label><input id="pkgWarn" type="number" value="100"></div>
+    </div>
+    <div class="fitem">
+      <label>变更原因（必填，将记入留痕）</label>
+      <textarea id="pkgReason" placeholder="如：新增套餐配置"></textarea>
+    </div>
+    <div class="notice" style="margin-top:14px">
+      新建套餐默认不含货品明细，创建后可在后台按「调整」方式补齐内容清单。
+    </div>`,
+  `<button class="btn sec" onclick="closeModal()">取消</button>
+   ${p ? `<button class="btn" id="pkgBtn" onclick="applyStock(${p.id})">确认调整</button>`
+       : '<button class="btn" id="pkgBtn" onclick="createPackage()">确认创建</button>'}`);
+}
+
+/* 套餐内容按招标要求不可私自更改，因此任何库存/状态变更都必须带变更原因 */
+function packagePayload(p, overrides){
+  return Object.assign({
+    id: p.id, no: p.no, name: p.name, sub: p.sub, price: p.price,
+    stock: p.stock, warn: p.warn, sort: p.sort, status: p.status,
+    goods: (p.goods || []).map(g=>({name:g.name, spec:g.spec, qty:g.qty, unit:g.unit}))
+  }, overrides || {});
+}
+async function applyStock(id){
+  const p = PACKAGES.find(x=>x.id===id);
+  if(!p) return;
+  const add = Number(document.getElementById('pkgAdd').value || 0);
+  const reason = (document.getElementById('pkgReason').value || '').trim();
+  if(!reason){ toast('请填写变更原因，该字段为必填'); return; }
+  if(!add){ toast('请填写本次入库数量'); return; }
+  if(p.stock + add < 0){ toast('调整后库存不能为负数'); return; }
+  const btn = document.getElementById('pkgBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '提交中…'; }
+  try {
+    await API.post('/admin/packages', packagePayload(p, {stock: p.stock + add, changeReason: reason}));
+    closeModal();
+    await reload();
+    toast('库存已调整并留痕：' + p.stock + ' → ' + (p.stock + add));
+  } catch(e) {
+    toast('调整失败：' + e.message);
+    if(btn){ btn.disabled = false; btn.textContent = '确认调整'; }
+  }
+}
+async function createPackage(){
+  const name = (document.getElementById('pkgName').value || '').trim();
+  const reason = (document.getElementById('pkgReason').value || '').trim();
+  if(!name){ toast('请填写套餐名称'); return; }
+  if(!reason){ toast('请填写变更原因，该字段为必填'); return; }
+  const btn = document.getElementById('pkgBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '提交中…'; }
+  try {
+    await API.post('/admin/packages', {
+      no: (document.getElementById('pkgNo').value || '').trim(),
+      name: name,
+      sub: (document.getElementById('pkgSub').value || '').trim(),
+      stock: Number(document.getElementById('pkgStock').value || 0),
+      warn: Number(document.getElementById('pkgWarn').value || 100),
+      status: 1,
+      changeReason: reason,
+      goods: []
+    });
+    closeModal();
+    await reload();
+    toast('套餐已创建');
+  } catch(e) {
+    toast('创建失败：' + e.message);
+    if(btn){ btn.disabled = false; btn.textContent = '确认创建'; }
+  }
+}
+async function togglePackage(id){
+  const p = PACKAGES.find(x=>x.id===id);
+  if(!p) return;
+  const going = p.status ? '下架' : '上架';
+  const reason = prompt('请填写' + going + '原因（将记入留痕）：',
+    going === '下架' ? '库存售罄，暂停展示' : '补货完成，恢复展示');
+  if(reason === null) return;
+  try {
+    await API.post('/admin/packages', packagePayload(p, {
+      status: p.status ? 0 : 1,
+      changeReason: reason || '未填写'
+    }));
+    await reload();
+    toast('套餐已' + going);
+  } catch(e) {
+    toast(going + '失败：' + e.message);
+  }
+}
+
+
+/* =========================================================
+   页面：订单汇总
+   ========================================================= */
+function pageOrders(){
+  const f = F.order;
+  let list = ORDERS.slice();
+  if(f.kw) list = list.filter(o => (o.orderNo+o.granteeName+o.empNo+o.phone+o.detail).includes(f.kw));
+  if(f.status !== '') list = list.filter(o => String(o.status) === f.status);
+  if(f.org) list = list.filter(o => o.org === f.org);
+  if(f.pkg) list = list.filter(o => String(o.packageId) === f.pkg);
+  if(f.sla) list = list.filter(o => o.status===0 && String(slaInfo(o).key) === f.sla);
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>订单汇总</h2>
+      <p>共 ${ORDERS.length} 笔订单 · 当前筛选 ${list.length} 笔</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="exportOrders()">导出订单</button>
+      <button class="btn" onclick="go('ship')">去发货</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input class="search" placeholder="搜索订单号 / 姓名 / 工号 / 手机号 / 地址" value="${esc(f.kw)}"
+      oninput="setFilter('order.kw', this.value, this)">
+    <select onchange="F.order.status=this.value;render()">
+      <option value="">全部状态</option>
+      ${Object.entries(STATUS_META).map(([k,v])=>`<option value="${k}" ${f.status===k?'selected':''}>${v.label}</option>`).join('')}
+    </select>
+    <select onchange="F.order.org=this.value;render()">
+      <option value="">全部单位</option>
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+    </select>
+    <select onchange="F.order.pkg=this.value;render()">
+      <option value="">全部套餐</option>
+      ${PACKAGES.map(p=>`<option value="${p.id}" ${f.pkg===String(p.id)?'selected':''}>${p.name}</option>`).join('')}
+    </select>
+    <select onchange="F.order.sla=this.value;render()">
+      <option value="">全部时限状态</option>
+      <option value="0" ${f.sla==='0'?'selected':''}>安全</option>
+      <option value="1" ${f.sla==='1'?'selected':''}>预警</option>
+      <option value="2" ${f.sla==='2'?'selected':''}>紧急</option>
+      <option value="3" ${f.sla==='3'?'selected':''}>超时</option>
+    </select>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th class="nowrap">订单号</th><th class="nowrap">领取人</th><th class="nowrap">所属单位</th>
+        <th>套餐</th><th class="nowrap">状态</th><th class="nowrap">发货时限</th>
+        <th class="nowrap">提交时间</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">没有符合条件的订单</div></td></tr>` : ''}
+        ${list.map(o=>`<tr>
+          <td class="mono nowrap">${o.orderNo}</td>
+          <td class="nowrap">${esc(o.granteeName)}<span style="color:var(--text-3);font-size:11.5px;margin-left:5px">${o.empNo}</span></td>
+          <td class="nowrap">${esc(o.org)}</td>
+          <td class="nowrap">${esc(o.packageName)} ×${o.quantity}</td>
+          <td>${stTag(o)}</td>
+          <td class="nowrap">${o.status===0?`<span class="tag ${slaInfo(o).cls}">${remainText(o)}</span>`:'—'}</td>
+          <td class="nowrap">${fmt(o.createTime)}</td>
+          <td class="nowrap"><span class="link" onclick="orderDetail(${o.id})">详情</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function orderDetail(id){
+  const o = ORDERS.find(x=>x.id===id);
+  const s = slaInfo(o);
+  openModal('订单详情 · ' + o.orderNo, `
+    <dl class="dl">
+      <dt>订单状态</dt><dd>${stTag(o)} ${o.status===0?`<span class="tag ${s.cls}" style="margin-left:6px">${remainText(o)}</span>`:''}</dd>
+      <dt>订单号</dt><dd class="mono">${o.orderNo}</dd>
+      <dt>领取人</dt><dd>${esc(o.granteeName)} · 工号 ${o.empNo}</dd>
+      <dt>所属单位</dt><dd>${esc(o.org)} / ${esc(o.dept)}</dd>
+      <dt>套餐</dt><dd>${esc(o.packageName)} ×${o.quantity} 份</dd>
+      <dt>收货人</dt><dd>${esc(o.receiver)}　${o.phone}</dd>
+      <dt>收货地址</dt><dd>${esc(o.province+o.city+o.district+o.detail)}</dd>
+      <dt>代收点授权</dt><dd>${o.allowStation?'<span class="tag t-warn">允许投放代收点</span>':'<span class="tag t-ok">不允许放代收点</span>'}</dd>
+      ${o.expectCarrierName?`<dt>期望承运商</dt><dd>${esc(o.expectCarrierName)}${o.carrierName && o.carrierCode!==o.expectCarrier?` <span style="color:var(--text-3);font-size:11.5px">（实际 ${esc(o.carrierName)}）</span>`:''}</dd>`:''}
+      <dt>配送备注</dt><dd>${o.remark?esc(o.remark):'—'}</dd>
+      <dt>提交时间</dt><dd>${fmt(o.createTime)}</dd>
+      <dt>承诺发货</dt><dd>${fmt(o.slaDeadline)} 前（提交后 10 日内）</dd>
+      <dt>实际发货</dt><dd>${o.shipTime ? fmt(o.shipTime) + `　<span class="tag ${(o.shipTime-o.createTime)<=10*DAY?'t-ok':'t-danger'}">用时 ${((o.shipTime-o.createTime)/DAY).toFixed(1)} 天</span>` : '—'}</dd>
+      ${o.carrierName?`<dt>承运商</dt><dd>${esc(o.carrierName)}</dd><dt>运单号</dt><dd class="mono">${o.waybillNo}</dd>`:''}
+      ${o.signTime?`<dt>签收时间</dt><dd>${fmt(o.signTime)}</dd>`:''}
+      ${o.cancelReason?`<dt>取消原因</dt><dd>${esc(o.cancelReason)}</dd>`:''}
+      ${o.delayReason?`<dt>延期原因</dt><dd>${esc(o.delayReason)}</dd>`:''}
+    </dl>
+    ${o.traces.length?`
+      <div class="sub-h">物流轨迹（${esc(o.carrierName)} ${o.waybillNo}）</div>
+      <div class="tl">${o.traces.map(t=>`<div class="n"><div class="tx">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}</div>`:''}
+  `, `<button class="btn sec" onclick="closeModal()">关闭</button>
+      ${o.status===0?`<button class="btn" onclick="closeModal();shipOne(${o.id})">立即发货</button>`:''}`);
+}
+async function exportOrders(){
+  const f = F.order, qs = [];
+  if(f.kw) qs.push('keyword=' + encodeURIComponent(f.kw));
+  if(f.status !== '') qs.push('status=' + f.status);
+  if(f.org) qs.push('org=' + encodeURIComponent(f.org));
+  if(f.sla !== '') qs.push('slaLevel=' + f.sla);
+  try {
+    toast('已导出 ' + await API.download('/admin/orders/export' + (qs.length ? '?' + qs.join('&') : ''),
+      '配送订单明细.xlsx'));
+  } catch(e) { toast('导出失败：' + e.message); }
+}
+
+/* =========================================================
+   页面：发货管理
+   ========================================================= */
+function pageShip(){
+  const f = F.ship;
+  let list = ORDERS.filter(o=>o.status===0);
+  if(f.kw) list = list.filter(o => (o.orderNo+o.granteeName+o.empNo+o.detail).includes(f.kw));
+  if(f.org) list = list.filter(o => o.org === f.org);
+  const overCount = list.filter(o=>slaInfo(o).key===3).length;
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>发货管理</h2>
+      <p>待发货 ${list.length} 笔${overCount?` · <span style="color:var(--danger)">其中 ${overCount} 笔已超出 10 日承诺</span>`:''}</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="importWaybills()">批量导入运单号</button>
+      <button class="btn sec" onclick="exportPending()">导出待发货清单</button>
+      <button class="btn" onclick="batchShip()">批量发货（已选 ${orderSel.size}）</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    发货时系统会自动将 <b>「上楼入户」</b> 标记与 <b>代收点授权结果</b> 同步至承运方；未授权代收点的订单，需确保快递送达收货人门牌地址。
+  </div>
+
+  <div class="filters">
+    <input class="search" placeholder="搜索订单号 / 姓名 / 工号 / 地址" value="${esc(f.kw)}"
+      oninput="setFilter('ship.kw', this.value, this)">
+    <select onchange="F.ship.org=this.value;render()">
+      <option value="">全部单位</option>
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+    </select>
+    <div class="sp"></div>
+    <button class="btn sm sec" onclick="selectAllVisible()">全选当前结果</button>
+    <button class="btn sm sec" onclick="orderSel.clear();render()">清空选择</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:38px"><input type="checkbox" class="chk" ${list.length&&list.every(o=>orderSel.has(o.id))?'checked':''} onchange="toggleAll(this.checked)"></th>
+        <th class="nowrap">订单号</th><th class="nowrap">领取人</th><th>收货地址</th>
+        <th class="nowrap">代收点</th><th class="nowrap">发货时限</th><th class="nowrap">提交时间</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">暂无待发货订单</div></td></tr>` : ''}
+        ${list.sort((a,b)=>a.slaDeadline-b.slaDeadline).map(o=>{
+          const s = slaInfo(o);
+          return `<tr>
+            <td><input type="checkbox" class="chk" ${orderSel.has(o.id)?'checked':''} onchange="toggleSel(${o.id},this.checked)"></td>
+            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="nowrap">${esc(o.granteeName)}<div style="font-size:11.5px;color:var(--text-3)">${esc(o.org)}</div></td>
+            <td style="max-width:300px">
+              <div style="font-size:12.5px">${esc(o.receiver)}　<span class="mono">${maskPhone(o.phone)}</span></div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${esc(o.province+o.city+o.district+o.detail)}</div>
+            </td>
+            <td class="nowrap">${o.allowStation?'<span class="tag t-warn">已授权</span>':'<span class="tag t-ok">禁止投放</span>'}</td>
+            <td class="nowrap"><span class="tag ${s.cls}">${remainText(o)}</span></td>
+            <td class="nowrap">${fmt(o.createTime)}</td>
+            <td class="nowrap">
+              <span class="link" onclick="shipOne(${o.id})">发货</span>
+              <span class="link" style="margin-left:9px" onclick="orderDetail(${o.id})">详情</span>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function toggleSel(id, on){ on ? orderSel.add(id) : orderSel.delete(id); render(); }
+function toggleAll(on){
+  const f = F.ship;
+  let list = ORDERS.filter(o=>o.status===0);
+  if(f.kw) list = list.filter(o => (o.orderNo+o.granteeName+o.empNo+o.detail).includes(f.kw));
+  if(f.org) list = list.filter(o => o.org === f.org);
+  list.forEach(o => on ? orderSel.add(o.id) : orderSel.delete(o.id));
+  render();
+}
+function selectAllVisible(){
+  const f = F.ship;
+  let list = ORDERS.filter(o=>o.status===0);
+  if(f.kw) list = list.filter(o => (o.orderNo+o.granteeName+o.empNo+o.detail).includes(f.kw));
+  if(f.org) list = list.filter(o => o.org === f.org);
+  list.forEach(o => orderSel.add(o.id));
+  render(); toast('已选择 ' + list.length + ' 笔订单');
+}
+function shipOne(id){
+  orderSel.clear(); orderSel.add(id);
+  openShipModal();
+}
+function batchShip(){
+  if(orderSel.size === 0){ toast('请先勾选需要发货的订单'); return; }
+  openShipModal();
+}
+function openShipModal(){
+  const ids = [...orderSel];
+  const list = ids.map(id => ORDERS.find(o=>o.id===id)).filter(Boolean);
+  const overCount = list.filter(o=>slaInfo(o).key===3).length;
+  /* 预填承运商：优先取所选订单里用户选择最多的「期望承运商」 */
+  const expectCount = {};
+  list.forEach(o=>{ if(o.expectCarrier) expectCount[o.expectCarrier]=(expectCount[o.expectCarrier]||0)+1; });
+  const preset = Object.keys(expectCount).sort((a,b)=>expectCount[b]-expectCount[a])[0] || (CARRIERS[0]||{}).code;
+  const expectName = code => (CARRIERS.find(c=>c.code===code)||{}).name || code || '—';
+  openModal(`批量发货 · 已选 ${list.length} 笔`, `
+    ${overCount?`<div class="notice" style="border-left-color:var(--danger);margin-bottom:14px">所选订单中有 <b>${overCount}</b> 笔已超出 10 日发货承诺，请尽快发出。</div>`:''}
+    <div class="notice" style="margin-bottom:14px">已按用户下单时选择的「期望承运商」预填；如需改发其它物流，可在下方调整。</div>
+    <div class="frow">
+      <div class="fitem">
+        <label>承运商</label>
+        <select id="shipCarrier">${CARRIERS.map(c=>`<option value="${c.code}" ${c.code===preset?'selected':''}>${c.name}</option>`).join('')}</select>
+      </div>
+      <div class="fitem">
+        <label>发货时间</label>
+        <input id="shipTime" value="${fmt(now())}">
+      </div>
+    </div>
+    <div class="fitem" style="margin-bottom:14px">
+      <label>运单号（每行一个，与下方订单顺序一一对应；留空则由系统模拟生成）</label>
+      <textarea id="shipWaybills" style="min-height:76px" placeholder="SF1234567890123&#10;SF1234567890124"></textarea>
+    </div>
+    <div class="sub-h">待发货订单</div>
+    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+      <thead><tr><th>订单号</th><th>领取人</th><th>地址</th><th>代收点</th><th>期望承运商</th><th>时限</th></tr></thead>
+      <tbody>${list.map(o=>`<tr>
+        <td class="mono">${o.orderNo}</td><td>${esc(o.granteeName)}</td>
+        <td style="font-size:11.5px;color:var(--text-2)">${esc(o.province+o.city+o.district+o.detail).slice(0,34)}</td>
+        <td>${o.allowStation?'<span class="tag t-warn">已授权</span>':'<span class="tag t-ok">禁止投放</span>'}</td>
+        <td class="nowrap">${o.expectCarrier?`<span class="tag ${o.expectCarrier===preset?'t-brand':'t-gray'}">${esc(expectName(o.expectCarrier))}</span>`:'—'}</td>
+        <td><span class="tag ${slaInfo(o).cls}">${remainText(o)}</span></td></tr>`).join('')}</tbody>
+    </table></div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button class="btn" id="shipBtn" onclick="doShip()">确认发货</button>`, true);
+}
+async function doShip(){
+  const carrierCode = document.getElementById('shipCarrier').value;
+  const rawNo = (document.getElementById('shipWaybills').value || '')
+    .split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const ids = [...orderSel];
+  if(!ids.length){ toast('请先勾选需要发货的订单'); return; }
+  const btn = document.getElementById('shipBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '发货中…'; }
+  try {
+    let r;
+    if(rawNo.length){
+      /* 手工填写了运单号：逐单提交，保证运单号与订单一一对应 */
+      let success = 0, fails = [];
+      for(let i = 0; i < ids.length; i++){
+        if(!rawNo[i]){ fails.push('第 ' + (i + 1) + ' 笔未填写运单号，已跳过'); continue; }
+        try {
+          const one = await API.post('/admin/orders/ship',
+            {orderIds:[ids[i]], carrier: carrierCode, waybillNo: rawNo[i]});
+          success += (one && one.successCount) || 0;
+          ((one && one.failList) || []).forEach(x=>fails.push(x));
+        } catch(e) { fails.push(e.message); }
+      }
+      r = {successCount: success, failCount: fails.length, failList: fails};
+    } else {
+      /* 未填运单号：整批提交，由后端按承运商规则生成运单号 */
+      r = await API.post('/admin/orders/ship', {orderIds: ids, carrier: carrierCode});
+    }
+    orderSel.clear();
+    closeModal();
+    await reload();
+    const failCount = (r && r.failCount) || 0;
+    toast('发货完成：成功 ' + ((r && r.successCount) || 0) + ' 笔' + (failCount ? '，失败 ' + failCount + ' 笔' : ''));
+    if(failCount){
+      const fails = (r && r.failList) || [];
+      if(fails.length) openModal('部分订单发货失败', `
+        <div class="notice" style="border-left-color:var(--danger);margin-bottom:12px">
+          以下订单未能发货，请核对后重试。已成功的订单不受影响。
+        </div>
+        <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
+          <thead><tr><th>原因</th></tr></thead>
+          <tbody>${fails.map(x=>`<tr><td>${esc(x)}</td></tr>`).join('')}</tbody>
+        </table></div>`, '<button class="btn sec" onclick="closeModal()">知道了</button>');
+    }
+  } catch(e) {
+    toast('发货失败：' + e.message);
+    if(btn){ btn.disabled = false; btn.textContent = '确认发货'; }
+  }
+}
+
+
+async function exportPending(){
+  const qs = F.ship.org ? '?org=' + encodeURIComponent(F.ship.org) : '';
+  try {
+    toast('已导出 ' + await API.download('/admin/orders/export-pending' + qs, '待发货清单.xlsx'));
+  } catch(e) { toast('导出失败：' + e.message); }
+}
+function importWaybills(){
+  openModal('批量导入运单号', `
+    <div class="notice" style="margin-bottom:14px">
+      支持 <b>.xlsx / .xls</b>，列顺序：<b>订单号、承运商编码、运单号</b>。<br>
+      承运商编码可选值：${CARRIERS.map(c=>c.code).join(' / ')}。导入成功后订单自动置为「已发货」。
+    </div>
+    <div class="fitem" style="margin-bottom:14px">
+      <label>选择文件</label>
+      <input type="file" id="wbFile" accept=".xlsx,.xls">
+    </div>
+    <div style="margin-bottom:6px">
+      <button class="btn sec sm" onclick="downloadWaybillTemplate()">下载导入模板</button>
+    </div>
+    <div id="wbResult"></div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button class="btn" onclick="doImportWaybills()">开始导入</button>`, true);
+}
+async function downloadWaybillTemplate(){
+  try {
+    toast('已下载 ' + await API.download('/admin/orders/waybill-template', '运单号批量导入模板.xlsx'));
+  } catch(e) { toast('下载失败：' + e.message); }
+}
+async function doImportWaybills(){
+  const input = document.getElementById('wbFile');
+  const f = input && input.files && input.files[0];
+  if(!f){ toast('请先选择运单号文件'); return; }
+  const box = document.getElementById('wbResult');
+  box.innerHTML = '<div class="hint" style="padding:14px 0;color:var(--text-3)">正在导入，请稍候…</div>';
+  try {
+    const r = await API.upload('/admin/orders/import-waybill', f);
+    const fails = r.failList || [];
+    box.innerHTML = `
+      <div class="sub-h">导入结果</div>
+      <div class="kv" style="gap:16px;margin-bottom:10px">
+        <span>文件共 <b>${r.total||0}</b> 行</span>
+        <span>成功发货 <b style="color:var(--ok)">${r.successCount||0}</b> 笔</span>
+        <span>失败 <b style="color:var(--danger)">${r.failCount||0}</b> 笔</span>
+      </div>
+      ${fails.length ? `<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table class="tbl" style="min-width:auto">
+        <thead><tr><th>失败明细</th></tr></thead>
+        <tbody>${fails.map(x=>`<tr><td>${esc(x)}</td></tr>`).join('')}</tbody>
+      </table></div>` : '<div class="tag t-ok">全部成功</div>'}
+    `;
+    await reload();
+    toast('运单号导入完成：成功 ' + (r.successCount||0) + ' 笔');
+  } catch(e) {
+    box.innerHTML = '<div class="notice" style="border-left-color:var(--danger)">' + esc(e.message) + '</div>';
+    toast('导入失败：' + e.message);
+  }
+}
+
+
+/* =========================================================
+   页面：物流跟踪
+   ========================================================= */
+function pageLogistics(){
+  const f = F.logistics;
+  let list = ORDERS.filter(o=>o.status>=10 && o.status!==50);
+  if(f.kw) list = list.filter(o => (o.orderNo+o.waybillNo+o.granteeName).includes(f.kw));
+  if(f.status !== '') list = list.filter(o => String(o.status) === f.status);
+  const abnormal = ORDERS.filter(o=>o.status===60).length;
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>物流跟踪</h2>
+      <p>在途 ${list.length} 单 · 异常件 ${abnormal} 单</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="exportLogistics()">导出物流台账</button>
+    </div>
+  </div>
+
+  ${abnormal?`<div class="notice" style="border-left-color:var(--danger)">
+    <b>异常件提醒：</b>当前有 <b>${abnormal}</b> 单派送异常（收件人未接通 / 拒收 / 地址问题），请及时跟进，避免产生投诉。
+  </div>`:''}
+
+  <div class="filters">
+    <input class="search" placeholder="搜索订单号 / 运单号 / 领取人" value="${esc(f.kw)}"
+      oninput="setFilter('logistics.kw', this.value, this)">
+    <select onchange="F.logistics.status=this.value;render()">
+      <option value="">全部状态</option>
+      <option value="10" ${f.status==='10'?'selected':''}>已发货</option>
+      <option value="30" ${f.status==='30'?'selected':''}>派送中</option>
+      <option value="40" ${f.status==='40'?'selected':''}>已签收</option>
+      <option value="60" ${f.status==='60'?'selected':''}>配送异常</option>
+    </select>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th class="nowrap">订单号</th><th class="nowrap">领取人</th><th class="nowrap">承运商</th>
+        <th class="nowrap">运单号</th><th class="nowrap">发货时间</th><th class="nowrap">发货用时</th>
+        <th class="nowrap">当前状态</th><th>最新轨迹</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${list.length === 0 ? `<tr><td colspan="9"><div class="empty">暂无在途运单</div></td></tr>` : ''}
+        ${list.map(o=>{
+          const dur = o.shipTime ? (o.shipTime-o.createTime)/DAY : 0;
+          const latest = o.traces[0];
+          return `<tr>
+            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="nowrap">${esc(o.granteeName)}</td>
+            <td class="nowrap">${esc(o.carrierName)}</td>
+            <td class="mono nowrap">${o.waybillNo}</td>
+            <td class="nowrap">${fmt(o.shipTime)}</td>
+            <td class="nowrap"><span class="tag ${dur<=10?'t-ok':'t-danger'}">${dur.toFixed(1)} 天</span></td>
+            <td class="nowrap">${stTag(o)}${o.allowStation?'':' <span class="tag t-ok">禁投代收点</span>'}</td>
+            <td style="max-width:290px;font-size:11.5px;color:var(--text-2)">${latest?esc(latest.desc).slice(0,32)+'…':'—'}</td>
+            <td class="nowrap"><span class="link" onclick="trackDetail(${o.id})">轨迹</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function trackDetail(id){
+  const o = ORDERS.find(x=>x.id===id);
+  openModal('物流轨迹 · ' + o.orderNo, `
+    <dl class="dl" style="margin-bottom:4px">
+      <dt>运单号</dt><dd class="mono">${o.carrierName} ${o.waybillNo}</dd>
+      <dt>收货人</dt><dd>${esc(o.receiver)}　${o.phone}</dd>
+      <dt>收货地址</dt><dd>${esc(o.province+o.city+o.district+o.detail)}</dd>
+      <dt>配送要求</dt><dd><span class="tag t-ok">上楼入户</span> ${o.allowStation?'<span class="tag t-warn">已授权放代收点</span>':'<span class="tag t-ok">禁止放代收点</span>'}</dd>
+    </dl>
+    <div class="sub-h">轨迹明细</div>
+    <div class="tl">${o.traces.map(t=>`<div class="n"><div class="tx">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}</div>
+  `, `<button class="btn sec" onclick="closeModal()">关闭</button>
+      <button class="btn" onclick="syncTracks(${o.id})">同步最新轨迹</button>`);
+}
+/* 重新拉取该单轨迹并原地刷新弹窗 */
+async function syncTracks(id){
+  try {
+    const list = await API.get('/admin/orders/' + id + '/tracks');
+    const o = ORDERS.find(x=>x.id===id);
+    if(o) o.traces = (list || []).map(t=>({desc:t.description, time:ts(t.trackTime)}));
+    trackDetail(id);
+    toast('轨迹已刷新，共 ' + ((list || []).length) + ' 条');
+  } catch(e) {
+    toast('刷新失败：' + e.message);
+  }
+}
+function exportLogistics(){
+  const list = ORDERS.filter(o=>o.status>=10);
+  exportCSV('物流台账_' + fmtD(now()) + '.csv',
+    ['订单号','领取人','所属单位','承运商','运单号','发货时间','送达时间','发货用时(天)','状态','运单最新轨迹','代收点授权'],
+    list.map(o=>[o.orderNo,o.granteeName,o.org,o.carrierName||'',o.waybillNo||'',fmt(o.shipTime),fmt(o.signTime),
+      o.shipTime?((o.shipTime-o.createTime)/DAY).toFixed(1):'',STATUS_META[o.status].label,
+      o.traces[0]?o.traces[0].desc:'', o.allowStation?'允许':'不允许']));
+}
+
+/* =========================================================
+   页面：SLA 监控
+   ========================================================= */
+/* SLA 定时预警记录：后端每日自动扫描落库（SlaAlertJob），此处只读展示 + 支持手动触发 */
+let SLA_ALERTS = [];
+let slaAlertLoading = false;
+async function loadSlaAlerts(){
+  if(slaAlertLoading) return;
+  slaAlertLoading = true;
+  try { SLA_ALERTS = (await API.get('/admin/sla/alerts?days=14')) || []; }
+  catch(e){ SLA_ALERTS = []; }
+  slaAlertLoading = false;
+  if(page === 'sla') render();
+}
+async function scanSla(){
+  try {
+    const r = await API.post('/admin/sla/scan?notify=false');
+    await loadSlaAlerts();
+    toast(`扫描完成：已超期 ${r.overdue} 笔，24 小时内到期 ${r.dueIn24h} 笔，72 小时内 ${r.dueIn72h} 笔`);
+  } catch(e) { toast('扫描失败：' + e.message); }
+}
+const SLA_ALERT_LEVEL = {
+  3:{t:'已超期',    c:'t-danger'},
+  2:{t:'24 小时内', c:'t-danger'},
+  1:{t:'72 小时内', c:'t-warn'}
+};
+
+function pageSla(){
+  if(!SLA_ALERTS.length && !slaAlertLoading) loadSlaAlerts();
+  const pending = ORDERS.filter(o=>o.status===0);
+  const buckets = {3:[],2:[],1:[],0:[]};
+  pending.forEach(o=>buckets[slaInfo(o).key].push(o));
+  Object.keys(buckets).forEach(k=>buckets[k].sort((a,b)=>a.slaDeadline-b.slaDeadline));
+
+  // 已发货订单的履约统计
+  const shipped = ORDERS.filter(o=>o.shipTime);
+  const within = shipped.filter(o=>(o.shipTime-o.createTime) <= 10*DAY).length;
+  const avg = shipped.length ? shipped.reduce((s,o)=>s+(o.shipTime-o.createTime)/DAY,0)/shipped.length : 0;
+
+  const cur = F.sla.filter;
+  const list = cur === 'all' ? pending.sort((a,b)=>a.slaDeadline-b.slaDeadline) : buckets[cur] || [];
+
+  const Card = (key, title, desc, color) => `
+    <div class="stat" style="border-left:3px solid ${color};cursor:pointer;${cur===String(key)?'background:#FAFBFC':''}"
+      onclick="F.sla.filter='${cur===String(key)?'all':key}';render()">
+      <div class="lb">${title}</div>
+      <div class="vl" style="color:${color}">${buckets[key].length}<small>笔</small></div>
+      <div class="ft">${desc}</div>
+    </div>`;
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>SLA 监控 · 10 日发货承诺</h2>
+      <p>按招标要求「收到配送信息后 10 日内发货」，系统自动倒计时并分级预警</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="F.sla.filter='all';render()">显示全部待发货</button>
+      <button class="btn sec" onclick="scanSla()">立即扫描预警</button>
+      <button class="btn sec" onclick="exportSla()">导出履约报表</button>
+    </div>
+  </div>
+
+  ${SLA_ALERTS.length ? `
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-hd">
+      <h3>定时预警记录</h3>
+      <span style="font-size:12px;color:var(--text-3)">每日 09:30 自动扫描；出现超期或次日到期订单时短信通知库管</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th class="nowrap">日期</th><th class="nowrap">预警档位</th><th class="nowrap">订单数</th>
+          <th>订单号</th><th class="nowrap">短信通知</th>
+        </tr></thead>
+        <tbody>
+          ${SLA_ALERTS.map(a=>`<tr>
+            <td class="nowrap">${esc(a.alertDate)}</td>
+            <td class="nowrap"><span class="tag ${(SLA_ALERT_LEVEL[a.level]||{}).c||'t-gray'}">${(SLA_ALERT_LEVEL[a.level]||{}).t||a.level}</span></td>
+            <td class="nowrap">${a.orderCount}</td>
+            <td style="font-size:12px;color:var(--text-2);max-width:420px">${esc(a.orderNos||'')}</td>
+            <td class="nowrap">${a.notified?'<span class="tag t-ok">已通知</span>':'<span class="tag t-gray">未通知</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <div class="grid g4" style="margin-bottom:16px">
+    ${Card(0,'安全（> 3 天）','时间充裕，正常排产','#15A05A')}
+    ${Card(1,'预警（≤ 3 天）','需列入近期发货计划','#D98A18')}
+    ${Card(2,'紧急（≤ 1 天）','需当日安排发货','#D64040')}
+    ${Card(3,'已超时','已违反 10 日承诺，须登记原因','#A62B24')}
+  </div>
+
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="stat">
+      <div class="lb">履约率（10 日内发货）</div>
+      <div class="vl">${shipped.length ? (within/shipped.length*100).toFixed(1) : '0.0'}<small>%</small></div>
+      <div class="ft">已发货 ${shipped.length} 笔，按期 ${within} 笔</div>
+    </div>
+    <div class="stat">
+      <div class="lb">平均发货用时</div>
+      <div class="vl">${avg.toFixed(1)}<small>天</small></div>
+      <div class="ft">承诺上限 10 天</div>
+    </div>
+    <div class="stat">
+      <div class="lb">待发货总量</div>
+      <div class="vl">${pending.length}<small>笔</small></div>
+      <div class="ft">其中 ${buckets[2].length + buckets[3].length} 笔需优先处理</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h3>${cur === 'all' ? '全部待发货订单（按截止时间排序）' : (SLA_META[Number(cur)].label + '订单')}</h3>
+      <span class="hint">共 ${list.length} 笔</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th class="nowrap">订单号</th><th class="nowrap">领取人</th><th class="nowrap">所属单位</th>
+          <th class="nowrap">套餐</th><th class="nowrap">提交时间</th><th class="nowrap">承诺截止</th>
+          <th class="nowrap">剩余 / 超时</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+          ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">该分组下没有订单</div></td></tr>` : ''}
+          ${list.map(o=>{
+            const s = slaInfo(o);
+            return `<tr>
+              <td class="mono nowrap">${o.orderNo}</td>
+              <td class="nowrap">${esc(o.granteeName)}</td>
+              <td class="nowrap">${esc(o.org)}</td>
+              <td class="nowrap">${esc(o.packageName)}</td>
+              <td class="nowrap">${fmt(o.createTime)}</td>
+              <td class="nowrap">${fmt(o.slaDeadline)}</td>
+              <td class="nowrap"><span class="tag ${s.cls}">${remainText(o)}</span></td>
+              <td class="nowrap">
+                <span class="link" onclick="shipOne(${o.id})">立即发货</span>
+                ${s.key===3?`<span class="link danger" style="margin-left:9px" onclick="delayReason(${o.id})">登记原因</span>`:''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function delayReason(id){
+  const o = ORDERS.find(x=>x.id===id);
+  openModal('登记超时原因 · ' + o.orderNo, `
+    <div class="notice" style="border-left-color:var(--danger);margin-bottom:14px">
+      该订单已超出 10 日发货承诺 <b>${Math.floor((now()-o.slaDeadline)/DAY)} 天</b>。请登记原因与预计发货时间，记录将作为履约说明材料留存。
+    </div>
+    <div class="fitem" style="margin-bottom:13px">
+      <label>超时原因</label>
+      <select id="drType">
+        <option>供应商备货延迟</option>
+        <option>收货地址待确认，联系不上收货人</option>
+        <option>该地区物流资源紧张</option>
+        <option>套餐库存临时不足</option>
+        <option>其他</option>
+      </select>
+    </div>
+    <div class="fitem" style="margin-bottom:13px">
+      <label>补充说明</label>
+      <textarea id="drText" placeholder="请填写具体情况与补救措施"></textarea>
+    </div>
+    <div class="fitem">
+      <label>预计发货时间</label>
+      <input id="drEta" value="${fmt(now()+2*DAY)}">
+    </div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button class="btn" onclick="saveDelayReason(${o.id})">登记并留存</button>`);
+}
+async function saveDelayReason(id){
+  const type = document.getElementById('drType').value;
+  const note = (document.getElementById('drText').value || '').trim();
+  const eta = document.getElementById('drEta').value;
+  if(!note){ toast('请填写补充说明'); return; }
+  try {
+    await API.post('/admin/orders/' + id + '/delay-reason', {type: type, note: note, eta: eta});
+    closeModal();
+    await reload();
+    toast('已登记超时原因，作为履约说明材料留存');
+  } catch(e) {
+    toast('登记失败：' + e.message);
+  }
+}
+function exportSla(){
+  exportCSV('SLA履约报表_' + fmtD(now()) + '.csv',
+    ['订单号','领取人','所属单位','套餐','提交时间','承诺发货截止','当前状态','剩余天数','实际发货时间','实际用时(天)','是否按期','超时原因'],
+    ORDERS.map(o=>{
+      const s = slaInfo(o);
+      const dur = o.shipTime ? (o.shipTime-o.createTime)/DAY : null;
+      return [o.orderNo,o.granteeName,o.org,o.packageName,fmt(o.createTime),fmt(o.slaDeadline),
+        o.status===0?SLA_META[s.key].label:STATUS_META[o.status].label,
+        o.status===0?s.remainDays.toFixed(1):'', fmt(o.shipTime), dur?dur.toFixed(1):'',
+        dur? (dur<=10?'是':'否') : '', o.delayReason||''];
+    }));
+}
+
+/* =========================================================
+   页面：报表中心
+   ========================================================= */
+function buildReport(tab){
+  const valid = ORDERS.filter(o=>o.status!==50);
+  if(tab === 'org'){
+    const m = {};
+    GRANTEES.forEach(g=>{
+      m[g.org] = m[g.org] || {org:g.org, total:0, submitted:0, pending:0, shipped:0, signed:0};
+      m[g.org].total++;
+      if(g.pickStatus>0) m[g.org].submitted++;
+    });
+    valid.forEach(o=>{
+      const r = m[o.org]; if(!r) return;
+      if(o.status===0) r.pending++;
+      else if(o.status===40) r.signed++; else r.shipped++;
+    });
+    return {
+      headers:['所属单位','应领人数','已提交','未提交','提交率','待发货','已发货','已签收'],
+      rows:Object.values(m).map(r=>[r.org, r.total, r.submitted, r.total-r.submitted,
+        (r.submitted/r.total*100).toFixed(1)+'%', r.pending, r.shipped, r.signed])
+    };
+  }
+  if(tab === 'pkg'){
+    return {
+      headers:['套餐编号','套餐名称','内容清单项数','已选份数','占比','当前库存','状态'],
+      rows:PACKAGES.map(p=>{
+        const cnt = valid.filter(o=>o.packageId===p.id).length;
+        return [p.no, p.name, p.goods.length, cnt, (cnt/Math.max(1,valid.length)*100).toFixed(1)+'%', p.stock, p.status?'已上架':'已下架'];
+      })
+    };
+  }
+  if(tab === 'area'){
+    const m = {};
+    valid.forEach(o=>{
+      m[o.province] = m[o.province] || {p:o.province, cnt:0, cities:new Set(), pending:0, shipped:0};
+      m[o.province].cnt++;
+      m[o.province].cities.add(o.city);
+      if(o.status===0) m[o.province].pending++; else m[o.province].shipped++;
+    });
+    return {
+      headers:['省份','覆盖城市数','订单数','待发货','已发货'],
+      rows:Object.values(m).sort((a,b)=>b.cnt-a.cnt).map(r=>[r.p, r.cities.size, r.cnt, r.pending, r.shipped])
+    };
+  }
+  // 发放明细
+  return {
+    headers:['订单号','工号','领取人','所属单位','部门','套餐','数量','收货人','手机号','收货地址','代收点授权','状态','提交时间','发货时间','承运商','运单号','签收时间'],
+    rows:ORDERS.map(o=>[o.orderNo,o.empNo,o.granteeName,o.org,o.dept,o.packageName,o.quantity,o.receiver,o.phone,
+      o.province+o.city+o.district+o.detail, o.allowStation?'允许':'不允许', STATUS_META[o.status].label,
+      fmt(o.createTime),fmt(o.shipTime),o.carrierName||'',o.waybillNo||'',fmt(o.signTime)])
+  };
+}
+function pageReport(){
+  const tab = F.report.tab;
+  const rep = buildReport(tab);
+  const titles = {org:'按单位汇总', pkg:'按套餐汇总', area:'按地区汇总', detail:'发放明细表'};
+
+  return `
+  <div class="phead">
+    <div>
+      <h2>报表中心</h2>
+      <p>支持一键导出，用于向甲方汇报发放进度与配送履约情况</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="exportSla()">SLA 履约报表</button>
+      <button class="btn" onclick="exportReport()">导出当前报表</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    ${Object.keys(titles).map(k=>`<div class="tb ${tab===k?'on':''}" onclick="F.report.tab='${k}';render()">${titles[k]}</div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h3>${titles[tab]}</h3>
+      <span class="hint">共 ${rep.rows.length} 行 · 导出为 CSV（Excel 可直接打开）</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>${rep.headers.map(h=>`<th class="nowrap">${h}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${rep.rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?'nowrap':'num'}">${esc(c)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h3>导出说明</h3></div>
+    <div style="font-size:12.5px;color:var(--text-2);line-height:1.9">
+      · 发放明细表包含收货地址等个人信息，导出行为会记录操作人与时间，文件带水印标识。<br>
+      · SLA 履约报表可用于证明「收到配送信息后 10 日内发货」的履约情况。<br>
+      · 大数据量导出在真实环境中走异步任务，生成后提供下载链接（7 天有效）。
+    </div>
+  </div>`;
+}
+function exportReport(){
+  const rep = buildReport(F.report.tab);
+  const names = {org:'按单位汇总', pkg:'按套餐汇总', area:'按地区汇总', detail:'发放明细表'};
+  exportCSV(names[F.report.tab] + '_' + fmtD(now()) + '.csv', rep.headers, rep.rows);
+}
+
+/* =========================================================
+   页面：公告与说明
+   ========================================================= */
+
+function pageNotice(){
+  return `
+  <div class="phead">
+    <div>
+      <h2>公告与配送说明</h2>
+      <p>此处的配送说明与偏远地区说明会同步展示在小程序端，作为包邮与时效的公示依据</p>
+    </div>
+    <div class="acts"><button class="btn" onclick="editNotice(0)">新建公告</button></div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th class="nowrap">类型</th><th>标题</th><th>内容摘要</th><th class="nowrap">状态</th><th>操作</th></tr></thead>
+      <tbody>
+        ${NOTICES.map(n=>`<tr>
+          <td class="nowrap"><span class="tag ${n.type==='配送说明'?'t-brand':n.type==='偏远地区说明'?'t-warn':'t-gray'}">${n.type}</span></td>
+          <td class="nowrap">${esc(n.title)}</td>
+          <td style="color:var(--text-2);font-size:12px;max-width:520px">${esc(n.content).slice(0,80)}…</td>
+          <td class="nowrap">${n.status?'<span class="tag t-ok">已发布</span>':'<span class="tag t-gray">草稿</span>'}</td>
+          <td class="nowrap"><span class="link" onclick="editNotice(${n.id})">编辑</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function editNotice(id){
+  const n = id ? NOTICES.find(x=>x.id===id) : {type:'首页公告', title:'', content:''};
+  openModal(id ? '编辑公告' : '新建公告', `
+    <div class="frow">
+      <div class="fitem">
+        <label>类型</label>
+        <select id="ntType">${['首页公告','配送说明','偏远地区说明'].map(t=>`<option ${n.type===t?'selected':''}>${t}</option>`).join('')}</select>
+      </div>
+      <div class="fitem"><label>标题</label><input id="ntTitle" value="${esc(n.title)}"></div>
+    </div>
+    <div class="fitem"><label>内容</label><textarea id="ntContent" style="min-height:140px">${esc(n.content)}</textarea></div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button class="btn" onclick="saveNotice(${id||0})">保存并同步到小程序</button>`);
+}
+async function saveNotice(id){
+  const type = document.getElementById('ntType').value;
+  const title = document.getElementById('ntTitle').value.trim();
+  const content = document.getElementById('ntContent').value.trim();
+  if(!title || !content){ toast('标题与内容均不能为空'); return; }
+  const cur = id ? NOTICES.find(x=>x.id===id) : null;
+  try {
+    await API.post('/admin/notices', {
+      id: id || null,
+      type: NOTICE_TYPE_CODE[type] || 1,
+      title: title,
+      content: content,
+      status: 1,
+      sort: cur ? cur.sort : NOTICES.length + 1
+    });
+    closeModal();
+    await reload();
+    toast('已保存并同步至小程序端');
+  } catch(e) {
+    toast('保存失败：' + e.message);
+  }
+}
+
+/* =========================================================
+   页面：操作日志（审计）
+   名单与订单的导入导出含教职工个人信息，按合规要求全程留痕：
+   谁、何时、从哪个 IP、按什么范围、导出了多少条。
+   ========================================================= */
+let AUDIT = {list:[], total:0, loaded:false, loading:false};
+const AUDIT_MODULES = {grantee:'教职工名单', order:'配送订单', package:'套餐', notice:'公告', sla:'SLA 预警', sms:'短信'};
+const AUDIT_ACTIONS = {
+  'export':'导出', 'export-pending':'导出待发货清单', 'import':'导入',
+  'delete':'删除', 'reset-quota':'重置额度', 'scan':'扫描'
+};
+
+function pageAudit(){
+  if(!AUDIT.loaded && !AUDIT.loading) loadAudit();
+  const f = F.audit;
+  return `
+  <div class="phead">
+    <div>
+      <h2>操作日志</h2>
+      <p>涉及个人信息的导出与导入均记录操作人、时间、IP 与筛选范围，供个人信息保护审计追溯</p>
+    </div>
+    <div class="acts">
+      <button class="btn sec" onclick="AUDIT.loaded=false;loadAudit()">刷新</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select onchange="setAuditFilter('module', this.value)">
+      <option value="">全部模块</option>
+      ${Object.keys(AUDIT_MODULES).map(k=>`<option value="${k}" ${f.module===k?'selected':''}>${AUDIT_MODULES[k]}</option>`).join('')}
+    </select>
+    <select onchange="setAuditFilter('action', this.value)">
+      <option value="">全部动作</option>
+      ${Object.keys(AUDIT_ACTIONS).map(k=>`<option value="${k}" ${f.action===k?'selected':''}>${AUDIT_ACTIONS[k]}</option>`).join('')}
+    </select>
+    <input type="date" value="${f.date||''}" onchange="setAuditFilter('date', this.value)">
+    <input class="search" placeholder="搜索操作人 / 范围 / IP，回车查询" value="${esc(f.kw)}"
+      onkeydown="if(event.key==='Enter'){setAuditFilter('kw', this.value)}">
+    <div class="sp"></div>
+    <span class="hint" style="font-size:12px;color:var(--text-3)">共 ${AUDIT.total} 条</span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr>
+        <th class="nowrap">时间</th><th class="nowrap">操作人</th><th class="nowrap">模块</th>
+        <th class="nowrap">动作</th><th>对象 / 条件</th><th class="nowrap">条数</th>
+        <th class="nowrap">IP</th><th class="nowrap">结果</th>
+      </tr></thead>
+      <tbody>
+        ${AUDIT.loading ? `<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px">加载中…</td></tr>` : ''}
+        ${!AUDIT.loading && !AUDIT.list.length ? `<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px">暂无记录</td></tr>` : ''}
+        ${AUDIT.list.map(l=>`<tr>
+          <td class="nowrap">${fmt(ts(l.createTime))}</td>
+          <td class="nowrap">${esc(l.adminName||l.adminAccount||'—')}
+            <div style="font-size:11px;color:var(--text-3)">${esc(l.adminRole||'')}</div></td>
+          <td class="nowrap">${esc(AUDIT_MODULES[l.module]||l.module||'')}</td>
+          <td class="nowrap">${esc(AUDIT_ACTIONS[l.action]||l.action||'')}</td>
+          <td style="font-size:12px;color:var(--text-2);max-width:360px">${esc(l.target||'')}${l.detail?'　'+esc(l.detail):''}</td>
+          <td class="nowrap">${l.rowCount==null?'—':l.rowCount}</td>
+          <td class="nowrap" style="font-size:12px">${esc(l.ip||'—')}</td>
+          <td class="nowrap">${l.result==='success'?'<span class="tag t-ok">成功</span>':'<span class="tag t-danger">失败</span>'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function setAuditFilter(k, v){
+  F.audit[k] = v;
+  AUDIT.loaded = false;
+  loadAudit();
+}
+async function loadAudit(){
+  const f = F.audit;
+  AUDIT.loading = true;
+  if(page === 'audit') render();
+  const q = new URLSearchParams({page:'1', size:'200'});
+  if(f.module) q.set('module', f.module);
+  if(f.action) q.set('action', f.action);
+  if(f.kw) q.set('keyword', f.kw);
+  if(f.date) q.set('date', f.date);
+  try {
+    const r = await API.get('/admin/operation-logs?' + q.toString());
+    AUDIT.list = (r && r.list) || [];
+    AUDIT.total = (r && r.total) || 0;
+    AUDIT.loaded = true;
+  } catch(e) {
+    AUDIT.list = []; AUDIT.total = 0;
+    toast('日志加载失败：' + e.message);
+  }
+  AUDIT.loading = false;
+  if(page === 'audit') render();
+}
+
+/* =========================================================
+   渲染
+   ========================================================= */
+const PAGES = {
+  dashboard:pageDashboard, grantees:pageGrantees, packages:pagePackages,
+  orders:pageOrders, ship:pageShip, logistics:pageLogistics,
+  sla:pageSla, report:pageReport, notice:pageNotice, audit:pageAudit
+};
+function render(){
+  const el = document.getElementById('main');
+  const keepScroll = el.scrollTop;
+  renderSidebar();
+  el.innerHTML = (PAGES[page] || pageDashboard)();
+  el.scrollTop = keepScroll;
+}
+/* 搜索框输入：重渲染后恢复焦点与光标位置，避免每输一个字就失焦 */
+function setFilter(path, value, el){
+  const [g, k] = path.split('.');
+  F[g][k] = value;
+  const caret = el && el.selectionStart != null ? el.selectionStart : value.length;
+  render();
+  const t = document.querySelector('#main .filters input.search');
+  if(t){
+    t.focus();
+    try { t.setSelectionRange(caret, caret); } catch(e){}
+  }
+}
+/* =========================================================
+   登录态与启动
+   ========================================================= */
+function showLogin(msg){
+  const el = document.getElementById('loginMask');
+  if(el) el.classList.add('show');
+  const box = document.getElementById('lgMsg');
+  if(box) box.textContent = msg || '';
+}
+function hideLogin(){
+  const el = document.getElementById('loginMask');
+  if(el) el.classList.remove('show');
+}
+const ROLE_NAME = {admin:'系统管理员', operator:'项目运营', viewer:'只读查看'};
+function renderTopbar(){
+  const d = new Date();
+  const today = document.getElementById('today');
+  if(today) today.textContent = `${d.getFullYear()}-${P(d.getMonth()+1)}-${P(d.getDate())}`;
+  const p = API.profile || {};
+  const info = document.getElementById('whoInfo');
+  if(info){
+    const roleText = ROLE_NAME[p.role] || '管理端用户';
+    const who = p.realName || p.username;
+    /* realName 与角色名相同时不重复展示 */
+    info.textContent = p.username ? (who && who !== roleText ? roleText + ' · ' + who : roleText) : '未登录';
+  }
+  const av = document.getElementById('whoAv');
+  if(av) av.textContent = String(p.realName || p.username || '管').slice(0,1);
+  const lo = document.getElementById('logoutBtn');
+  if(lo) lo.style.display = p.username ? 'inline' : 'none';
+  const ro = document.getElementById('roBanner');
+  if(ro) ro.style.display = (p.username && p.role === 'viewer') ? 'block' : 'none';
+}
+async function doAdminLogin(){
+  const username = (document.getElementById('lgUser').value || '').trim();
+  const password = document.getElementById('lgPass').value || '';
+  const box = document.getElementById('lgMsg');
+  if(!username || !password){ box.textContent = '请填写账号与密码'; return; }
+  const btn = document.getElementById('lgBtn');
+  btn.disabled = true; btn.textContent = '登录中…';
+  try {
+    const d = await API.post('/admin/auth/login', {username: username, password: password});
+    API.setToken(d.token);
+    API.profile = d;
+    hideLogin();
+    await reload();
+  } catch(e) {
+    box.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '登 录';
+  }
+}
+async function adminLogout(){
+  try { await API.post('/admin/auth/logout'); } catch(e) {}
+  API.setToken(null);
+  API.profile = null;
+  renderTopbar();
+  showLogin('已退出登录，请重新登录');
+}
+/* 数据变更后统一重新拉取并重绘 */
+async function reload(){
+  await loadAll();
+  hideLogin();          // 数据能取到即说明登录态有效，确保登录层不会残留
+  renderTopbar();
+  render();
+}
+async function tryRestoreSession(){
+  if(!API.token) return false;
+  try {
+    API.profile = await API.get('/admin/auth/profile');
+    return true;
+  } catch(e) {
+    API.setToken(null);
+    return false;
+  }
+}
+
+(async function start(){
+  renderTopbar();
+  if(await tryRestoreSession()){
+    try {
+      await reload();
+      return;
+    } catch(e) {
+      console.error('初始化失败', e);
+      toast('数据加载失败：' + e.message);
+    }
+  }
+  showLogin('');
+})();
+</script>
+</body>
+</html>

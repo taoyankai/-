@@ -1,0 +1,26 @@
+# Local secrets and runtime configuration
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+target/
+coverage/
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+.claude/
+.workbuddy/
+project.private.config.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

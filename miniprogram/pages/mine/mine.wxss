@@ -1,0 +1,23 @@
+/* pages/mine/mine.wxss */
+.u-name {
+  font-size: 32rpx;
+  font-weight: 500;
+}
+.menu {
+  padding: 0 28rpx;
+}
+.mi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 0;
+  font-size: 29rpx;
+  border-bottom: 2rpx solid #F5F6F8;
+}
+.mi:last-child {
+  border-bottom: none;
+}
+.arw {
+  color: #C4C4CA;
+  font-size: 34rpx;
+}

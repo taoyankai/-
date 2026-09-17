@@ -1,0 +1,125 @@
+<!--pages/confirm/confirm.wxml-->
+<view class="page page-with-foot" wx:if="{{pkg}}">
+  <view class="notice" wx:if="{{editMode}}">
+    正在修改订单 {{orderNo}} 的收货信息。套餐不可更改，地址仅可自助修改 1 次。
+  </view>
+
+  <view class="card">
+    <view class="card-hd">
+      <text class="ttl">领取套餐</text>
+      <text class="tag tag-gray">{{editMode ? '不可更改' : '每人限领 1 份'}}</text>
+    </view>
+    <view class="pkg-name">{{pkg.name}}</view>
+    <view class="hint" wx:if="{{pkg.sub}}">{{pkg.sub}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-hd">
+      <text class="ttl">配送信息</text>
+      <text class="tag tag-brand">全国包邮</text>
+    </view>
+
+    <view class="field">
+      <view class="field-label">收货人姓名</view>
+      <input
+        class="input"
+        maxlength="20"
+        placeholder="请填写收货人姓名"
+        placeholder-class="placeholder"
+        value="{{form.name}}"
+        bindinput="onName" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">联系电话</view>
+      <input
+        class="input"
+        type="number"
+        maxlength="11"
+        placeholder="请填写 11 位手机号"
+        placeholder-class="placeholder"
+        value="{{form.phone}}"
+        bindinput="onPhone" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">所在地区</view>
+      <picker mode="region" value="{{region}}" bindchange="onRegion">
+        <view class="picker {{form.province ? '' : 'is-empty'}}">
+          {{form.province ? form.province + ' ' + form.city + ' ' + form.district : '请选择省 / 市 / 区'}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="field-label">详细地址（须精确到门牌）</view>
+      <textarea
+        class="textarea"
+        maxlength="120"
+        placeholder="例：五四东路180号河北大学3栋502室"
+        placeholder-class="placeholder"
+        value="{{form.detail}}"
+        bindinput="onDetail" />
+      <view class="hint">快递须送货上门并送达门牌，请务必填写楼栋、单元、门牌号。</view>
+    </view>
+
+    <view class="field" style="margin-bottom:0">
+      <view class="field-label">配送备注（选填）</view>
+      <input
+        class="input"
+        maxlength="60"
+        placeholder="例：工作日 9:00-18:00 在家"
+        placeholder-class="placeholder"
+        value="{{form.remark}}"
+        bindinput="onRemark" />
+    </view>
+
+    <view class="divider"></view>
+    <view class="between">
+      <view style="flex:1;margin-right:20rpx">
+        <view style="font-size:29rpx">允许投放快递代收点</view>
+        <view class="hint">
+          默认关闭。关闭时快递须送达您填写的门牌地址；开启后配送员可在您不便签收时投放至代收点。
+        </view>
+      </view>
+      <switch checked="{{form.allowStation}}" color="#C93B32" bindchange="onStation" />
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{!editMode && carriers.length}}">
+    <view class="card-hd">
+      <text class="ttl">选择承运物流</text>
+      <text class="tag tag-brand">包邮</text>
+    </view>
+    <view
+      class="carrier {{form.carrier === item.code ? 'on' : ''}}"
+      wx:for="{{carriers}}"
+      wx:key="code"
+      bindtap="pickCarrier"
+      data-code="{{item.code}}">
+      <view class="radio"></view>
+      <view style="flex:1">
+        <view class="c-name">{{item.name}}</view>
+        <view class="hint">合作物流 · 送货上门</view>
+      </view>
+      <text class="tag tag-brand">包邮</text>
+    </view>
+    <view class="hint mt">可任选一家合作物流，我们将按其时效为您送货上门，全程免费。</view>
+  </view>
+
+  <view class="card">
+    <view class="pi">提交后我们将于 <text class="b">10 日内</text>安排发货，全国包邮，无需支付任何费用</view>
+    <view class="pi">快递将送货上门，送达至您填写的门牌地址</view>
+    <view class="pi">{{form.allowStation ? '您已开启代收点授权' : '未经您允许，不会投放至快递代收点'}}</view>
+  </view>
+
+  <view class="err" wx:if="{{err}}">{{err}}</view>
+</view>
+
+<view class="loading" wx:else>加载中…</view>
+
+<view class="footbar">
+  <button class="btn" disabled="{{submitting || !pkg}}" bindtap="submit">
+    {{submitting ? '提交中…' : (editMode ? '保存修改' : '提交配送信息')}}
+  </button>
+</view>

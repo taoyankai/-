@@ -1,0 +1,164 @@
+# ============================================================================
+#  华中商贸配送中心 · 服务器部署编排（生产/演示环境专用）
+#
+#  与仓库根目录 docker-compose.yml 的区别：
+#    1. 只对外暴露 80（Nginx 一个入口）。MySQL / Redis / 后端 API 端口**不对校园网开放**，
+#       它们只在内部 hz-net 网络里互通 —— 校园网里的其他机器扫不到你的数据库。
+#    2. api 用 image 而非 build：服务器上不需要 Maven / JDK / 外网依赖，
+#       镜像在开发机构建好、docker save 传过来 docker load 即可。
+#    3. 加了内存上限与日志轮转，避免长期运行把磁盘写满。
+#
+#  使用：
+#    cd /opt/hz-delivery/deploy/server
+#    cp .env.example .env && vi .env        # 改密码！
+#    docker compose up -d
+#    docker compose ps
+#
+#  小程序/后台访问入口（校园网内）：
+#    http://10.191.19.25/            教职工端 H5
+#    http://10.191.19.25/admin/      管理后台
+#    http://10.191.19.25/api/        后端接口（小程序走这个）
+#    http://10.191.19.25/healthz     健康检查
+# ============================================================================
+
+services:
+
+  # ---------------- MySQL（仅内部网络） ----------------
+  mysql:
+    image: mysql:8.0
+    container_name: hz-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?必须在 .env 中设置}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hz_delivery}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+      - --max-connections=500
+      - --innodb-buffer-pool-size=512M
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 首次启动（数据卷为空时）自动建表并写入初始数据
+      - ../../db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+    networks:
+      - hz-net
+
+  # ---------------- Redis（仅内部网络） ----------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: hz-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - hz-net
+
+  # ---------------- 后端服务（仅内部网络，由 Nginx 反代） ----------------
+  api:
+    image: hz-delivery-server:1.0.0
+    container_name: hz-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-hz_delivery}
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:?必须在 .env 中设置}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SLA_DAYS: ${SLA_DAYS:-10}
+      DEFAULT_QUOTA: ${DEFAULT_QUOTA:-1}
+      MOCK_SMS_CODE: ${MOCK_SMS_CODE:-}
+      LOGIN_MODE: ${LOGIN_MODE:-sms}
+      LOGIN_MAX_FAIL: ${LOGIN_MAX_FAIL:-5}
+      LOGIN_LOCK_MINUTES: ${LOGIN_LOCK_MINUTES:-10}
+      SMS_DAILY_LIMIT: ${SMS_DAILY_LIMIT:-10}
+      SLA_ALERT_PHONE: ${SLA_ALERT_PHONE:-}
+      SLA_ALERT_CRON: ${SLA_ALERT_CRON:-0 30 9 * * ?}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      SMS_TEST_ENABLED: ${SMS_TEST_ENABLED:-false}
+      SMS_HBU_BASE_URL: ${SMS_HBU_BASE_URL:-http://sim.hbu.edu.cn/sms-hbu/api}
+      SMS_HBU_CID: ${SMS_HBU_CID:-7}
+      SMS_HBU_KEY: ${SMS_HBU_KEY:-}
+      SMS_HBU_MODEL: ${SMS_HBU_MODEL:-yzmmb}
+      SMS_HBU_TIME_MINUTES: ${SMS_HBU_TIME_MINUTES:-5}
+      ADMIN_INIT_PASSWORD: ${ADMIN_INIT_PASSWORD:?必须在 .env 中设置}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=70.0 -XX:+UseG1GC -Dfile.encoding=UTF-8}
+    volumes:
+      - api-logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks:
+      - hz-net
+
+  # ---------------- 前端与反向代理（唯一对外入口） ----------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: hz-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../../miniapp:/usr/share/nginx/html/h5:ro
+      - ../../admin:/usr/share/nginx/html/admin:ro
+    ports:
+      - "${WEB_PORT:-80}:80"
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    networks:
+      - hz-net
+
+volumes:
+  mysql-data:
+    name: hz-mysql-data
+  redis-data:
+    name: hz-redis-data
+  api-logs:
+    name: hz-api-logs
+
+networks:
+  hz-net:
+    name: hz-net
+    driver: bridge

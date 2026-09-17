@@ -1,0 +1,43 @@
+/* pages/login/login.wxss */
+.brand {
+  text-align: center;
+  padding: 70rpx 0 44rpx;
+}
+.brand-logo {
+  width: 124rpx;
+  height: 124rpx;
+  border-radius: 34rpx;
+  background: #C93B32;
+  color: #fff;
+  font-size: 40rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24rpx;
+  letter-spacing: 2rpx;
+}
+.brand-name {
+  font-size: 38rpx;
+  font-weight: 500;
+}
+.brand-sub {
+  font-size: 25rpx;
+  color: #8A8A90;
+  margin-top: 10rpx;
+}
+.code-btn {
+  width: 220rpx;
+  height: 94rpx;
+  line-height: 94rpx;
+  text-align: center;
+  border-radius: 14rpx;
+  background: #FBE9E7;
+  color: #C93B32;
+  font-size: 26rpx;
+  flex-shrink: 0;
+}
+.code-btn.off {
+  background: #F1F2F4;
+  color: #A8A8AE;
+}

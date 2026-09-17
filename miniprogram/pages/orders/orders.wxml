@@ -1,0 +1,28 @@
+<!--pages/orders/orders.wxml-->
+<view class="page">
+  <view class="loading" wx:if="{{loading}}">加载中…</view>
+  <view class="empty" wx:elif="{{!list.length}}">您还没有提交过配送信息</view>
+
+  <view class="card" wx:for="{{list}}" wx:key="id">
+    <view class="between" bindtap="open" data-id="{{item.id}}">
+      <view style="flex:1;margin-right:16rpx">
+        <view class="o-pkg">{{item.packageName}} ×{{item.quantity}}</view>
+        <view class="hint">{{item.orderNo}}</view>
+      </view>
+      <text class="tag {{item.tagCls}}">{{item.statusName}}</text>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="hint">{{item.receiver}}　{{item.phoneMasked}}</view>
+    <view class="hint">{{item.province}}{{item.city}}{{item.district}}{{item.detail}}</view>
+    <view class="hint" wx:if="{{item.waybillNo}}">{{item.carrierName}} · {{item.waybillNo}}</view>
+    <view class="hint" wx:if="{{item.status === 0}}" style="color:#D98A18">{{item.remainText}}</view>
+
+    <view class="acts">
+      <view class="abtn" bindtap="open" data-id="{{item.id}}">查看详情</view>
+      <view class="abtn" wx:if="{{item.canEditAddr}}" bindtap="editAddr" data-id="{{item.id}}">修改地址</view>
+      <view class="abtn danger" wx:if="{{item.status === 0}}" bindtap="cancel" data-id="{{item.id}}">取消订单</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,40 @@
+<!--pages/package/package.wxml-->
+<view class="page page-with-foot" wx:if="{{p}}">
+  <view class="card">
+    <view class="d-name">{{p.name}}</view>
+    <view class="d-sub">{{p.sub}}</view>
+    <view class="d-meta">
+      <text class="tag tag-brand">全国包邮</text>
+      <text class="tag tag-gray" wx:if="{{p.stock > 0}}">库存 {{p.stock}}</text>
+      <text class="tag tag-danger" wx:else>库存不足</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-hd">
+      <text class="ttl">套餐内容</text>
+      <text class="hint">共 {{p.goods.length}} 项</text>
+    </view>
+    <view class="gi" wx:for="{{p.goods}}" wx:key="name">
+      <view class="gi-n">{{item.name}}</view>
+      <view class="gi-s">{{item.spec}}</view>
+      <view class="gi-q">×{{item.qty}} {{item.unit}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-hd"><text class="ttl">配送与售后承诺</text></view>
+    <view class="row"><text class="k">发货时限</text><text class="v">收到配送信息后 10 日内</text></view>
+    <view class="row"><text class="k">配送方式</text><text class="v">快递送货上门（上楼入户）</text></view>
+    <view class="row"><text class="k">代收点</text><text class="v">未经您允许不投放代收点</text></view>
+    <view class="row"><text class="k">费用</text><text class="v">全国包邮，无需支付任何费用</text></view>
+    <view class="row"><text class="k">参考价</text><text class="v">¥{{p.price}}（仅展示）</text></view>
+    <view class="row"><text class="k">套餐编号</text><text class="v">{{p.no}}</text></view>
+  </view>
+</view>
+
+<view class="loading" wx:else>加载中…</view>
+
+<view class="footbar">
+  <button class="btn" disabled="{{!p}}" bindtap="choose">选择该套餐并填写配送信息</button>
+</view>

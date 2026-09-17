@@ -1,0 +1,123 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,application/javascript
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+
+spring:
+  application:
+    name: hz-delivery-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 注意：characterEncoding 必须使用 Java 字符集名 UTF-8（不是 MySQL 的 utf8mb4），
+    # Connector/J 8.x 会自动将其映射为服务端的 utf8mb4
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:hz_delivery}?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:hz_root_2026}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: always
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.hz.delivery.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+hz:
+  # 业务参数（可在 .env 覆盖）
+  delivery:
+    # 承诺发货天数（招标要求：收到配送信息后 10 日内发货）
+    sla-days: ${SLA_DAYS:10}
+    # 每名教职工可领取套餐份数（本项目：每人只能选择一个套餐）
+    default-quota: ${DEFAULT_QUOTA:1}
+    # 验证码有效期（秒）
+    code-ttl: 300
+    # 演示环境固定验证码；生产置空则走真实短信通道
+    mock-sms-code: ${MOCK_SMS_CODE:123456}
+    # 是否允许放代收点（招标要求：默认不允许）
+    allow-station-default: false
+    # C 端登录方式：sms=短信验证码（正式使用，默认）；name=手机号+姓名核验（仅演示环境，不安全）
+    login-mode: ${LOGIN_MODE:sms}
+    # 同一手机号连续核验失败上限，达到即临时锁定
+    login-max-fail: ${LOGIN_MAX_FAIL:5}
+    # 锁定时长（分钟），同时作为失败计数窗口
+    login-lock-minutes: ${LOGIN_LOCK_MINUTES:10}
+    # 同一手机号每日验证码发送上限（防有人对名单内号码轮流轰炸）
+    sms-daily-limit: ${SMS_DAILY_LIMIT:10}
+    # SLA 发货超时预警：每日扫描待发货订单并按剩余时间分档
+    # 接收预警短信的手机号，多个用英文逗号分隔；留空则只落库、不发送短信
+    sla-alert-phone: ${SLA_ALERT_PHONE:}
+    # 预警扫描时间（cron），默认每日 09:30
+    sla-alert-cron: ${SLA_ALERT_CRON:0 30 9 * * ?}
+    # 短信发送通道：mock=演示（不真实发送，验证码见日志/固定值）
+    #              hbu =河北大学统一短信服务平台（真实发送，已接入）
+    #              aliyun=阿里云（骨架，需补全 SDK 调用）
+    sms:
+      provider: ${SMS_PROVIDER:mock}
+      # 后台「短信通道自检」接口开关，生产环境建议 false
+      test-enabled: ${SMS_TEST_ENABLED:false}
+      hbu:
+        base-url: ${SMS_HBU_BASE_URL:http://sim.hbu.edu.cn/sms-hbu/api}
+        cid: ${SMS_HBU_CID:7}
+        # 密钥通过环境变量注入，不要写进代码库
+        key: ${SMS_HBU_KEY:}
+        # 验证码模板（platform 模板名，变量 code + time）
+        model: ${SMS_HBU_MODEL:yzmmb}
+        time-minutes: ${SMS_HBU_TIME_MINUTES:5}
+        max-text-length: 60
+        connect-timeout: 5
+        read-timeout: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.hz.delivery: INFO

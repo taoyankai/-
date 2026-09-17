@@ -1,0 +1,47 @@
+<!--pages/mine/mine.wxml-->
+<view class="page" wx:if="{{profile}}">
+  <view class="card">
+    <view class="between">
+      <view style="flex:1">
+        <view class="u-name">{{profile.name}}</view>
+        <view class="hint">{{profile.org}} · {{profile.dept}}</view>
+        <view class="hint">工号 {{profile.empNo || '—'}}</view>
+      </view>
+      <text class="tag {{canClaim ? 'tag-brand' : 'tag-gray'}}">{{canClaim ? '可领取' : '已领取'}}</text>
+    </view>
+    <view class="divider"></view>
+    <view class="row"><text class="k">手机号</text><text class="v">{{phoneMasked}}</text></view>
+    <view class="row"><text class="k">可领取份数</text><text class="v">{{profile.quota}} 份</text></view>
+    <view class="row"><text class="k">已领取份数</text><text class="v">{{profile.used}} 份</text></view>
+  </view>
+
+  <view class="card menu">
+    <view class="mi" bindtap="goOrders">
+      <text>我的订单</text>
+      <text class="arw">›</text>
+    </view>
+    <view class="mi" bindtap="goTrack">
+      <text>物流查询</text>
+      <text class="arw">›</text>
+    </view>
+    <view class="mi" bindtap="goPackages">
+      <text>套餐内容</text>
+      <text class="arw">›</text>
+    </view>
+    <view class="mi" bindtap="showNotice">
+      <text>领取与配送说明</text>
+      <text class="arw">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <button class="btn btn-line" bindtap="logout">退出登录</button>
+  </view>
+
+  <view class="hint center">
+    本项目慰问品由华中商贸配送中心统一供货与配送，全国包邮、送货上门。<br />
+    如有配送问题，请联系所在单位工会或配送中心服务电话。
+  </view>
+</view>
+
+<view class="loading" wx:else>加载中…</view>

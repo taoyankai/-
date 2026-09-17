@@ -1,0 +1,52 @@
+/* pages/packages/packages.wxss */
+.notice {
+  background: #FDF3E3;
+  color: #D98A18;
+  font-size: 24rpx;
+  line-height: 1.6;
+  padding: 18rpx 22rpx;
+  border-radius: 14rpx;
+  margin-bottom: 20rpx;
+}
+.pkg-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pkg-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  flex: 1;
+  margin-right: 16rpx;
+}
+.pkg-sub {
+  font-size: 25rpx;
+  color: #8A8A90;
+  margin-top: 8rpx;
+}
+.pkg-items {
+  margin-top: 18rpx;
+}
+.pkg-item {
+  display: inline-block;
+  font-size: 23rpx;
+  color: #6A6A70;
+  background: #F7F8FA;
+  border-radius: 8rpx;
+  padding: 5rpx 14rpx;
+  margin: 0 10rpx 10rpx 0;
+}
+.pkg-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14rpx;
+}
+.pkg-price {
+  font-size: 25rpx;
+  color: #C8912F;
+}
+.pkg-more {
+  font-size: 25rpx;
+  color: #C93B32;
+}

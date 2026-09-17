@@ -1,0 +1,295 @@
+/* app.wxss —— 全局样式与设计变量
+   主色 #C93B32（暖红） / 辅助金 #C8912F / 页面底色 #F5F6F8 */
+
+page {
+  background: #F5F6F8;
+  color: #2B2B2E;
+  font-size: 28rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  padding: 24rpx 24rpx 60rpx;
+}
+
+/* 带底部固定操作条的页面：预留高度 + 安全区，避免被按钮遮挡 */
+.page-with-foot {
+  padding-bottom: 200rpx;
+}
+.footbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-top: 2rpx solid #F0F1F3;
+  padding: 18rpx 24rpx;
+  padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+.card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.card-hd .ttl {
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+/* ---------- 行（键值） ---------- */
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  font-size: 27rpx;
+}
+.row .k {
+  color: #8A8A90;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+.row .v {
+  text-align: right;
+  flex: 1;
+  word-break: break-all;
+}
+.row .v.muted {
+  color: #A8A8AE;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 46rpx;
+  background: #C93B32;
+  color: #fff;
+  font-size: 31rpx;
+  font-weight: 500;
+  border: none;
+  line-height: 1;
+}
+.btn::after {
+  border: none;
+}
+.btn[disabled] {
+  background: #E0B6B3;
+  color: #fff;
+}
+.btn-line {
+  background: #fff;
+  color: #C93B32;
+  border: 2rpx solid #E6C9C6;
+}
+
+/* ---------- 表单 ---------- */
+.field {
+  margin-bottom: 26rpx;
+}
+.field-label {
+  font-size: 26rpx;
+  color: #6A6A70;
+  margin-bottom: 12rpx;
+}
+.input,
+.textarea,
+.picker {
+  background: #F7F8FA;
+  border: 2rpx solid #EDEEF1;
+  border-radius: 14rpx;
+  padding: 22rpx 24rpx;
+  font-size: 29rpx;
+  box-sizing: border-box;
+  width: 100%;
+}
+.textarea {
+  min-height: 150rpx;
+}
+.picker.is-empty {
+  color: #A8A8AE;
+}
+.placeholder {
+  color: #B4B4BA;
+}
+
+/* ---------- 标签 ---------- */
+.tag {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+.tag-brand {
+  background: #FBE9E7;
+  color: #C93B32;
+}
+.tag-ok {
+  background: #E8F6EE;
+  color: #15A05A;
+}
+.tag-warn {
+  background: #FDF3E3;
+  color: #D98A18;
+}
+.tag-danger {
+  background: #FDECEC;
+  color: #D64040;
+}
+.tag-gray {
+  background: #F1F2F4;
+  color: #8A8A90;
+}
+
+/* ---------- 其它 ---------- */
+.hint {
+  font-size: 24rpx;
+  color: #8A8A90;
+  line-height: 1.7;
+}
+.err {
+  font-size: 25rpx;
+  color: #D64040;
+  margin-top: 12rpx;
+}
+.mt {
+  margin-top: 20rpx;
+}
+.between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.center {
+  text-align: center;
+}
+.empty {
+  padding: 120rpx 40rpx;
+  text-align: center;
+  color: #A8A8AE;
+  font-size: 28rpx;
+}
+.loading {
+  padding: 100rpx 0;
+  text-align: center;
+  color: #A8A8AE;
+  font-size: 26rpx;
+}
+.divider {
+  height: 2rpx;
+  background: #F0F1F3;
+  margin: 20rpx 0;
+}
+
+/* ---------- 商品明细行（套餐详情 / 订单详情共用） ---------- */
+.gi {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #F5F6F8;
+  font-size: 27rpx;
+}
+.gi:last-child {
+  border-bottom: none;
+}
+.gi-n {
+  flex: 1;
+}
+.gi-s {
+  width: 200rpx;
+  color: #8A8A90;
+  font-size: 24rpx;
+  text-align: right;
+  margin-right: 20rpx;
+}
+.gi-q {
+  width: 150rpx;
+  text-align: right;
+  font-size: 25rpx;
+  color: #6A6A70;
+}
+
+/* ---------- 订单状态头 ---------- */
+.hdr {
+  background: #C93B32;
+  border-radius: 20rpx;
+  padding: 34rpx 30rpx;
+  margin-bottom: 20rpx;
+}
+.hdr-t {
+  color: #fff;
+  font-size: 38rpx;
+  font-weight: 500;
+}
+.hdr-s {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 25rpx;
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+/* ---------- 物流轨迹时间轴 ---------- */
+.tl {
+  display: flex;
+  padding: 14rpx 0;
+}
+.tl-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #D8D9DD;
+  margin: 10rpx 22rpx 0 0;
+  flex-shrink: 0;
+}
+.tl-dot.on {
+  background: #C93B32;
+}
+.tl-body {
+  flex: 1;
+  border-bottom: 2rpx solid #F5F6F8;
+  padding-bottom: 14rpx;
+}
+.tl:last-child .tl-body {
+  border-bottom: none;
+}
+.tl-desc {
+  font-size: 27rpx;
+  color: #6A6A70;
+  line-height: 1.6;
+}
+.tl-desc.on {
+  color: #2B2B2E;
+  font-weight: 500;
+}
+
+/* ---------- 行内操作按钮 ---------- */
+.acts {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+}
+.abtn {
+  font-size: 25rpx;
+  color: #C93B32;
+  border: 2rpx solid #E6C9C6;
+  border-radius: 30rpx;
+  padding: 8rpx 26rpx;
+  margin-left: 16rpx;
+}
+.abtn.danger {
+  color: #D64040;
+  border-color: #F3D6D2;
+}

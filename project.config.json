@@ -1,0 +1,35 @@
+{
+  "description": "华中商贸配送中心 · 教职工慰问品配送小程序（小程序代码在 miniprogram/）",
+  "projectname": "hz-delivery",
+  "appid": "wx67f6685a1a7bc5f3",
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false,
+    "ignoreUploadUnusedFiles": true
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

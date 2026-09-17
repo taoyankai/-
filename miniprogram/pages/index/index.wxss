@@ -1,0 +1,63 @@
+/* pages/index/index.wxss */
+.hero {
+  padding: 26rpx 8rpx 34rpx;
+}
+.hero-t {
+  font-size: 38rpx;
+  font-weight: 500;
+}
+.hero-s {
+  font-size: 25rpx;
+  color: #8A8A90;
+  margin-top: 8rpx;
+}
+.u-name {
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+/* 主行动卡：品牌红底 */
+.cta {
+  background: #C93B32;
+}
+.cta-t {
+  font-size: 33rpx;
+  font-weight: 500;
+  color: #fff;
+}
+.cta-s {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 10rpx;
+}
+.cta-a {
+  font-size: 26rpx;
+  color: #fff;
+  margin-top: 20rpx;
+}
+
+/* 三宫格入口 */
+.grid {
+  display: flex;
+  margin-bottom: 20rpx;
+}
+.gitem {
+  flex: 1;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 12rpx;
+  text-align: center;
+  margin-right: 16rpx;
+}
+.gitem:last-child {
+  margin-right: 0;
+}
+.g-t {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+.g-s {
+  font-size: 22rpx;
+  color: #8A8A90;
+  margin-top: 8rpx;
+}

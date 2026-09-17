@@ -1,0 +1,16 @@
+/* pages/package/package.wxss（商品明细行 .gi 已抽到 app.wxss 共用） */
+.d-name {
+  font-size: 36rpx;
+  font-weight: 500;
+}
+.d-sub {
+  font-size: 26rpx;
+  color: #8A8A90;
+  margin-top: 10rpx;
+}
+.d-meta {
+  margin-top: 20rpx;
+}
+.d-meta .tag {
+  margin-right: 12rpx;
+}

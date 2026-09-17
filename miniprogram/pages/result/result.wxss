@@ -1,0 +1,31 @@
+/* pages/result/result.wxss */
+.ok {
+  text-align: center;
+  padding: 60rpx 0 44rpx;
+}
+.ok-icon {
+  width: 130rpx;
+  height: 130rpx;
+  border-radius: 50%;
+  background: #E8F6EE;
+  color: #15A05A;
+  font-size: 66rpx;
+  line-height: 130rpx;
+  margin: 0 auto 26rpx;
+}
+.ok-t {
+  font-size: 38rpx;
+  font-weight: 500;
+}
+.ok-s {
+  font-size: 25rpx;
+  color: #8A8A90;
+  margin-top: 12rpx;
+  line-height: 1.7;
+}
+.acts {
+  margin-top: 30rpx;
+}
+.acts .btn {
+  margin-bottom: 20rpx;
+}
