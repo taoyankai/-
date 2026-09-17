@@ -1667,17 +1667,21 @@ function exportLogistics(){
 /* SLA 定时预警记录：后端每日自动扫描落库（SlaAlertJob），此处只读展示 + 支持手动触发 */
 let SLA_ALERTS = [];
 let slaAlertLoading = false;
+let slaAlertLoaded = false;
 async function loadSlaAlerts(){
-  if(slaAlertLoading) return;
+  if(slaAlertLoading || slaAlertLoaded) return;   // 已尝试过就不要再触发：结果为空或失败时避免 render→pageSla→再拉 的死循环
   slaAlertLoading = true;
   try { SLA_ALERTS = (await API.get('/admin/sla/alerts?days=14')) || []; }
   catch(e){ SLA_ALERTS = []; }
   slaAlertLoading = false;
+  slaAlertLoaded = true;
   if(page === 'sla') render();
 }
 async function scanSla(){
   try {
     const r = await API.post('/admin/sla/scan?notify=false');
+    SLA_ALERTS = [];
+    slaAlertLoaded = false;   // 手动扫描后强制重新拉取最新的定时预警记录
     await loadSlaAlerts();
     toast(`扫描完成：已超期 ${r.overdue} 笔，24 小时内到期 ${r.dueIn24h} 笔，72 小时内 ${r.dueIn72h} 笔`);
   } catch(e) { toast('扫描失败：' + e.message); }
@@ -1689,7 +1693,7 @@ const SLA_ALERT_LEVEL = {
 };
 
 function pageSla(){
-  if(!SLA_ALERTS.length && !slaAlertLoading) loadSlaAlerts();
+  if(!slaAlertLoaded && !slaAlertLoading) loadSlaAlerts();
   const pending = ORDERS.filter(o=>o.status===0);
   const buckets = {3:[],2:[],1:[],0:[]};
   pending.forEach(o=>buckets[slaInfo(o).key].push(o));
