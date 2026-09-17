@@ -1,5 +1,6 @@
 package com.hz.delivery.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ public class OrderCreateDTO {
     private Long packageId;
 
     @Min(value = 1, message = "领取份数至少为 1")
+    @Max(value = 1, message = "每人限领 1 份，不能超过 1 份")
     private Integer quantity = 1;
 
     @NotBlank(message = "请填写收货人姓名")
