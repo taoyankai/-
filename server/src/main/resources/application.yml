@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     context-path: /
   compression:
@@ -82,6 +83,11 @@ hz:
     login-max-fail: ${LOGIN_MAX_FAIL:5}
     # 锁定时长（分钟），同时作为失败计数窗口
     login-lock-minutes: ${LOGIN_LOCK_MINUTES:10}
+    # 后台登录按账号和来源 IP 双维度锁定
+    admin-login-max-fail: ${ADMIN_LOGIN_MAX_FAIL:5}
+    admin-login-lock-minutes: ${ADMIN_LOGIN_LOCK_MINUTES:10}
+    # 逗号分隔；同源部署无需添加公网域名
+    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://127.0.0.1}
     # 同一手机号每日验证码发送上限（防有人对名单内号码轮流轰炸）
     sms-daily-limit: ${SMS_DAILY_LIMIT:10}
     # SLA 发货超时预警：每日扫描待发货订单并按剩余时间分档
@@ -89,6 +95,21 @@ hz:
     sla-alert-phone: ${SLA_ALERT_PHONE:}
     # 预警扫描时间（cron），默认每日 09:30
     sla-alert-cron: ${SLA_ALERT_CRON:0 30 9 * * ?}
+    # 真实物流：disabled=关闭；kuaidi100=快递100企业版实时查询
+    logistics:
+      provider: ${LOGISTICS_PROVIDER:disabled}
+      query-on-access: ${LOGISTICS_QUERY_ON_ACCESS:true}
+      validate-on-ship: ${LOGISTICS_VALIDATE_ON_SHIP:true}
+      # 快递100要求同一运单查询间隔至少 30 分钟，请勿调低
+      min-interval-minutes: ${LOGISTICS_MIN_INTERVAL_MINUTES:30}
+      batch-size: ${LOGISTICS_BATCH_SIZE:50}
+      sync-cron: ${LOGISTICS_SYNC_CRON:0 */30 * * * ?}
+      kuaidi100:
+        base-url: ${KUAIDI100_BASE_URL:https://poll.kuaidi100.com/poll/query.do}
+        key: ${KUAIDI100_KEY:}
+        customer: ${KUAIDI100_CUSTOMER:}
+        connect-timeout: ${KUAIDI100_CONNECT_TIMEOUT:5}
+        read-timeout: ${KUAIDI100_READ_TIMEOUT:10}
     # 短信发送通道：mock=演示（不真实发送，验证码见日志/固定值）
     #              hbu =河北大学统一短信服务平台（真实发送，已接入）
     #              aliyun=阿里云（骨架，需补全 SDK 调用）

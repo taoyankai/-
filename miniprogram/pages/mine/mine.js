@@ -65,15 +65,11 @@ Page({
       content: '退出后需重新核验身份，确认退出？',
       success: (r) => {
         if (!r.confirm) return;
-        // 先通知后端作废 token，失败也照样清本地（避免退不掉）
-        api
-          .post('/client/auth/logout')
-          .catch(() => {})
-          .then(() => {
-            api.setToken('');
-            getApp().globalData.grantee = null;
-            wx.reLaunch({ url: '/pages/login/login' });
-          });
+        // 通知后端作废 token，但不等待网络结果；本地必须能够立即退出。
+        api.post('/client/auth/logout').catch(() => {});
+        api.setToken('');
+        getApp().globalData.grantee = null;
+        wx.reLaunch({ url: '/pages/login/login' });
       }
     });
   }

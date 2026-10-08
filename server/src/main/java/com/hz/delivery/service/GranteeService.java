@@ -4,6 +4,7 @@ import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hz.delivery.common.BizException;
+import com.hz.delivery.common.BusinessNoUtil;
 import com.hz.delivery.common.Constants;
 import com.hz.delivery.common.ErrorCode;
 import com.hz.delivery.common.PageResult;
@@ -209,7 +210,7 @@ public class GranteeService {
 
         // 创建批次
         ImportBatch batch = new ImportBatch();
-        batch.setBatchNo("IB" + System.currentTimeMillis());
+        batch.setBatchNo(BusinessNoUtil.importBatchNo());
         batch.setType("grantee");
         batch.setFileName(file.getOriginalFilename());
         batch.setTotalCount(rows.size());

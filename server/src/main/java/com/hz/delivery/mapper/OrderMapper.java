@@ -22,12 +22,19 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Select("SELECT COUNT(*) FROM t_order WHERE order_no LIKE CONCAT(#{prefix}, '%')")
     int countByOrderNoPrefix(@Param("prefix") String prefix);
 
+    /** Redis 序列丢失时，从数据库恢复当日已经使用的最大序号。 */
+    @Select("SELECT COALESCE(MAX(CAST(SUBSTRING(order_no, CHAR_LENGTH(#{prefix}) + 1) AS UNSIGNED)), 0) " +
+            "FROM t_order WHERE order_no LIKE CONCAT(#{prefix}, '%')")
+    long maxSequenceByOrderNoPrefix(@Param("prefix") String prefix);
+
     /**
      * 发货：条件带 status = 0，避免重复发货
      */
     @Update("UPDATE t_order SET status = 10, carrier = #{carrier}, carrier_name = #{carrierName}, " +
             "waybill_no = #{waybillNo}, ship_time = NOW(), update_time = NOW() " +
-            "WHERE id = #{id} AND status = 0 AND deleted = 0")
+            "WHERE id = #{id} AND status = 0 AND deleted = 0 " +
+            "AND (sla_deadline IS NULL OR sla_deadline >= NOW() " +
+            "OR (exception_reason IS NOT NULL AND TRIM(exception_reason) <> ''))")
     int ship(@Param("id") Long id,
              @Param("carrier") String carrier,
              @Param("carrierName") String carrierName,

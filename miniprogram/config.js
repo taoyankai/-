@@ -27,7 +27,7 @@ module.exports = {
   //   公网（当前服务器） http://221.192.236.175/api   ← 校内外均可访问
   //   内网服务器          http://10.191.19.25/api      ← 仅校园网内
   //   本机开发            http://localhost:8080/api
-  backendDebugUrl: 'http://221.192.236.175/api',
+  backendDebugUrl: 'http://118.195.143.152/api',
 
   /* ---------- 其它 ---------- */
   // 演示提示开关：登录页会显示演示手机号与姓名，正式环境务必保持 false

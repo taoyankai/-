@@ -4,6 +4,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 业务参数配置，对应 application.yml 中的 hz.delivery.*
  */
@@ -46,6 +49,16 @@ public class BizProperties {
     /** 登录失败锁定时长（分钟），同时作为失败计数的统计窗口 */
     private int loginLockMinutes = 10;
 
+    /** 后台账号连续登录失败上限（账号与来源 IP 分别计数） */
+    private int adminLoginMaxFail = 5;
+
+    /** 后台登录失败锁定时长（分钟） */
+    private int adminLoginLockMinutes = 10;
+
+    /** 仅供确有跨域需求的管理页面使用；同源部署不需要加入列表 */
+    private List<String> corsAllowedOrigins = new ArrayList<>(List.of(
+            "http://localhost", "http://127.0.0.1"));
+
     /**
      * 同一手机号每日验证码发送上限。
      *
@@ -62,6 +75,41 @@ public class BizProperties {
 
     /** 短信通道配置 */
     private Sms sms = new Sms();
+
+    /** 真实物流轨迹查询配置 */
+    private Logistics logistics = new Logistics();
+
+    @Data
+    public static class Logistics {
+
+        /** disabled=关闭 / kuaidi100=快递100企业版实时查询 */
+        private String provider = "disabled";
+
+        /** 用户主动查询运单时是否尝试刷新真实轨迹 */
+        private boolean queryOnAccess = true;
+
+        /** 发货前是否必须通过真实接口校验承运商与运单号 */
+        private boolean validateOnShip = true;
+
+        /** 同一运单最短查询间隔；快递100官方要求不得低于 30 分钟 */
+        private int minIntervalMinutes = 30;
+
+        /** 定时任务每批最多同步的在途订单数 */
+        private int batchSize = 50;
+
+        private Kuaidi100 kuaidi100 = new Kuaidi100();
+
+        @Data
+        public static class Kuaidi100 {
+            private String baseUrl = "https://poll.kuaidi100.com/poll/query.do";
+            /** 企业管理后台中的授权 key */
+            private String key = "";
+            /** 企业管理后台中的 customer 授权码 */
+            private String customer = "";
+            private int connectTimeout = 5;
+            private int readTimeout = 10;
+        }
+    }
 
     @Data
     public static class Sms {

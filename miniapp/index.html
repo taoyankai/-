@@ -1025,6 +1025,7 @@ function pageConfirm(){
   /* 期望承运物流：默认取第一家合作物流（不改动 formAddr，避免渲染副作用） */
   const carriers = S.carriers || [];
   const effCarrier = formAddr.carrier || ((carriers[0]||{}).code || '');
+  const currentCarrier = carriers.find(c=>c.code===formAddr.carrier);
 
   return `
   <div class="page">
@@ -1096,7 +1097,19 @@ function pageConfirm(){
         </div>
       </div>
 
-      ${carriers.length ? `
+      ${pending.editingOrder ? `
+      <div class="card">
+        <div class="card-hd"><h3>期望承运物流</h3><span class="tag brand">包邮</span></div>
+        <div class="carrier-item on" style="cursor:default">
+          <div class="ci-radio"></div>
+          <div class="ci-info">
+            <div class="ci-name">${esc(pending.expectCarrierName || (currentCarrier||{}).name || formAddr.carrier || '未指定')}</div>
+            <div class="ci-desc">订单提交后不可修改</div>
+          </div>
+          <div class="ci-badge">已选</div>
+        </div>
+        <div class="hint" style="margin-top:8px">本次仅可修改收货信息，期望承运商保持不变。</div>
+      </div>` : carriers.length ? `
       <div class="card">
         <div class="card-hd"><h3>选择承运物流</h3><span class="tag brand">包邮</span></div>
         <div class="carrier-list">
@@ -1120,7 +1133,7 @@ function pageConfirm(){
       </div>
 
       <div class="footbar">
-        <div class="fb-l">${pending.editingOrder ? '套餐不变 · 仅限修改 1 次' : `共 ${pending.quantity} 份 · 包邮`}</div>
+        <div class="fb-l">${pending.editingOrder ? '仅修改收货信息 · 承运商不可更改' : `共 ${pending.quantity} 份 · 包邮`}</div>
         <button class="btn" id="submitOrderBtn" onclick="submitOrder()">${pending.editingOrder?'保存修改':'提交配送信息'}</button>
       </div>
     </div>
@@ -1185,7 +1198,7 @@ async function submitOrder(){
       pending = null;
       formAddr = {name:'',phone:'',province:'',city:'',district:'',detail:'',allowStation:false,remark:'',carrier:''};
       jump('#/order/' + editingId);
-      setTimeout(()=>toast('收货地址已修改，发货时将按新地址配送'), 260);
+      setTimeout(()=>toast('收货信息已修改，发货时将按新信息配送'), 260);
       return;
     }
 
@@ -1464,7 +1477,8 @@ function editAddress(id){
   const o = S.orders.find(x=>String(x.id)===String(id));
   if(!o){ toast('未找到该订单，请刷新后重试'); return; }
   if(o.status!==0){ toast('订单已发货，如需改派请联系客服 400-000-0000'); return; }
-  pending = {packageId:o.packageId, packageName:o.packageName, quantity:o.quantity, goods:o.goods, editingOrder:o.id};
+  pending = {packageId:o.packageId, packageName:o.packageName, quantity:o.quantity, goods:o.goods,
+    editingOrder:o.id, expectCarrierName:o.expectCarrierName||''};
   formAddr = {name:o.receiver, phone:o.phone, province:o.province, city:o.city,
     district:o.district, detail:o.detail, allowStation:o.allowStation, remark:o.remark||'',
     carrier:o.expectCarrier||''};

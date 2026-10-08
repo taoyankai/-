@@ -26,6 +26,16 @@
   color: #8A8A90;
   margin-top: 10rpx;
 }
+.code-row {
+  display: flex;
+  align-items: stretch;
+  gap: 16rpx;
+}
+.code-row .input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
 .code-btn {
   width: 220rpx;
   height: 94rpx;

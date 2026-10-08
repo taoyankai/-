@@ -25,6 +25,10 @@ public enum ErrorCode {
     SMS_TEST_DISABLED(1008, "短信自检接口未启用（需设置 SMS_TEST_ENABLED=true）"),
     SMS_SEND_FAILED(1009, "短信发送失败，请联系管理员检查短信通道配置"),
 
+    // 后台认证 1050+
+    ADMIN_LOGIN_LOCKED(1050, "后台登录失败次数过多，请稍后再试"),
+    ADMIN_PASSWORD_CHANGE_REQUIRED(1051, "首次登录必须修改初始密码"),
+
     // 套餐 1100+
     PACKAGE_OFFLINE(1101, "该套餐已下架，请重新选择"),
     PACKAGE_NO_STOCK(1102, "该套餐库存不足，请选择其他套餐"),
@@ -48,6 +52,8 @@ public enum ErrorCode {
     WAYBILL_DUPLICATE(1401, "运单号已存在，请勿重复录入"),
     CARRIER_REQUIRED(1402, "请选择承运商"),
     WAYBILL_REQUIRED(1403, "请填写运单号"),
+    WAYBILL_VERIFY_FAILED(1404, "运单校验失败"),
+    CARRIER_WAYBILL_MISMATCH(1405, "运单号与承运商不匹配"),
 
     // 导入导出 1500+
     EXCEL_EMPTY(1501, "文件内容为空，请检查后重新上传"),

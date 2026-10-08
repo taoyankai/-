@@ -110,10 +110,19 @@ page {
   background: #F7F8FA;
   border: 2rpx solid #EDEEF1;
   border-radius: 14rpx;
-  padding: 22rpx 24rpx;
   font-size: 29rpx;
   box-sizing: border-box;
   width: 100%;
+}
+.input {
+  height: 94rpx;
+  min-height: 94rpx;
+  line-height: 94rpx;
+  padding: 0 24rpx;
+}
+.textarea,
+.picker {
+  padding: 22rpx 24rpx;
 }
 .textarea {
   min-height: 150rpx;

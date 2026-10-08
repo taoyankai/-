@@ -23,17 +23,24 @@
 .cta-t {
   font-size: 33rpx;
   font-weight: 500;
-  color: #fff;
+  color: #222;
 }
 .cta-s {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.82);
+  color: #8a8a8a;
   margin-top: 10rpx;
 }
 .cta-a {
   font-size: 26rpx;
-  color: #fff;
+  color: #C93B32;
   margin-top: 20rpx;
+}
+.cta .cta-t,
+.cta .cta-a {
+  color: #fff;
+}
+.cta .cta-s {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 /* 三宫格入口 */

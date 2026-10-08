@@ -29,6 +29,9 @@ public class Admin {
 
     private Integer status;
 
+    /** 1 表示首次登录后必须修改初始密码 */
+    private Integer mustChangePassword;
+
     private LocalDateTime lastLoginTime;
 
     @TableField(fill = FieldFill.INSERT)

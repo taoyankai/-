@@ -22,12 +22,13 @@ CREATE TABLE `t_admin` (
   `real_name`      VARCHAR(32)  DEFAULT NULL            COMMENT '姓名',
   `role`           VARCHAR(16)  NOT NULL DEFAULT 'operator' COMMENT 'admin/operator/viewer',
   `status`         TINYINT      NOT NULL DEFAULT 1      COMMENT '1 启用 0 停用',
+  `must_change_password` TINYINT NOT NULL DEFAULT 1     COMMENT '1 首次登录必须修改初始密码',
   `last_login_time` DATETIME    DEFAULT NULL,
   `create_time`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`        TINYINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `idx_username` (`username`)
+  UNIQUE KEY `uk_admin_username` (`username`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '后台管理员';
 
 -- ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ CREATE TABLE `t_grantee` (
   `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`     TINYINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `idx_phone` (`phone`),
+  UNIQUE KEY `uk_grantee_phone` (`phone`),
   KEY `idx_org` (`org`),
   KEY `idx_used` (`used`),
   KEY `idx_batch` (`batch_id`)
@@ -132,11 +133,11 @@ CREATE TABLE `t_order` (
   `update_time`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`         TINYINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `idx_order_no` (`order_no`),
+  UNIQUE KEY `uk_order_order_no` (`order_no`),
   KEY `idx_grantee` (`grantee_id`),
   KEY `idx_status` (`status`),
   KEY `idx_org` (`org`),
-  KEY `idx_waybill` (`waybill_no`),
+  UNIQUE KEY `uk_order_waybill_no` (`waybill_no`),
   KEY `idx_sla` (`status`, `sla_deadline`),
   KEY `idx_create` (`create_time`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '配送订单';
@@ -213,6 +214,7 @@ CREATE TABLE `t_import_batch` (
   `operator`      VARCHAR(32)  DEFAULT NULL,
   `create_time`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_import_batch_no` (`batch_no`),
   KEY `idx_type_time` (`type`, `create_time`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '导入批次记录';
 
@@ -229,7 +231,7 @@ CREATE TABLE `t_carrier` (
   `sort`      INT         NOT NULL DEFAULT 0,
   `status`    TINYINT     NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `idx_code` (`code`)
+  UNIQUE KEY `uk_carrier_code` (`code`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '承运商字典';
 
 -- ---------------------------------------------------------------------------
@@ -290,7 +292,8 @@ INSERT INTO `t_carrier` (`code`, `name`, `track_url`, `phone`, `sort`, `status`)
 ('JD',  '京东物流', 'https://www.jdl.com/orderSearch?waybillCode={no}',                '950616', 2, 1),
 ('YTO', '圆通速递', 'https://www.yto.net.cn/query.html?no={no}',                      '95554', 3, 1),
 ('ZTO', '中通快递', 'https://www.zto.com/express/expressCheck.html?txtBill={no}',     '95311', 4, 1),
-('EMS', '中国邮政', 'https://www.ems.com.cn/queryList?mailNum={no}',                  '11183', 5, 1);
+('STO', '申通快递', 'https://www.sto.cn/',                                             '95543', 5, 1),
+('EMS', '中国邮政', 'https://www.ems.com.cn/queryList?mailNum={no}',                  '11183', 6, 1);
 
 -- 套餐
 INSERT INTO `t_package` (`id`, `no`, `name`, `sub`, `price`, `stock`, `warn`, `sort`, `status`) VALUES
