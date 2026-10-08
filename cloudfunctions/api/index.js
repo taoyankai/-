@@ -44,7 +44,7 @@ const { URL } = require('url');
 //   实测 CLI 部署也不会同步 config.json，写成严格 JSON 同样不生效）。
 //   漏配一次环境变量就会把整条免备案通道直接打死，因此这里用显式默认值兜底：
 //   要换后端地址时在控制台配 BACKEND_BASE_URL 即可（**环境变量优先**），无需改代码。
-const FALLBACK_BACKEND = 'http://221.192.236.175'; // 本项目线上后端根地址（不带 /api）
+const FALLBACK_BACKEND = 'http://118.195.143.152'; // 本项目线上后端根地址（不带 /api）
 const BACKEND = (process.env.BACKEND_BASE_URL || FALLBACK_BACKEND).replace(/\/+$/, '');
 const TIMEOUT_MS = 15000;
 

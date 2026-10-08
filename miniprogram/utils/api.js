@@ -37,7 +37,9 @@ function isLoggedIn() {
 // 直连通道（useCloud=false）使用的后端地址。
 // 走云函数通道时不会用到它 —— 那种情况下后端地址由云函数的环境变量 BACKEND_BASE_URL 决定。
 function baseUrl() {
-  return config.backendDebugUrl;
+  return String(config.backendDebugUrl || '')
+    .trim()
+    .replace(/\/+$/, '');
 }
 
 /* ---------- 通道实现 ---------- */
@@ -76,9 +78,11 @@ function viaCloud(method, path, data, token) {
 }
 
 function viaHttp(method, path, data, token) {
+  const requestPath = String(path || '').trim();
+  const requestUrl = baseUrl() + (requestPath.charAt(0) === '/' ? requestPath : '/' + requestPath);
   return new Promise(function (resolve, reject) {
     wx.request({
-      url: baseUrl() + path,
+      url: requestUrl,
       method: method,
       data: data || {},
       header: token ? { 'X-Token': token } : {},
@@ -86,8 +90,9 @@ function viaHttp(method, path, data, token) {
       success: function (r) {
         resolve(r.data);
       },
-      fail: function () {
-        reject(new Error('网络连接失败，请检查网络后重试'));
+      fail: function (err) {
+        const detail = (err && err.errMsg) || '未知网络错误';
+        reject(new Error('网络连接失败：' + detail + '（请求地址：' + requestUrl + '）'));
       }
     });
   });

@@ -5,6 +5,7 @@ import com.hz.delivery.common.Constants;
 import com.hz.delivery.common.ExcelUtil;
 import com.hz.delivery.common.PageResult;
 import com.hz.delivery.dto.ShipDTO;
+import com.hz.delivery.dto.BatchShipDTO;
 import com.hz.delivery.entity.Carrier;
 import com.hz.delivery.entity.Order;
 import com.hz.delivery.entity.OrderTrack;
@@ -13,6 +14,8 @@ import com.hz.delivery.excel.WaybillExcelRow;
 import com.hz.delivery.service.AdminAuthService;
 import com.hz.delivery.service.OperationLogService;
 import com.hz.delivery.service.ShipmentService;
+import com.hz.delivery.service.ShipmentBatchService;
+import com.hz.delivery.service.logistics.LogisticsTrackingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -39,8 +42,10 @@ public class AdminOrderController {
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm");
 
     private final ShipmentService shipmentService;
+    private final ShipmentBatchService shipmentBatchService;
     private final AdminAuthService adminAuthService;
     private final OperationLogService operationLogService;
+    private final LogisticsTrackingService logisticsTrackingService;
 
     /* ---------- 查询 ---------- */
 
@@ -118,6 +123,13 @@ public class AdminOrderController {
         return ApiResult.ok(shipmentService.ship(dto, operator));
     }
 
+    /** 多承运商批量发货：每笔订单独立指定承运商编码和真实运单号。 */
+    @PostMapping("/batch-ship")
+    public ApiResult<Map<String, Object>> batchShip(@RequestAttribute(Constants.ATTR_ADMIN_ID) Long adminId,
+                                                    @RequestBody @Valid BatchShipDTO dto) {
+        return ApiResult.ok(shipmentBatchService.ship(dto, adminAuthService.operatorName(adminId)));
+    }
+
     /**
      * 撤销发货（仅已发货状态，用于纠正录入错误）
      */
@@ -147,6 +159,29 @@ public class AdminOrderController {
     }
 
     /* ---------- 物流 ---------- */
+
+    /** 立即同步一次真实承运商轨迹（仍受 30 分钟限频保护）。 */
+    @PostMapping("/{id}/sync-logistics")
+    public ApiResult<LogisticsTrackingService.SyncResult> syncLogistics(@PathVariable Long id) {
+        return ApiResult.ok(logisticsTrackingService.syncByOrderId(id));
+    }
+
+    /** 进入物流页时批量刷新在途运单；每单仍受后端 30 分钟限频保护。 */
+    @PostMapping("/logistics/sync-batch")
+    public ApiResult<Map<String, Object>> syncLogisticsBatch(@RequestBody Map<String, Object> body) {
+        List<Long> ids = new ArrayList<>();
+        Object raw = body.get("orderIds");
+        if (raw instanceof List<?> list) {
+            for (Object value : list) {
+                try {
+                    ids.add(Long.valueOf(String.valueOf(value)));
+                } catch (NumberFormatException ignored) {
+                    // 非法 ID 直接忽略，合法订单仍可继续同步。
+                }
+            }
+        }
+        return ApiResult.ok(logisticsTrackingService.syncBatch(ids));
+    }
 
     /**
      * 推进物流状态（真实项目由承运商回调驱动，此处支持人工补录）

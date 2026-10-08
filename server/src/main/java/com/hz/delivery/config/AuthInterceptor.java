@@ -40,9 +40,6 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         String path = request.getRequestURI();
         String token = request.getHeader(Constants.HEADER_TOKEN);
-        if (!StringUtils.hasText(token)) {
-            token = request.getParameter("token");
-        }
 
         if (!StringUtils.hasText(token)) {
             return reject(response);
@@ -58,13 +55,22 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (isAdmin) {
             Long adminId = Long.valueOf(value);
             request.setAttribute(Constants.ATTR_ADMIN_ID, adminId);
+            Admin admin = adminMapper.selectById(adminId);
+            if (admin == null || admin.getStatus() == null || admin.getStatus() != 1) {
+                redis.delete(key);
+                return reject(response, ErrorCode.UNAUTHORIZED);
+            }
+            boolean passwordChangeEndpoint = path.equals("/api/admin/auth/change-password");
+            boolean sessionEndpoint = path.equals("/api/admin/auth/profile")
+                    || path.equals("/api/admin/auth/logout");
+            if ((admin.getMustChangePassword() == null || admin.getMustChangePassword() != 0)
+                    && !passwordChangeEndpoint && !sessionEndpoint) {
+                return reject(response, ErrorCode.ADMIN_PASSWORD_CHANGE_REQUIRED,
+                        "首次登录必须修改初始密码后才能使用后台");
+            }
             // 只读账号（viewer）禁止一切写操作，避免误改名单 / 套餐 / 发货数据
             if (!"GET".equalsIgnoreCase(request.getMethod())
                     && !path.startsWith("/api/admin/auth")) {
-                Admin admin = adminMapper.selectById(adminId);
-                if (admin == null) {
-                    return reject(response, ErrorCode.UNAUTHORIZED);
-                }
                 if (ROLE_VIEWER.equalsIgnoreCase(admin.getRole())) {
                     return reject(response, ErrorCode.FORBIDDEN, "当前为只读账号，无操作权限");
                 }

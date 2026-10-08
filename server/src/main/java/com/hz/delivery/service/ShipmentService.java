@@ -13,6 +13,8 @@ import com.hz.delivery.excel.WaybillExcelRow;
 import com.hz.delivery.mapper.CarrierMapper;
 import com.hz.delivery.mapper.OrderMapper;
 import com.hz.delivery.mapper.OrderTrackMapper;
+import com.hz.delivery.service.logistics.LogisticsQueryResult;
+import com.hz.delivery.service.logistics.LogisticsTrackingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +39,7 @@ public class ShipmentService {
     private final OrderMapper orderMapper;
     private final OrderTrackMapper trackMapper;
     private final CarrierMapper carrierMapper;
+    private final LogisticsTrackingService logisticsTrackingService;
 
     /* ==================== 订单查询（后台） ==================== */
 
@@ -100,18 +102,22 @@ public class ShipmentService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> ship(ShipDTO dto, String operator) {
         Carrier carrier = carrierMapper.selectOne(new LambdaQueryWrapper<Carrier>()
-                .eq(Carrier::getCode, dto.getCarrier()).last("LIMIT 1"));
+                .eq(Carrier::getCode, dto.getCarrier())
+                .eq(Carrier::getStatus, 1)
+                .last("LIMIT 1"));
         if (carrier == null) {
             throw BizException.of(ErrorCode.CARRIER_REQUIRED, "承运商不存在：" + dto.getCarrier());
         }
 
         boolean single = dto.getOrderIds().size() == 1 && StringUtils.hasText(dto.getWaybillNo());
+        if (!single) {
+            throw BizException.of(ErrorCode.WAYBILL_REQUIRED,
+                    "真实物流必须逐单绑定承运商运单号；多笔订单请填写每笔运单号或使用批量导入");
+        }
         List<String> fails = new ArrayList<>();
         List<String> successNos = new ArrayList<>();
-        int idx = 0;
 
         for (Long id : dto.getOrderIds()) {
-            idx++;
             Order o = orderMapper.selectById(id);
             if (o == null) {
                 fails.add("订单 ID " + id + " 不存在");
@@ -125,20 +131,45 @@ public class ShipmentService {
                 fails.add(o.getOrderNo() + "：已存在运单号，不可重复发货");
                 continue;
             }
+            if (overdueWithoutReason(o, LocalDateTime.now())) {
+                fails.add(delayReasonRequiredMessage(o));
+                continue;
+            }
 
-            String waybill = single ? dto.getWaybillNo().trim() : genWaybill(carrier.getCode(), idx);
+            String waybill = dto.getWaybillNo().trim();
+            if (!validWaybill(waybill)) {
+                fails.add(o.getOrderNo() + "：运单号长度应为 6～32 个字符");
+                continue;
+            }
             if (waybillExisted(waybill)) {
                 fails.add(o.getOrderNo() + "：运单号 " + waybill + " 已被占用");
                 continue;
             }
 
-            int updated = orderMapper.ship(id, carrier.getCode(), carrier.getName(), waybill);
-            if (updated == 0) {
-                fails.add(o.getOrderNo() + "：状态已变更，请刷新后重试");
+            LogisticsQueryResult verified;
+            try {
+                verified = logisticsTrackingService.validateForShipment(o, carrier.getCode(), waybill);
+            } catch (BizException e) {
+                fails.add(o.getOrderNo() + "：" + e.getMessage());
                 continue;
             }
-            addTrack(o, Constants.ORDER_SHIPPED, "您的慰问品已由「" + carrier.getName()
-                    + "」揽收发出，运单号 " + waybill + "，我们将全程跟踪直至送达", "system");
+
+            int updated = orderMapper.ship(id, carrier.getCode(), carrier.getName(), waybill);
+            if (updated == 0) {
+                Order latest = orderMapper.selectById(id);
+                fails.add(overdueWithoutReason(latest, LocalDateTime.now())
+                        ? delayReasonRequiredMessage(latest)
+                        : o.getOrderNo() + "：状态已变更，请刷新后重试");
+                continue;
+            }
+            o.setCarrier(carrier.getCode());
+            o.setCarrierName(carrier.getName());
+            o.setWaybillNo(waybill);
+            o.setStatus(Constants.ORDER_SHIPPED);
+            o.setShipTime(LocalDateTime.now());
+            addTrack(o, Constants.ORDER_SHIPPED, "商家已绑定「" + carrier.getName()
+                    + "」真实运单号 " + waybill + "，正在等待承运商揽收", "system");
+            logisticsTrackingService.applyValidatedResult(o, verified);
             successNos.add(o.getOrderNo() + " / " + waybill);
         }
 
@@ -221,6 +252,10 @@ public class ShipmentService {
                 fails.add("第 " + lineNo + " 行：运单号为空");
                 continue;
             }
+            if (!validWaybill(waybillNo)) {
+                fails.add("第 " + lineNo + " 行：运单号长度应为 6～32 个字符");
+                continue;
+            }
             if (!usedWaybills.add(waybillNo)) {
                 fails.add("第 " + lineNo + " 行：运单号 " + waybillNo + " 在文件内重复");
                 continue;
@@ -240,18 +275,39 @@ public class ShipmentService {
                         + GranteeService.orderStatusName(o.getStatus()) + "，不可重复发货");
                 continue;
             }
+            if (overdueWithoutReason(o, LocalDateTime.now())) {
+                fails.add("第 " + lineNo + " 行：" + delayReasonRequiredMessage(o));
+                continue;
+            }
             if (waybillExisted(waybillNo)) {
                 fails.add("第 " + lineNo + " 行：运单号 " + waybillNo + " 已存在");
                 continue;
             }
 
-            int updated = orderMapper.ship(o.getId(), carrierCode, carrierNameMap.get(carrierCode), waybillNo);
-            if (updated == 0) {
-                fails.add("第 " + lineNo + " 行：订单 " + orderNo + " 状态已变更");
+            LogisticsQueryResult verified;
+            try {
+                verified = logisticsTrackingService.validateForShipment(o, carrierCode, waybillNo);
+            } catch (BizException e) {
+                fails.add("第 " + lineNo + " 行：" + e.getMessage());
                 continue;
             }
-            addTrack(o, Constants.ORDER_SHIPPED, "您的慰问品已由「" + carrierNameMap.get(carrierCode)
-                    + "」揽收发出，运单号 " + waybillNo, "system");
+
+            int updated = orderMapper.ship(o.getId(), carrierCode, carrierNameMap.get(carrierCode), waybillNo);
+            if (updated == 0) {
+                Order latest = orderMapper.selectById(o.getId());
+                fails.add("第 " + lineNo + " 行：" + (overdueWithoutReason(latest, LocalDateTime.now())
+                        ? delayReasonRequiredMessage(latest)
+                        : "订单 " + orderNo + " 状态已变更"));
+                continue;
+            }
+            o.setCarrier(carrierCode);
+            o.setCarrierName(carrierNameMap.get(carrierCode));
+            o.setWaybillNo(waybillNo);
+            o.setStatus(Constants.ORDER_SHIPPED);
+            o.setShipTime(LocalDateTime.now());
+            addTrack(o, Constants.ORDER_SHIPPED, "商家已绑定「" + carrierNameMap.get(carrierCode)
+                    + "」真实运单号 " + waybillNo + "，正在等待承运商揽收", "system");
+            logisticsTrackingService.applyValidatedResult(o, verified);
             success++;
         }
 
@@ -465,10 +521,25 @@ public class ShipmentService {
                 .eq(Order::getWaybillNo, waybillNo)) > 0;
     }
 
-    private String genWaybill(String carrierCode, int idx) {
-        String day = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-        return carrierCode + day + String.format("%03d", idx)
-                + ThreadLocalRandom.current().nextInt(100, 999);
+    private boolean validWaybill(String waybillNo) {
+        return StringUtils.hasText(waybillNo)
+                && waybillNo.length() >= 6
+                && waybillNo.length() <= 32;
+    }
+
+    /**
+     * 超过承诺截止时间的订单必须先登记原因，才能进入发货流程。
+     * Mapper 中还有同口径的原子条件，防止校验后、更新前恰好跨过截止时间。
+     */
+    private boolean overdueWithoutReason(Order o, LocalDateTime now) {
+        return o != null
+                && o.getSlaDeadline() != null
+                && o.getSlaDeadline().isBefore(now)
+                && !StringUtils.hasText(o.getExceptionReason());
+    }
+
+    private String delayReasonRequiredMessage(Order o) {
+        return "订单 " + o.getOrderNo() + " 已超过承诺发货时限，请先登记超时原因后再发货";
     }
 
     private void addTrack(Order o, int status, String desc, String source) {

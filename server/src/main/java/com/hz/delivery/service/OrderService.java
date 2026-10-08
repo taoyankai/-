@@ -12,6 +12,7 @@ import com.hz.delivery.dto.OrderAddressDTO;
 import com.hz.delivery.dto.OrderCreateDTO;
 import com.hz.delivery.entity.*;
 import com.hz.delivery.mapper.*;
+import com.hz.delivery.service.logistics.LogisticsTrackingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -49,6 +50,7 @@ public class OrderService {
     private final CarrierMapper carrierMapper;
     private final StringRedisTemplate redis;
     private final BizProperties props;
+    private final LogisticsTrackingService logisticsTrackingService;
 
     private final ObjectMapper json = new ObjectMapper();
 
@@ -235,6 +237,7 @@ public class OrderService {
         if (granteeId != null && !granteeId.equals(o.getGranteeId())) {
             throw BizException.of(ErrorCode.ORDER_NO_PERMISSION, "该运单号不属于您的订单");
         }
+        logisticsTrackingService.syncOnAccess(o);
         return detail(granteeId, o.getId());
     }
 
@@ -342,9 +345,14 @@ public class OrderService {
     private String nextOrderNo() {
         String day = LocalDateTime.now().format(DAY_FMT);
         String key = ORDER_NO_SEQ_KEY + day;
+        String prefix = "HZ" + day;
+        if (!Boolean.TRUE.equals(redis.hasKey(key))) {
+            long dbMax = orderMapper.maxSequenceByOrderNoPrefix(prefix);
+            redis.opsForValue().setIfAbsent(key, String.valueOf(dbMax), 2, TimeUnit.DAYS);
+        }
         Long seq = redis.opsForValue().increment(key);
         redis.expire(key, 2, TimeUnit.DAYS);
-        return "HZ" + day + String.format("%04d", seq == null ? 1 : seq);
+        return prefix + String.format("%04d", seq == null ? 1 : seq);
     }
 
     private void addTrack(Long orderId, String orderNo, int status, String desc, String source) {

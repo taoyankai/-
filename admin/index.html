@@ -178,6 +178,35 @@ table.tbl .num{font-variant-numeric:tabular-nums;}
 }
 .fitem textarea{resize:vertical;min-height:96px;line-height:1.6;}
 .fitem input:focus,.fitem select:focus,.fitem textarea:focus{border-color:var(--brand-line);}
+/* ---------- batch shipment workspace ---------- */
+.modal.wide.ship-modal{width:min(1120px,calc(100vw - 48px));}
+.ship-tools{
+  display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:12px;
+  margin:0 0 18px;padding:14px;background:#F7F8FA;border:1px solid #E6E9ED;border-radius:10px;
+}
+.ship-tool{
+  min-width:0;padding:13px 14px;background:#fff;border:1px solid #E7EAEE;border-radius:9px;
+  box-shadow:0 1px 2px rgba(30,35,40,.025);
+}
+.ship-tool-h{font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:4px;}
+.ship-tool-tip{font-size:11.5px;color:var(--text-3);line-height:1.55;margin-bottom:10px;min-height:18px;}
+.ship-tool-row{display:flex;align-items:center;gap:8px;min-width:0;}
+.ship-tool-row select{
+  min-width:0;flex:1;height:38px;padding:0 34px 0 11px;border:1px solid #DDE1E6;border-radius:8px;
+  background:#fff;color:var(--text-1);font:400 13px/1.4 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  outline:none;
+}
+.ship-tool-row select:focus{border-color:var(--brand-line);box-shadow:0 0 0 3px rgba(201,59,50,.06);}
+.ship-tool .btn{height:38px;padding:0 13px;font-size:12.5px;}
+.ship-tool .btn.full{width:100%;}
+.ship-table table.tbl td{padding-top:13px;padding-bottom:13px;}
+.ship-table input{
+  width:100%;height:36px;padding:0 10px;border:1px solid #DDE1E6;border-radius:7px;background:#fff;
+  color:var(--text-1);font:400 12.5px/1.4 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;outline:none;
+}
+.ship-table input:focus{border-color:var(--brand-line);box-shadow:0 0 0 3px rgba(201,59,50,.06);}
+@media(max-width:960px){.ship-tools{grid-template-columns:1fr 1fr}.ship-tool:last-child{grid-column:1/-1;}}
+@media(max-width:680px){.ship-tools{grid-template-columns:1fr}.ship-tool:last-child{grid-column:auto}.modal.wide.ship-modal{width:calc(100vw - 24px)}}
 /* ---------- timeline ---------- */
 .tl{position:relative;padding-left:20px;}
 .tl .n{position:relative;padding-bottom:14px;}
@@ -360,6 +389,10 @@ const API = {
           this.profile = null;
           showLogin('登录已失效，请重新登录');
         }
+        if(data && data.code === 1051){
+          if(this.profile) this.profile.mustChangePassword = true;
+          openInitialPasswordChange();
+        }
         const err = new Error((data && data.msg) || ('请求失败（HTTP ' + resp.status + '）'));
         err.code = data && data.code;
         throw err;
@@ -371,7 +404,9 @@ const API = {
   get(p){ return this.raw('GET', p); },
   /* 只读账号（viewer）在界面层直接拦截写操作，后端拦截器同样会拒绝 */
   post(p, b){
-    if(!canWrite()) return Promise.reject(new Error('当前为只读账号，无操作权限'));
+    if(!canWrite() && p !== '/admin/auth/change-password' && p !== '/admin/auth/logout'){
+      return Promise.reject(new Error('当前为只读账号，无操作权限'));
+    }
     return this.raw('POST', p, b === undefined ? {} : b);
   },
   del(p){
@@ -605,7 +640,10 @@ const STATUS_META = {
   70:{label:'已退回',cls:'t-gray'}
 };
 const stTag = o => `<span class="tag ${STATUS_META[o.status].cls}">${STATUS_META[o.status].label}</span>`;
-const maskPhone = p => p.slice(0,3) + '****' + p.slice(-4);
+const maskPhone = p => {
+  const value = String(p == null ? '' : p);
+  return esc(value.length >= 7 ? value.slice(0,3) + '****' + value.slice(-4) : value);
+};
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* =========================================================
@@ -652,7 +690,10 @@ function renderSidebar(){
     </div>`;
   }).join('');
 }
-function go(k){ page = k; orderSel.clear(); render(); document.getElementById('main').scrollTop = 0; }
+function go(k){
+  page = k; orderSel.clear(); render(); document.getElementById('main').scrollTop = 0;
+  if(k === 'logistics') setTimeout(autoSyncLogistics, 0);
+}
 
 /* =========================================================
    工具
@@ -665,12 +706,17 @@ function toast(msg, ms=2000){
 function openModal(title, bodyHtml, footHtml, wide){
   document.getElementById('modal').className = 'modal' + (wide?' wide':'');
   document.getElementById('modal').innerHTML = `
-    <div class="mh"><h3>${title}</h3><span class="x" onclick="closeModal()">×</span></div>
+    <div class="mh"><h3></h3><span class="x" onclick="closeModal()">×</span></div>
     <div class="mb">${bodyHtml}</div>
     ${footHtml?`<div class="mf">${footHtml}</div>`:''}`;
+  document.querySelector('#modal .mh h3').textContent = title == null ? '' : String(title);
   document.getElementById('mask').classList.add('show');
 }
-function closeModal(){ document.getElementById('mask').classList.remove('show'); }
+let passwordChangeRequired = false;
+function closeModal(){
+  if(passwordChangeRequired) return;
+  document.getElementById('mask').classList.remove('show');
+}
 document.getElementById('mask').addEventListener('click', e => { if(e.target.id==='mask') closeModal(); });
 
 function exportCSV(filename, headers, rows){
@@ -813,7 +859,7 @@ function pageDashboard(){
         <thead><tr><th>订单号</th><th>领取人</th><th>所属单位</th><th>套餐</th><th>状态</th><th>发货时限</th><th>提交时间</th></tr></thead>
         <tbody>
           ${ORDERS.slice(0,6).map(o=>`<tr>
-            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="mono nowrap">${esc(o.orderNo)}</td>
             <td class="nowrap">${esc(o.granteeName)}</td>
             <td class="nowrap">${esc(o.org)}</td>
             <td class="nowrap">${esc(o.packageName)}</td>
@@ -856,7 +902,7 @@ function pageGrantees(){
       oninput="setFilter('grantee.kw', this.value, this)">
     <select onchange="F.grantee.org=this.value;render()">
       <option value="">全部单位</option>
-      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${esc(x.org)}</option>`).join('')}
     </select>
     <select onchange="F.grantee.status=this.value;render()">
       <option value="">全部状态</option>
@@ -876,7 +922,7 @@ function pageGrantees(){
       <tbody>
         ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">没有符合条件的教职工</div></td></tr>` : ''}
         ${list.map(g=>`<tr>
-          <td class="mono">${g.empNo}</td>
+          <td class="mono">${esc(g.empNo)}</td>
           <td>${esc(g.name)}</td>
           <td class="mono">${maskPhone(g.phone)}</td>
           <td>${esc(g.org)}</td>
@@ -895,11 +941,11 @@ function pageGrantees(){
 function granteeDetail(id){
   const g = GRANTEES.find(x=>x.id===id);
   const os = ORDERS.filter(o=>o.granteeId===id);
-  openModal('教职工详情 · ' + esc(g.name), `
+  openModal('教职工详情 · ' + g.name, `
     <dl class="dl">
-      <dt>工号</dt><dd class="mono">${g.empNo}</dd>
+      <dt>工号</dt><dd class="mono">${esc(g.empNo)}</dd>
       <dt>姓名</dt><dd>${esc(g.name)}</dd>
-      <dt>手机号</dt><dd class="mono">${g.phone}</dd>
+      <dt>手机号</dt><dd class="mono">${esc(g.phone)}</dd>
       <dt>所属单位</dt><dd>${esc(g.org)}</dd>
       <dt>部门</dt><dd>${esc(g.dept)}</dd>
       <dt>领取额度</dt><dd>${g.quota} 份（已领 ${g.used} 份）</dd>
@@ -910,7 +956,7 @@ function granteeDetail(id){
     <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
       <thead><tr><th>订单号</th><th>套餐</th><th>状态</th><th>提交时间</th></tr></thead>
       <tbody>${os.map(o=>`<tr>
-        <td class="mono">${o.orderNo}</td><td>${esc(o.packageName)}</td>
+        <td class="mono">${esc(o.orderNo)}</td><td>${esc(o.packageName)}</td>
         <td>${stTag(o)}</td><td>${fmt(o.createTime)}</td></tr>`).join('')}</tbody>
     </table></div>`}
   `, `<button class="btn sec" onclick="closeModal()">关闭</button>`);
@@ -1033,7 +1079,7 @@ function pagePackages(){
           const cnt = ORDERS.filter(o=>o.packageId===p.id && o.status!==50).length;
           const warn = p.stock > 0 && p.stock <= p.warn;
           return `<tr>
-            <td class="mono nowrap">${p.no}</td>
+            <td class="mono nowrap">${esc(p.no)}</td>
             <td>
               <div style="font-weight:500">${esc(p.name)}</div>
               <div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${esc(p.sub)}</div>
@@ -1050,6 +1096,7 @@ function pagePackages(){
               <span class="link" onclick="packageDetail(${p.id})">明细</span>
               <span class="link" style="margin-left:9px" onclick="editPackage(${p.id})">调整库存</span>
               <span class="link ${p.status?'danger':''}" style="margin-left:9px" onclick="togglePackage(${p.id})">${p.status?'下架':'上架'}</span>
+              ${!p.status?`<span class="link danger" style="margin-left:9px" onclick="deletePackage(${p.id})">删除</span>`:''}
             </td>
           </tr>`;
         }).join('')}
@@ -1059,9 +1106,9 @@ function pagePackages(){
 }
 function packageDetail(id){
   const p = PACKAGES.find(x=>x.id===id);
-  openModal('套餐明细 · ' + esc(p.name), `
+  openModal('套餐明细 · ' + p.name, `
     <dl class="dl">
-      <dt>套餐编号</dt><dd class="mono">${p.no}</dd>
+      <dt>套餐编号</dt><dd class="mono">${esc(p.no)}</dd>
       <dt>套餐名称</dt><dd>${esc(p.name)}</dd>
       <dt>副标题</dt><dd>${esc(p.sub)}</dd>
       <dt>库存</dt><dd>${p.stock} 份（预警阈值 ${p.warn}）</dd>
@@ -1097,7 +1144,7 @@ function openChangeLogs(){
 }
 function editPackage(id){
   const p = id ? PACKAGES.find(x=>x.id===id) : null;
-  openModal(p ? '调整套餐库存 · ' + esc(p.name) : '新建套餐', p ? `
+  openModal(p ? '调整套餐库存 · ' + p.name : '新建套餐', p ? `
     <dl class="dl" style="margin-bottom:14px">
       <dt>套餐编号</dt><dd class="mono">${esc(p.no)}</dd>
       <dt>当前库存</dt><dd>${p.stock} 份（预警阈值 ${p.warn}）</dd>
@@ -1204,6 +1251,23 @@ async function togglePackage(id){
     toast(going + '失败：' + e.message);
   }
 }
+async function deletePackage(id){
+  const p = PACKAGES.find(x=>x.id===id);
+  if(!p) return;
+  if(p.status){ toast('套餐仍处于上架状态，请先下架'); return; }
+  const reason = prompt('请填写删除套餐的原因（必填，将写入操作日志）：', '套餐停止供应');
+  if(reason === null) return;
+  const cleanReason = reason.trim();
+  if(!cleanReason){ toast('删除套餐必须填写原因'); return; }
+  if(!confirm('确认删除套餐「' + p.name + '」？\n\n删除后将不再出现在套餐管理和用户端，历史订单快照不受影响。')) return;
+  try {
+    await API.del('/admin/packages/' + p.id + '?reason=' + encodeURIComponent(cleanReason));
+    await reload();
+    toast('套餐已删除，历史订单保留');
+  } catch(e) {
+    toast('删除失败：' + e.message);
+  }
+}
 
 
 /* =========================================================
@@ -1239,11 +1303,11 @@ function pageOrders(){
     </select>
     <select onchange="F.order.org=this.value;render()">
       <option value="">全部单位</option>
-      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${esc(x.org)}</option>`).join('')}
     </select>
     <select onchange="F.order.pkg=this.value;render()">
       <option value="">全部套餐</option>
-      ${PACKAGES.map(p=>`<option value="${p.id}" ${f.pkg===String(p.id)?'selected':''}>${p.name}</option>`).join('')}
+      ${PACKAGES.map(p=>`<option value="${p.id}" ${f.pkg===String(p.id)?'selected':''}>${esc(p.name)}</option>`).join('')}
     </select>
     <select onchange="F.order.sla=this.value;render()">
       <option value="">全部时限状态</option>
@@ -1264,8 +1328,8 @@ function pageOrders(){
       <tbody>
         ${list.length === 0 ? `<tr><td colspan="8"><div class="empty">没有符合条件的订单</div></td></tr>` : ''}
         ${list.map(o=>`<tr>
-          <td class="mono nowrap">${o.orderNo}</td>
-          <td class="nowrap">${esc(o.granteeName)}<span style="color:var(--text-3);font-size:11.5px;margin-left:5px">${o.empNo}</span></td>
+          <td class="mono nowrap">${esc(o.orderNo)}</td>
+          <td class="nowrap">${esc(o.granteeName)}<span style="color:var(--text-3);font-size:11.5px;margin-left:5px">${esc(o.empNo)}</span></td>
           <td class="nowrap">${esc(o.org)}</td>
           <td class="nowrap">${esc(o.packageName)} ×${o.quantity}</td>
           <td>${stTag(o)}</td>
@@ -1283,11 +1347,11 @@ function orderDetail(id){
   openModal('订单详情 · ' + o.orderNo, `
     <dl class="dl">
       <dt>订单状态</dt><dd>${stTag(o)} ${o.status===0?`<span class="tag ${s.cls}" style="margin-left:6px">${remainText(o)}</span>`:''}</dd>
-      <dt>订单号</dt><dd class="mono">${o.orderNo}</dd>
-      <dt>领取人</dt><dd>${esc(o.granteeName)} · 工号 ${o.empNo}</dd>
+      <dt>订单号</dt><dd class="mono">${esc(o.orderNo)}</dd>
+      <dt>领取人</dt><dd>${esc(o.granteeName)} · 工号 ${esc(o.empNo)}</dd>
       <dt>所属单位</dt><dd>${esc(o.org)} / ${esc(o.dept)}</dd>
       <dt>套餐</dt><dd>${esc(o.packageName)} ×${o.quantity} 份</dd>
-      <dt>收货人</dt><dd>${esc(o.receiver)}　${o.phone}</dd>
+      <dt>收货人</dt><dd>${esc(o.receiver)}　${esc(o.phone)}</dd>
       <dt>收货地址</dt><dd>${esc(o.province+o.city+o.district+o.detail)}</dd>
       <dt>代收点授权</dt><dd>${o.allowStation?'<span class="tag t-warn">允许投放代收点</span>':'<span class="tag t-ok">不允许放代收点</span>'}</dd>
       ${o.expectCarrierName?`<dt>期望承运商</dt><dd>${esc(o.expectCarrierName)}${o.carrierName && o.carrierCode!==o.expectCarrier?` <span style="color:var(--text-3);font-size:11.5px">（实际 ${esc(o.carrierName)}）</span>`:''}</dd>`:''}
@@ -1295,13 +1359,13 @@ function orderDetail(id){
       <dt>提交时间</dt><dd>${fmt(o.createTime)}</dd>
       <dt>承诺发货</dt><dd>${fmt(o.slaDeadline)} 前（提交后 10 日内）</dd>
       <dt>实际发货</dt><dd>${o.shipTime ? fmt(o.shipTime) + `　<span class="tag ${(o.shipTime-o.createTime)<=10*DAY?'t-ok':'t-danger'}">用时 ${((o.shipTime-o.createTime)/DAY).toFixed(1)} 天</span>` : '—'}</dd>
-      ${o.carrierName?`<dt>承运商</dt><dd>${esc(o.carrierName)}</dd><dt>运单号</dt><dd class="mono">${o.waybillNo}</dd>`:''}
+      ${o.carrierName?`<dt>承运商</dt><dd>${esc(o.carrierName)}</dd><dt>运单号</dt><dd class="mono">${esc(o.waybillNo)}</dd>`:''}
       ${o.signTime?`<dt>签收时间</dt><dd>${fmt(o.signTime)}</dd>`:''}
       ${o.cancelReason?`<dt>取消原因</dt><dd>${esc(o.cancelReason)}</dd>`:''}
       ${o.delayReason?`<dt>延期原因</dt><dd>${esc(o.delayReason)}</dd>`:''}
     </dl>
     ${o.traces.length?`
-      <div class="sub-h">物流轨迹（${esc(o.carrierName)} ${o.waybillNo}）</div>
+      <div class="sub-h">物流轨迹（${esc(o.carrierName)} ${esc(o.waybillNo)}）</div>
       <div class="tl">${o.traces.map(t=>`<div class="n"><div class="tx">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}</div>`:''}
   `, `<button class="btn sec" onclick="closeModal()">关闭</button>
       ${o.status===0?`<button class="btn" onclick="closeModal();shipOne(${o.id})">立即发货</button>`:''}`);
@@ -1350,7 +1414,7 @@ function pageShip(){
       oninput="setFilter('ship.kw', this.value, this)">
     <select onchange="F.ship.org=this.value;render()">
       <option value="">全部单位</option>
-      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${x.org}</option>`).join('')}
+      ${ORG_TREE.map(x=>`<option ${f.org===x.org?'selected':''}>${esc(x.org)}</option>`).join('')}
     </select>
     <div class="sp"></div>
     <button class="btn sm sec" onclick="selectAllVisible()">全选当前结果</button>
@@ -1370,7 +1434,7 @@ function pageShip(){
           const s = slaInfo(o);
           return `<tr>
             <td><input type="checkbox" class="chk" ${orderSel.has(o.id)?'checked':''} onchange="toggleSel(${o.id},this.checked)"></td>
-            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="mono nowrap">${esc(o.orderNo)}</td>
             <td class="nowrap">${esc(o.granteeName)}<div style="font-size:11.5px;color:var(--text-3)">${esc(o.org)}</div></td>
             <td style="max-width:300px">
               <div style="font-size:12.5px">${esc(o.receiver)}　<span class="mono">${maskPhone(o.phone)}</span></div>
@@ -1381,6 +1445,7 @@ function pageShip(){
             <td class="nowrap">${fmt(o.createTime)}</td>
             <td class="nowrap">
               <span class="link" onclick="shipOne(${o.id})">发货</span>
+              ${s.key===3&&!o.delayReason?`<span class="link danger" style="margin-left:9px" onclick="delayReason(${o.id})">登记原因</span>`:''}
               <span class="link" style="margin-left:9px" onclick="orderDetail(${o.id})">详情</span>
             </td>
           </tr>`;
@@ -1412,93 +1477,155 @@ function shipOne(id){
 }
 function batchShip(){
   if(orderSel.size === 0){ toast('请先勾选需要发货的订单'); return; }
+  if(orderSel.size > 100){ toast('单次最多批量发货 100 笔，请分批操作'); return; }
   openShipModal();
 }
+let shipRetryDraft = new Map();
 function openShipModal(){
   const ids = [...orderSel];
   const list = ids.map(id => ORDERS.find(o=>o.id===id)).filter(Boolean);
   const overCount = list.filter(o=>slaInfo(o).key===3).length;
-  /* 预填承运商：优先取所选订单里用户选择最多的「期望承运商」 */
-  const expectCount = {};
-  list.forEach(o=>{ if(o.expectCarrier) expectCount[o.expectCarrier]=(expectCount[o.expectCarrier]||0)+1; });
-  const preset = Object.keys(expectCount).sort((a,b)=>expectCount[b]-expectCount[a])[0] || (CARRIERS[0]||{}).code;
+  const unresolvedOverCount = list.filter(o=>slaInfo(o).key===3&&!o.delayReason).length;
   const expectName = code => (CARRIERS.find(c=>c.code===code)||{}).name || code || '—';
   openModal(`批量发货 · 已选 ${list.length} 笔`, `
-    ${overCount?`<div class="notice" style="border-left-color:var(--danger);margin-bottom:14px">所选订单中有 <b>${overCount}</b> 笔已超出 10 日发货承诺，请尽快发出。</div>`:''}
-    <div class="notice" style="margin-bottom:14px">已按用户下单时选择的「期望承运商」预填；如需改发其它物流，可在下方调整。</div>
-    <div class="frow">
-      <div class="fitem">
-        <label>承运商</label>
-        <select id="shipCarrier">${CARRIERS.map(c=>`<option value="${c.code}" ${c.code===preset?'selected':''}>${c.name}</option>`).join('')}</select>
+    ${overCount?`<div class="notice" style="border-left-color:var(--danger);margin-bottom:14px">所选订单中有 <b>${overCount}</b> 笔已超出 10 日发货承诺。${unresolvedOverCount?`其中 <b>${unresolvedOverCount}</b> 笔尚未登记超时原因，系统将拒绝发货，请先在列表中登记。`:'均已登记超时原因，可以继续发货。'}</div>`:''}
+    <div class="notice" style="margin-bottom:14px">
+      每笔订单分别填写「承运商编码 + 运单号」，系统根据编码匹配承运商并进行真实校验。编码可选：
+      <b>${CARRIERS.map(c=>esc(c.code)).join(' / ')}</b>。
+    </div>
+    <datalist id="shipCarrierCodes">${CARRIERS.map(c=>`<option value="${esc(c.code)}">${esc(c.name)}</option>`).join('')}</datalist>
+    <div class="ship-tools">
+      <div class="ship-tool">
+        <div class="ship-tool-h">按订单偏好填充</div>
+        <div class="ship-tool-tip">恢复每笔订单下单时选择的期望承运商</div>
+        <button class="btn sec full" onclick="fillExpectedCarriers()">填充期望承运商</button>
       </div>
-      <div class="fitem">
-        <label>发货时间</label>
-        <input id="shipTime" value="${fmt(now())}">
+      <div class="ship-tool">
+        <div class="ship-tool-h">统一指定承运商</div>
+        <div class="ship-tool-tip">适用于本批订单由同一家快递统一揽收</div>
+        <div class="ship-tool-row">
+          <select id="batchCarrierCode">
+            <option value="">请选择承运商</option>
+            ${CARRIERS.map(c=>`<option value="${esc(c.code)}">${esc(c.code)} · ${esc(c.name)}</option>`).join('')}
+          </select>
+          <button class="btn sec" onclick="fillAllCarriers()">应用全部</button>
+        </div>
+      </div>
+      <div class="ship-tool">
+        <div class="ship-tool-h">从 Excel 快速录入</div>
+        <div class="ship-tool-tip">粘贴订单号、承运商编码、运单号三列数据</div>
+        <button class="btn sec full" onclick="toggleShipPaste()">打开粘贴区域</button>
       </div>
     </div>
-    <div class="fitem" style="margin-bottom:14px">
-      <label>运单号（每行一个，与下方订单顺序一一对应；留空则由系统模拟生成）</label>
-      <textarea id="shipWaybills" style="min-height:76px" placeholder="SF1234567890123&#10;SF1234567890124"></textarea>
+    <div id="shipPasteBox" style="display:none;margin-bottom:12px">
+      <div class="fitem">
+        <label>从 Excel 粘贴：订单号、承运商编码、运单号（每行一笔）</label>
+        <textarea id="shipPasteData" style="min-height:90px" placeholder="HZ202609010001&#9;ZTO&#9;465670598373386&#10;HZ202609010002&#9;STO&#9;777443291281761"></textarea>
+      </div>
+      <button class="btn sec" onclick="applyShipPaste()">匹配到当前订单</button>
     </div>
-    <div class="sub-h">待发货订单</div>
-    <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
-      <thead><tr><th>订单号</th><th>领取人</th><th>地址</th><th>代收点</th><th>期望承运商</th><th>时限</th></tr></thead>
+    <div class="sub-h">待发货明细</div>
+    <div class="tbl-wrap ship-table"><table class="tbl" style="min-width:1040px">
+      <thead><tr><th>订单号</th><th>领取人</th><th>期望承运商</th><th>承运商编码</th><th>识别结果</th><th>真实运单号</th><th>校验状态</th></tr></thead>
       <tbody>${list.map(o=>`<tr>
-        <td class="mono">${o.orderNo}</td><td>${esc(o.granteeName)}</td>
-        <td style="font-size:11.5px;color:var(--text-2)">${esc(o.province+o.city+o.district+o.detail).slice(0,34)}</td>
-        <td>${o.allowStation?'<span class="tag t-warn">已授权</span>':'<span class="tag t-ok">禁止投放</span>'}</td>
-        <td class="nowrap">${o.expectCarrier?`<span class="tag ${o.expectCarrier===preset?'t-brand':'t-gray'}">${esc(expectName(o.expectCarrier))}</span>`:'—'}</td>
-        <td><span class="tag ${slaInfo(o).cls}">${remainText(o)}</span></td></tr>`).join('')}</tbody>
+        <td class="mono nowrap">${esc(o.orderNo)}</td><td class="nowrap">${esc(o.granteeName)}</td>
+        <td class="nowrap">${o.expectCarrier?`<span class="tag t-gray">${esc(o.expectCarrier)} · ${esc(expectName(o.expectCarrier))}</span>`:'—'}</td>
+        <td style="width:130px"><input class="ship-carrier-code mono" data-id="${o.id}" data-expect="${esc(o.expectCarrier||'')}"
+          list="shipCarrierCodes" value="${esc((shipRetryDraft.get(o.id)||{}).carrierCode||o.expectCarrier||(CARRIERS[0]||{}).code||'')}" maxlength="16"
+          oninput="normalizeCarrierInput(this);updateShipCarrier(${o.id})"></td>
+        <td class="nowrap" id="shipCarrierName-${o.id}">${esc(expectName((shipRetryDraft.get(o.id)||{}).carrierCode||o.expectCarrier||(CARRIERS[0]||{}).code))}</td>
+        <td style="min-width:210px"><input class="ship-waybill mono" data-id="${o.id}" value="${esc((shipRetryDraft.get(o.id)||{}).waybillNo||'')}" placeholder="请输入真实运单号"></td>
+        <td class="nowrap" id="shipStatus-${o.id}"><span class="tag t-gray">待校验</span></td>
+      </tr>`).join('')}</tbody>
     </table></div>
   `, `<button class="btn sec" onclick="closeModal()">取消</button>
-      <button class="btn" id="shipBtn" onclick="doShip()">确认发货</button>`, true);
+      <button class="btn" id="shipBtn" onclick="doShip()">校验并发货（${list.length} 笔）</button>`, true);
+  document.getElementById('modal').classList.add('ship-modal');
+}
+function normalizeCarrierInput(input){ input.value = (input.value||'').trim().toUpperCase(); }
+function carrierByCode(code){ return CARRIERS.find(c=>c.code===(code||'').trim().toUpperCase()); }
+function updateShipCarrier(id){
+  const input = document.querySelector(`.ship-carrier-code[data-id="${id}"]`);
+  const target = document.getElementById('shipCarrierName-' + id);
+  const carrier = carrierByCode(input && input.value);
+  if(target) target.innerHTML = carrier ? esc(carrier.name) : '<span style="color:var(--danger)">无效编码</span>';
+}
+function fillExpectedCarriers(){
+  document.querySelectorAll('.ship-carrier-code').forEach(input=>{
+    if(input.dataset.expect) input.value = input.dataset.expect;
+    updateShipCarrier(input.dataset.id);
+  });
+}
+function fillAllCarriers(){
+  const code = (document.getElementById('batchCarrierCode').value||'').trim();
+  if(!code){ toast('请先选择要批量设置的承运商'); return; }
+  document.querySelectorAll('.ship-carrier-code').forEach(input=>{ input.value=code; updateShipCarrier(input.dataset.id); });
+}
+function toggleShipPaste(){
+  const box = document.getElementById('shipPasteBox');
+  if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+function applyShipPaste(){
+  const raw = (document.getElementById('shipPasteData').value||'').trim();
+  if(!raw){ toast('请先粘贴三列数据'); return; }
+  const selected = new Map([...orderSel].map(id=>{ const o=ORDERS.find(x=>x.id===id); return [o&&o.orderNo,o]; }));
+  let matched=0, missing=[];
+  raw.split(/\r?\n/).filter(Boolean).forEach((line,index)=>{
+    const cols = line.trim().split(/\t|,|\s{2,}/).map(x=>x.trim());
+    if(cols.length<3){ missing.push('第 '+(index+1)+' 行列数不足'); return; }
+    const o = selected.get(cols[0]);
+    if(!o){ missing.push(cols[0]+' 不在当前选择中'); return; }
+    const carrier = document.querySelector(`.ship-carrier-code[data-id="${o.id}"]`);
+    const waybill = document.querySelector(`.ship-waybill[data-id="${o.id}"]`);
+    carrier.value=(cols[1]||'').toUpperCase(); waybill.value=cols[2]||'';
+    updateShipCarrier(o.id); matched++;
+  });
+  toast('已匹配 '+matched+' 笔'+(missing.length?'，'+missing.length+' 行未匹配':''));
 }
 async function doShip(){
-  const carrierCode = document.getElementById('shipCarrier').value;
-  const rawNo = (document.getElementById('shipWaybills').value || '')
-    .split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
   const ids = [...orderSel];
   if(!ids.length){ toast('请先勾选需要发货的订单'); return; }
+  const items=[]; let invalid=0; const seen=new Set();
+  ids.forEach(id=>{
+    const carrierInput=document.querySelector(`.ship-carrier-code[data-id="${id}"]`);
+    const waybillInput=document.querySelector(`.ship-waybill[data-id="${id}"]`);
+    const carrierCode=(carrierInput&&carrierInput.value||'').trim().toUpperCase();
+    const waybillNo=(waybillInput&&waybillInput.value||'').trim();
+    const status=document.getElementById('shipStatus-'+id);
+    let message='';
+    if(!carrierByCode(carrierCode)) message='承运商编码无效';
+    else if(!waybillNo) message='请填写运单号';
+    else if(seen.has(waybillNo)) message='本批次运单号重复';
+    if(message){ invalid++; if(status) status.innerHTML=`<span class="tag t-danger">${message}</span>`; }
+    else { seen.add(waybillNo); items.push({orderId:id,carrierCode,waybillNo}); if(status) status.innerHTML='<span class="tag t-info">待校验</span>'; }
+  });
+  if(invalid){ toast('有 '+invalid+' 行填写不完整，请先修正'); return; }
   const btn = document.getElementById('shipBtn');
-  if(btn){ btn.disabled = true; btn.textContent = '发货中…'; }
+  if(btn){ btn.disabled = true; btn.textContent = '正在逐单校验（' + items.length + ' 笔）…'; }
+  items.forEach(x=>{ const s=document.getElementById('shipStatus-'+x.orderId); if(s) s.innerHTML='<span class="tag t-warn">校验中</span>'; });
   try {
-    let r;
-    if(rawNo.length){
-      /* 手工填写了运单号：逐单提交，保证运单号与订单一一对应 */
-      let success = 0, fails = [];
-      for(let i = 0; i < ids.length; i++){
-        if(!rawNo[i]){ fails.push('第 ' + (i + 1) + ' 笔未填写运单号，已跳过'); continue; }
-        try {
-          const one = await API.post('/admin/orders/ship',
-            {orderIds:[ids[i]], carrier: carrierCode, waybillNo: rawNo[i]});
-          success += (one && one.successCount) || 0;
-          ((one && one.failList) || []).forEach(x=>fails.push(x));
-        } catch(e) { fails.push(e.message); }
-      }
-      r = {successCount: success, failCount: fails.length, failList: fails};
-    } else {
-      /* 未填运单号：整批提交，由后端按承运商规则生成运单号 */
-      r = await API.post('/admin/orders/ship', {orderIds: ids, carrier: carrierCode});
-    }
-    orderSel.clear();
+    const r = await API.post('/admin/orders/batch-ship', {items});
+    const results=(r&&r.results)||[];
+    const failed=results.filter(x=>!x.success);
+    orderSel.clear(); failed.forEach(x=>orderSel.add(x.orderId));
+    shipRetryDraft = new Map(failed.map(x=>[x.orderId,{carrierCode:x.carrierCode,waybillNo:x.waybillNo}]));
     closeModal();
     await reload();
     const failCount = (r && r.failCount) || 0;
     toast('发货完成：成功 ' + ((r && r.successCount) || 0) + ' 笔' + (failCount ? '，失败 ' + failCount + ' 笔' : ''));
     if(failCount){
-      const fails = (r && r.failList) || [];
-      if(fails.length) openModal('部分订单发货失败', `
+      openModal('部分订单发货失败', `
         <div class="notice" style="border-left-color:var(--danger);margin-bottom:12px">
-          以下订单未能发货，请核对后重试。已成功的订单不受影响。
+          以下订单仍保持待发货状态。关闭后已自动保留失败项的勾选，可修正后重新批量发货。
         </div>
         <div class="tbl-wrap"><table class="tbl" style="min-width:auto">
-          <thead><tr><th>原因</th></tr></thead>
-          <tbody>${fails.map(x=>`<tr><td>${esc(x)}</td></tr>`).join('')}</tbody>
-        </table></div>`, '<button class="btn sec" onclick="closeModal()">知道了</button>');
+          <thead><tr><th>订单号</th><th>承运商编码</th><th>运单号</th><th>失败原因</th></tr></thead>
+          <tbody>${failed.map(x=>{const o=ORDERS.find(o=>o.id===x.orderId);return `<tr><td class="mono">${o?o.orderNo:x.orderId}</td><td>${esc(x.carrierCode)}</td><td class="mono">${esc(x.waybillNo)}</td><td>${esc(x.message)}</td></tr>`;}).join('')}</tbody>
+        </table></div>`, '<button class="btn sec" onclick="closeModal()">稍后处理</button><button class="btn" onclick="closeModal();openShipModal()">修正失败项</button>');
     }
   } catch(e) {
     toast('发货失败：' + e.message);
-    if(btn){ btn.disabled = false; btn.textContent = '确认发货'; }
+    if(btn){ btn.disabled = false; btn.textContent = '校验并发货（' + items.length + ' 笔）'; }
   }
 }
 
@@ -1513,7 +1640,7 @@ function importWaybills(){
   openModal('批量导入运单号', `
     <div class="notice" style="margin-bottom:14px">
       支持 <b>.xlsx / .xls</b>，列顺序：<b>订单号、承运商编码、运单号</b>。<br>
-      承运商编码可选值：${CARRIERS.map(c=>c.code).join(' / ')}。导入成功后订单自动置为「已发货」。
+      承运商编码可选值：${CARRIERS.map(c=>esc(c.code)).join(' / ')}。导入成功后订单自动置为「已发货」。
     </div>
     <div class="fitem" style="margin-bottom:14px">
       <label>选择文件</label>
@@ -1564,6 +1691,26 @@ async function doImportWaybills(){
 /* =========================================================
    页面：物流跟踪
    ========================================================= */
+let logisticsAutoSyncing = false;
+/* 打开物流页自动请求在途单；后端 Redis 会跳过 30 分钟内已查询的运单。 */
+async function autoSyncLogistics(){
+  if(logisticsAutoSyncing || page !== 'logistics' || !canWrite()) return;
+  const ids = ORDERS
+    .filter(o => [10,20,30,60].includes(o.status) && o.waybillNo)
+    .slice(0, 50).map(o => o.id);
+  if(!ids.length) return;
+  logisticsAutoSyncing = true;
+  try {
+    const result = await API.post('/admin/orders/logistics/sync-batch', {orderIds:ids});
+    await loadAll();
+    if(page === 'logistics') render();
+    if(result.insertedCount) toast('已自动更新 ' + result.insertedCount + ' 条物流轨迹');
+  } catch(e) {
+    console.warn('物流自动刷新失败，可使用单笔手动同步兜底', e);
+  } finally {
+    logisticsAutoSyncing = false;
+  }
+}
 function pageLogistics(){
   const f = F.logistics;
   let list = ORDERS.filter(o=>o.status>=10 && o.status!==50);
@@ -1581,6 +1728,8 @@ function pageLogistics(){
       <button class="btn sec" onclick="exportLogistics()">导出物流台账</button>
     </div>
   </div>
+
+  <div class="notice">进入本页会自动刷新在途运单；同一运单 30 分钟内只查询一次，仍可在轨迹详情中手动同步。</div>
 
   ${abnormal?`<div class="notice" style="border-left-color:var(--danger)">
     <b>异常件提醒：</b>当前有 <b>${abnormal}</b> 单派送异常（收件人未接通 / 拒收 / 地址问题），请及时跟进，避免产生投诉。
@@ -1611,10 +1760,10 @@ function pageLogistics(){
           const dur = o.shipTime ? (o.shipTime-o.createTime)/DAY : 0;
           const latest = o.traces[0];
           return `<tr>
-            <td class="mono nowrap">${o.orderNo}</td>
+            <td class="mono nowrap">${esc(o.orderNo)}</td>
             <td class="nowrap">${esc(o.granteeName)}</td>
             <td class="nowrap">${esc(o.carrierName)}</td>
-            <td class="mono nowrap">${o.waybillNo}</td>
+            <td class="mono nowrap">${esc(o.waybillNo)}</td>
             <td class="nowrap">${fmt(o.shipTime)}</td>
             <td class="nowrap"><span class="tag ${dur<=10?'t-ok':'t-danger'}">${dur.toFixed(1)} 天</span></td>
             <td class="nowrap">${stTag(o)}${o.allowStation?'':' <span class="tag t-ok">禁投代收点</span>'}</td>
@@ -1630,8 +1779,8 @@ function trackDetail(id){
   const o = ORDERS.find(x=>x.id===id);
   openModal('物流轨迹 · ' + o.orderNo, `
     <dl class="dl" style="margin-bottom:4px">
-      <dt>运单号</dt><dd class="mono">${o.carrierName} ${o.waybillNo}</dd>
-      <dt>收货人</dt><dd>${esc(o.receiver)}　${o.phone}</dd>
+      <dt>运单号</dt><dd class="mono">${esc(o.carrierName)} ${esc(o.waybillNo)}</dd>
+      <dt>收货人</dt><dd>${esc(o.receiver)}　${esc(o.phone)}</dd>
       <dt>收货地址</dt><dd>${esc(o.province+o.city+o.district+o.detail)}</dd>
       <dt>配送要求</dt><dd><span class="tag t-ok">上楼入户</span> ${o.allowStation?'<span class="tag t-warn">已授权放代收点</span>':'<span class="tag t-ok">禁止放代收点</span>'}</dd>
     </dl>
@@ -1640,16 +1789,15 @@ function trackDetail(id){
   `, `<button class="btn sec" onclick="closeModal()">关闭</button>
       <button class="btn" onclick="syncTracks(${o.id})">同步最新轨迹</button>`);
 }
-/* 重新拉取该单轨迹并原地刷新弹窗 */
+/* 调用真实物流平台同步该单，再刷新页面数据（后端仍执行 30 分钟限频）。 */
 async function syncTracks(id){
   try {
-    const list = await API.get('/admin/orders/' + id + '/tracks');
-    const o = ORDERS.find(x=>x.id===id);
-    if(o) o.traces = (list || []).map(t=>({desc:t.description, time:ts(t.trackTime)}));
+    const result = await API.post('/admin/orders/' + id + '/sync-logistics', {});
+    await reload();
     trackDetail(id);
-    toast('轨迹已刷新，共 ' + ((list || []).length) + ' 条');
+    toast(result.message + (result.insertedCount ? '，新增 ' + result.insertedCount + ' 条轨迹' : ''));
   } catch(e) {
-    toast('刷新失败：' + e.message);
+    toast('同步失败：' + e.message);
   }
 }
 function exportLogistics(){
@@ -1795,7 +1943,7 @@ function pageSla(){
           ${list.map(o=>{
             const s = slaInfo(o);
             return `<tr>
-              <td class="mono nowrap">${o.orderNo}</td>
+              <td class="mono nowrap">${esc(o.orderNo)}</td>
               <td class="nowrap">${esc(o.granteeName)}</td>
               <td class="nowrap">${esc(o.org)}</td>
               <td class="nowrap">${esc(o.packageName)}</td>
@@ -1948,7 +2096,7 @@ function pageReport(){
     </div>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr>${rep.headers.map(h=>`<th class="nowrap">${h}</th>`).join('')}</tr></thead>
+        <thead><tr>${rep.headers.map(h=>`<th class="nowrap">${esc(h)}</th>`).join('')}</tr></thead>
         <tbody>
           ${rep.rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?'nowrap':'num'}">${esc(c)}</td>`).join('')}</tr>`).join('')}
         </tbody>
@@ -1989,7 +2137,7 @@ function pageNotice(){
       <thead><tr><th class="nowrap">类型</th><th>标题</th><th>内容摘要</th><th class="nowrap">状态</th><th>操作</th></tr></thead>
       <tbody>
         ${NOTICES.map(n=>`<tr>
-          <td class="nowrap"><span class="tag ${n.type==='配送说明'?'t-brand':n.type==='偏远地区说明'?'t-warn':'t-gray'}">${n.type}</span></td>
+          <td class="nowrap"><span class="tag ${n.type==='配送说明'?'t-brand':n.type==='偏远地区说明'?'t-warn':'t-gray'}">${esc(n.type)}</span></td>
           <td class="nowrap">${esc(n.title)}</td>
           <td style="color:var(--text-2);font-size:12px;max-width:520px">${esc(n.content).slice(0,80)}…</td>
           <td class="nowrap">${n.status?'<span class="tag t-ok">已发布</span>':'<span class="tag t-gray">草稿</span>'}</td>
@@ -2170,6 +2318,41 @@ function hideLogin(){
   const el = document.getElementById('loginMask');
   if(el) el.classList.remove('show');
 }
+function openInitialPasswordChange(){
+  passwordChangeRequired = true;
+  hideLogin();
+  openModal('首次登录，请修改初始密码', `
+    <div class="notice" style="margin-bottom:14px">修改完成前无法使用后台其它功能。新密码长度须为 12-64 位，并至少包含大写字母、小写字母、数字、特殊字符中的三类。</div>
+    <div class="fitem"><label>当前初始密码</label><input id="cpCurrent" type="password" autocomplete="current-password"></div>
+    <div class="fitem"><label>新密码</label><input id="cpNew" type="password" autocomplete="new-password"></div>
+    <div class="fitem"><label>确认新密码</label><input id="cpConfirm" type="password" autocomplete="new-password"></div>
+    <div id="cpMsg" style="font-size:12.5px;color:var(--danger);min-height:18px"></div>
+  `, '<button class="btn" id="cpBtn" onclick="submitInitialPasswordChange()">确认修改并进入后台</button>');
+  const close = document.querySelector('#modal .x');
+  if(close) close.style.display = 'none';
+}
+async function submitInitialPasswordChange(){
+  const currentPassword = document.getElementById('cpCurrent').value || '';
+  const newPassword = document.getElementById('cpNew').value || '';
+  const confirmPassword = document.getElementById('cpConfirm').value || '';
+  const msg = document.getElementById('cpMsg');
+  if(!currentPassword || !newPassword || !confirmPassword){ msg.textContent='请完整填写三个密码框'; return; }
+  if(newPassword !== confirmPassword){ msg.textContent='两次输入的新密码不一致'; return; }
+  const btn = document.getElementById('cpBtn');
+  btn.disabled = true; btn.textContent = '修改中…';
+  try {
+    await API.post('/admin/auth/change-password', {currentPassword, newPassword});
+    API.profile.mustChangePassword = false;
+    passwordChangeRequired = false;
+    closeModal();
+    toast('密码修改成功');
+    await reload();
+  } catch(e) {
+    msg.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '确认修改并进入后台';
+  }
+}
 const ROLE_NAME = {admin:'系统管理员', operator:'项目运营', viewer:'只读查看'};
 function renderTopbar(){
   const d = new Date();
@@ -2202,6 +2385,11 @@ async function doAdminLogin(){
     API.setToken(d.token);
     API.profile = d;
     hideLogin();
+    renderTopbar();
+    if(d.mustChangePassword){
+      openInitialPasswordChange();
+      return;
+    }
     await reload();
   } catch(e) {
     box.textContent = e.message;
@@ -2237,6 +2425,11 @@ async function tryRestoreSession(){
 (async function start(){
   renderTopbar();
   if(await tryRestoreSession()){
+    if(API.profile && API.profile.mustChangePassword){
+      renderTopbar();
+      openInitialPasswordChange();
+      return;
+    }
     try {
       await reload();
       return;

@@ -1,5 +1,6 @@
 package com.hz.delivery.config;
 
+import com.hz.delivery.common.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+    private final BizProperties bizProperties;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -28,12 +30,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = bizProperties.getCorsAllowedOrigins().stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !"*".equals(s))
+                .toArray(String[]::new);
         registry.addMapping("/api/**")
-                .allowedOriginPatterns("*")
+                .allowedOrigins(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                .allowedHeaders("Content-Type", Constants.HEADER_TOKEN)
                 .exposedHeaders("Content-Disposition")
-                .allowCredentials(true)
+                .allowCredentials(false)
                 .maxAge(3600);
     }
 }

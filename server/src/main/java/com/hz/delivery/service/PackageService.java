@@ -128,13 +128,25 @@ public class PackageService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public GoodsPackage delete(Long id, String reason, String operator) {
+        if (!StringUtils.hasText(reason)) {
+            throw BizException.of(ErrorCode.PARAM_ERROR, "删除套餐必须填写原因");
+        }
         GoodsPackage p = packageMapper.selectById(id);
         if (p == null) {
-            return;
+            throw BizException.of(ErrorCode.NOT_FOUND, "套餐不存在或已删除");
         }
+        if (p.getStatus() != null && p.getStatus() == 1) {
+            throw BizException.of(ErrorCode.PARAM_ERROR, "套餐仍处于上架状态，请先下架后再删除");
+        }
+        p.setChangeReason((StringUtils.hasText(operator) ? operator : "管理员")
+                + "：删除套餐：" + reason.trim());
+        packageMapper.updateById(p);
         packageMapper.deleteById(id);
         itemMapper.delete(new LambdaQueryWrapper<PackageItem>().eq(PackageItem::getPackageId, id));
+        log.warn("套餐已逻辑删除 packageId={} no={} operator={} reason={}",
+                p.getId(), p.getNo(), operator, reason.trim());
+        return p;
     }
 
     private void fillItems(GoodsPackage p) {

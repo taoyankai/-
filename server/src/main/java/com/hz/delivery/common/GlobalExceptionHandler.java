@@ -1,6 +1,7 @@
 package com.hz.delivery.common;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,6 +41,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ApiResult<Void> handleUploadSize(MaxUploadSizeExceededException e) {
         return ApiResult.fail(ErrorCode.EXCEL_TOO_LARGE);
+    }
+
+    /** 数据库唯一约束是并发写入的最终防线；将约束名转换为可理解的业务提示。 */
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ApiResult<Void> handleDuplicateKey(DuplicateKeyException e) {
+        String message = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+        log.warn("唯一约束冲突：{}", e.getMessage());
+        if (message.contains("uk_order_waybill_no")) {
+            return ApiResult.fail(ErrorCode.WAYBILL_DUPLICATE);
+        }
+        if (message.contains("uk_grantee_phone")) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "该手机号已存在（包括已删除的历史记录）");
+        }
+        if (message.contains("uk_admin_username")) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "管理员账号已存在");
+        }
+        if (message.contains("uk_order_order_no")) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "订单号生成冲突，请重新提交");
+        }
+        if (message.contains("uk_carrier_code")) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "承运商编码已存在");
+        }
+        if (message.contains("uk_import_batch_no")) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "导入批次号生成冲突，请重试");
+        }
+        return ApiResult.fail(ErrorCode.PARAM_ERROR, "数据已存在，请勿重复提交");
     }
 
     @ExceptionHandler(Exception.class)
