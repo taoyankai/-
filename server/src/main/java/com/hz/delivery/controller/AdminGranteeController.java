@@ -125,9 +125,23 @@ public class AdminGranteeController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResult<Void> delete(@PathVariable Long id) {
-        granteeService.delete(id);
-        return ApiResult.ok();
+    public ApiResult<Void> delete(@RequestAttribute(Constants.ATTR_ADMIN_ID) Long adminId,
+                                  @PathVariable Long id,
+                                  HttpServletRequest request) {
+        try {
+            adminAuthService.requireAdmin(adminId);
+            Grantee deleted = granteeService.delete(id);
+            String target = deleted == null
+                    ? "教职工 ID=" + id
+                    : "教职工 " + deleted.getName() + "（" + deleted.getPhone() + "）";
+            operationLogService.success(adminId, "grantee", "delete", target,
+                    "仅系统管理员可执行；ID=" + id, deleted == null ? 0 : 1, request);
+            return ApiResult.ok();
+        } catch (RuntimeException e) {
+            operationLogService.fail(adminId, "grantee", "delete", "教职工 ID=" + id,
+                    "删除教职工", e.getMessage(), request);
+            throw e;
+        }
     }
 
     /**

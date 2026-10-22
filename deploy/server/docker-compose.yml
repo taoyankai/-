@@ -1,25 +1,27 @@
 # ============================================================================
-#  华中商贸配送中心 · 服务器部署编排（生产/演示环境专用）
-#
-#  与仓库根目录 docker-compose.yml 的区别：
-#    1. 只对外暴露 80（Nginx 一个入口）。MySQL / Redis / 后端 API 端口**不对校园网开放**，
-#       它们只在内部 hz-net 网络里互通 —— 校园网里的其他机器扫不到你的数据库。
-#    2. api 用 image 而非 build：服务器上不需要 Maven / JDK / 外网依赖，
-#       镜像在开发机构建好、docker save 传过来 docker load 即可。
-#    3. 加了内存上限与日志轮转，避免长期运行把磁盘写满。
+#  华中商贸配送中心 · 统一部署入口（GitHub 源码 + Docker Compose）
+#  仅 Nginx 暴露 WEB_PORT；MySQL / Redis / API 只通过容器网络访问。
+#  默认用正式初始化脚本，只在 MySQL 数据卷为空时执行。
+#  沿用原有容器名和数据卷名；已有数据卷不会自动移除演示数据。
 #
 #  使用：
 #    cd /opt/hz-delivery/deploy/server
 #    cp .env.example .env && vi .env        # 改密码！
-#    docker compose up -d
+#    docker compose config --quiet
+#    docker compose build api
+#    docker compose up -d --no-build
 #    docker compose ps
 #
-#  小程序/后台访问入口（校园网内）：
-#    http://10.191.19.25/            教职工端 H5
-#    http://10.191.19.25/admin/      管理后台
-#    http://10.191.19.25/api/        后端接口（小程序走这个）
-#    http://10.191.19.25/healthz     健康检查
+#  /             教职工端 H5          /admin/          管理后台
+#  /api/         后端接口             /healthz         Nginx 存活
+#  /actuator/health                  后端及数据库、Redis 健康
 # ============================================================================
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
 
@@ -28,6 +30,7 @@ services:
     image: mysql:8.0
     container_name: hz-mysql
     restart: unless-stopped
+    logging: *default-logging
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?必须在 .env 中设置}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-hz_delivery}
@@ -40,8 +43,13 @@ services:
       - --innodb-buffer-pool-size=512M
     volumes:
       - mysql-data:/var/lib/mysql
-      # 首次启动（数据卷为空时）自动建表并写入初始数据
-      - ../../db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # 文件缺失时立即报错，避免 Docker 静默创建同名目录。
+      - type: bind
+        source: ../../db/init-production.sql
+        target: /docker-entrypoint-initdb.d/01-init.sql
+        read_only: true
+        bind:
+          create_host_path: false
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
@@ -60,6 +68,7 @@ services:
     image: redis:7.4-alpine
     container_name: hz-redis
     restart: unless-stopped
+    logging: *default-logging
     command: >
       redis-server
       --appendonly yes
@@ -83,9 +92,15 @@ services:
 
   # ---------------- 后端服务（仅内部网络，由 Nginx 反代） ----------------
   api:
-    image: hz-delivery-server:1.0.0
+    image: hz-delivery-server:${APP_VERSION:?必须在 .env 中设置 APP_VERSION}
+    # 先显式 build，再 up --no-build；不从公共仓库拉取这个本地构建的镜像。
+    pull_policy: never
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
     container_name: hz-api
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       mysql:
         condition: service_healthy
@@ -125,6 +140,13 @@ services:
       KUAIDI100_CONNECT_TIMEOUT: ${KUAIDI100_CONNECT_TIMEOUT:-5}
       KUAIDI100_READ_TIMEOUT: ${KUAIDI100_READ_TIMEOUT:-10}
       SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      SMS_AUTH_PROVIDER: ${SMS_AUTH_PROVIDER:-local}
+      SMS_AUTH_TEST_ENABLED: ${SMS_AUTH_TEST_ENABLED:-false}
+      ALIBABA_CLOUD_ACCESS_KEY_ID: ${ALIBABA_CLOUD_ACCESS_KEY_ID:-}
+      ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${ALIBABA_CLOUD_ACCESS_KEY_SECRET:-}
+      ALIYUN_PNVS_SIGN_NAME: ${ALIYUN_PNVS_SIGN_NAME:-}
+      ALIYUN_PNVS_TEMPLATE_CODE: ${ALIYUN_PNVS_TEMPLATE_CODE:-}
+      ALIYUN_PNVS_SCHEME_NAME: ${ALIYUN_PNVS_SCHEME_NAME:-hz-client-login}
       SMS_TEST_ENABLED: ${SMS_TEST_ENABLED:-false}
       SMS_HBU_BASE_URL: ${SMS_HBU_BASE_URL:-http://sim.hbu.edu.cn/sms-hbu/api}
       SMS_HBU_CID: ${SMS_HBU_CID:-7}
@@ -147,14 +169,31 @@ services:
     image: nginx:1.27-alpine
     container_name: hz-nginx
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       TZ: Asia/Shanghai
     volumes:
-      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../../miniapp:/usr/share/nginx/html/h5:ro
-      - ../../admin:/usr/share/nginx/html/admin:ro
+      - type: bind
+        source: ../nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../../miniapp
+        target: /usr/share/nginx/html/h5
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../../admin
+        target: /usr/share/nginx/html/admin
+        read_only: true
+        bind:
+          create_host_path: false
     ports:
       - "${WEB_PORT:-80}:80"
     deploy:

@@ -44,7 +44,7 @@ public class DataInitializer implements ApplicationRunner {
         if (created) {
             log.warn("==================================================================");
             log.warn(" 已补齐默认后台账号：admin / operator / viewer");
-            log.warn(" 初始密码：{}   —— 请登录后立即修改！", pwd);
+            log.warn(" 初始密码由 ADMIN_INIT_PASSWORD 配置，请登录后立即修改；日志不输出密码");
             log.warn("==================================================================");
         }
     }

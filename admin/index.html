@@ -932,6 +932,7 @@ function pageGrantees(){
           <td class="nowrap">
             <span class="link" onclick="granteeDetail(${g.id})">详情</span>
             ${g.used>0?`<span class="link danger" style="margin-left:9px" onclick="resetQuota(${g.id})">重置额度</span>`:''}
+            ${API.profile && API.profile.role==='admin'?`<span class="link danger" style="margin-left:9px" onclick="deleteGrantee(${g.id})">删除</span>`:''}
           </td>
         </tr>`).join('')}
       </tbody>
@@ -971,6 +972,22 @@ async function resetQuota(id){
     toast('已重置 ' + g.name + ' 的领取额度');
   } catch(e) {
     toast('重置失败：' + e.message);
+  }
+}
+async function deleteGrantee(id){
+  const g = GRANTEES.find(x=>x.id===id);
+  if(!g) return;
+  if(!API.profile || API.profile.role !== 'admin'){
+    toast('仅系统管理员可删除教职工');
+    return;
+  }
+  if(!confirm('确认删除教职工「' + g.name + '」？\n\n删除后该教职工将无法登录，且操作无法撤销；已领取慰问品的教职工不可删除。')) return;
+  try {
+    await API.del('/admin/grantees/' + id);
+    await reload();
+    toast('已删除教职工 ' + g.name);
+  } catch(e) {
+    toast('删除失败：' + e.message);
   }
 }
 async function downloadTemplate(){

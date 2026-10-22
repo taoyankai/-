@@ -1,7 +1,7 @@
 {
   "description": "华中商贸配送中心 · 教职工慰问品配送小程序（小程序代码在 miniprogram/）",
   "projectname": "hz-delivery",
-  "appid": "wx67f6685a1a7bc5f3",
+  "appid": "wxf96c849829b2ad90",
   "compileType": "miniprogram",
   "libVersion": "3.4.0",
   "miniprogramRoot": "miniprogram/",

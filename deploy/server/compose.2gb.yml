@@ -1,0 +1,47 @@
+# 2核/2GB 主机：与 docker-compose.yml 合并，命令在 deploy/server 下执行。
+# docker compose --env-file .env -f docker-compose.yml -f compose.2gb.yml up -d --no-build --pull never --wait
+# 首轮通过 SSH 隧道验收；配置 HTTPS 后再安排公网开放。
+services:
+  mysql:
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+      - --max-connections=50
+      - --innodb-buffer-pool-size=128M
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  redis:
+    command: >
+      redis-server --appendonly yes --maxmemory 64mb --maxmemory-policy noeviction
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+  api:
+    build:
+      args:
+        MAVEN_JAVA_OPTS: "-Xms64m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m -XX:ActiveProcessorCount=2 -XX:+UseSerialGC"
+    environment:
+      JAVA_OPTS: ${LOW_MEMORY_JAVA_OPTS:--Xms64m -Xmx320m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m -Xss512k -XX:ActiveProcessorCount=2 -XX:+UseG1GC -Dfile.encoding=UTF-8}
+      SERVER_TOMCAT_THREADS_MAX: 40
+      SERVER_TOMCAT_THREADS_MINSPARE: 5
+      SERVER_TOMCAT_ACCEPTCOUNT: 50
+      SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 8
+      SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 2
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAXACTIVE: 8
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAXIDLE: 4
+      SPRING_DATA_REDIS_LETTUCE_POOL_MINIDLE: 1
+    deploy:
+      resources:
+        limits:
+          memory: 640M
+  nginx:
+    ports: !override
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-80}:80"
+    deploy:
+      resources:
+        limits:
+          memory: 96M

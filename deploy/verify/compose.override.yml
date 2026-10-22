@@ -1,0 +1,26 @@
+services:
+  mysql:
+    container_name: hz-verify-mysql
+
+  redis:
+    container_name: hz-verify-redis
+
+  api:
+    container_name: hz-verify-api
+
+  nginx:
+    container_name: hz-verify-nginx
+    ports: !override
+      - "127.0.0.1:18081:80"
+
+volumes:
+  mysql-data:
+    name: hz-verify-mysql-data
+  redis-data:
+    name: hz-verify-redis-data
+  api-logs:
+    name: hz-verify-api-logs
+
+networks:
+  hz-net:
+    name: hz-verify-net

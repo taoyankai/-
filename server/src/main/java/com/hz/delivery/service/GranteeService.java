@@ -139,15 +139,16 @@ public class GranteeService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public Grantee delete(Long id) {
         Grantee g = granteeMapper.selectById(id);
         if (g == null) {
-            return;
+            return null;
         }
         if (g.getUsed() != null && g.getUsed() > 0) {
             throw BizException.of(ErrorCode.PARAM_ERROR, "该教职工已领取慰问品，不可删除；如确需移除请先停用");
         }
         granteeMapper.deleteById(id);
+        return g;
     }
 
     /**

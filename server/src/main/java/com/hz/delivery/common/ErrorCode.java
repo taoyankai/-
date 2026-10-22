@@ -24,6 +24,7 @@ public enum ErrorCode {
     SMS_NOT_REQUIRED(1007, "当前登录方式无需短信验证码，请填写手机号与姓名登录"),
     SMS_TEST_DISABLED(1008, "短信自检接口未启用（需设置 SMS_TEST_ENABLED=true）"),
     SMS_SEND_FAILED(1009, "短信发送失败，请联系管理员检查短信通道配置"),
+    SMS_AUTH_UNAVAILABLE(1010, "短信认证暂时不可用，请稍后重试"),
 
     // 后台认证 1050+
     ADMIN_LOGIN_LOCKED(1050, "后台登录失败次数过多，请稍后再试"),

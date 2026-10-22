@@ -5,6 +5,8 @@ import com.hz.delivery.common.BizException;
 import com.hz.delivery.common.ErrorCode;
 import com.hz.delivery.config.BizProperties;
 import com.hz.delivery.service.sms.SmsSender;
+import com.hz.delivery.service.AuthService;
+import com.hz.delivery.service.sms.auth.SmsVerificationService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,8 @@ public class AdminSmsController {
 
     private final SmsSender smsSender;
     private final BizProperties props;
+    private final AuthService authService;
+    private final SmsVerificationService smsVerification;
 
     /** 当前短信通道与自检开关状态 */
     @GetMapping("/status")
@@ -48,7 +52,35 @@ public class AdminSmsController {
         m.put("provider", smsSender.provider());
         m.put("testEnabled", props.getSms().isTestEnabled());
         m.put("loginMode", props.getLoginMode());
+        m.put("authProvider", smsVerification.provider());
+        m.put("authTestEnabled", props.getSmsAuth().isTestEnabled());
         return ApiResult.ok(m);
+    }
+
+    /** 验证码认证自检仍经过名单、频控和每日上限，不允许绕过业务规则。 */
+    @PostMapping("/auth/send-code")
+    public ApiResult<Map<String, Object>> authSendCode(
+            @RequestParam @Pattern(regexp = "^1\\d{10}$") String phone) {
+        requireAuthTest();
+        return ApiResult.ok(authService.sendCode(phone));
+    }
+
+    /** 完整核验后立即注销临时令牌，只向管理员返回通过结果。 */
+    @PostMapping("/auth/verify-code")
+    public ApiResult<Map<String, Object>> authVerifyCode(
+            @RequestParam @Pattern(regexp = "^1\\d{10}$") String phone,
+            @RequestParam @Pattern(regexp = "^[0-9]{6}$") String code) {
+        requireAuthTest();
+        if (!authService.smsMode()) throw BizException.of(ErrorCode.SMS_NOT_REQUIRED);
+        var login = authService.login(phone, code, null);
+        authService.logout(login.getToken());
+        return ApiResult.ok(Map.of("verified", true, "provider", smsVerification.provider()));
+    }
+
+    private void requireAuthTest() {
+        if (!props.getSmsAuth().isTestEnabled()) {
+            throw BizException.of(ErrorCode.SMS_TEST_DISABLED, "验证码认证自检未启用（SMS_AUTH_TEST_ENABLED=false）");
+        }
     }
 
     /**

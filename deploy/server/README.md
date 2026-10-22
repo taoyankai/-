@@ -1,171 +1,183 @@
-# 服务器部署与运维手册
+# 统一部署与维护手册
 
-**已部署环境**：`10.191.19.25`（Ubuntu 20.04 / 4 核 8G / 85G 可用）
-**部署目录**：`/opt/hz-delivery`
-**访问入口**：`http://10.191.19.25/`（校园网内）
+当前采用 **GitHub 拉取指定版本源码 → Docker Compose 构建后端 → Nginx 提供页面与 API**。本手册用于后续本地验证和服务器部署，不表示已经完成上线。
 
----
+目标服务器 `118.89.27.5` 为 2GB 内存，按用户选定的 **本地修改 → 提交 GitHub 并打版本标签 → 服务器拉取指定标签 → 服务器构建镜像 → 更新容器** 流程部署。具体命令见 [2GB 主机部署说明](SERVER-2GB.md)；该主机必须合并 `compose.2gb.yml`。GitHub、镜像仓库及 Maven 下载需先通过目标主机网络检查。
 
-## 一、这次部署做了什么
+原服务器地址、网络连通性和历史部署记录移至[旧环境记录](../../docs/archive/服务器部署记录-旧环境.md)，本手册不预设目标服务器 IP。
 
-| 步骤 | 内容 |
-| --- | --- |
-| 1 | 安装 `docker.io` 26.1.3 + `docker-compose-v2` 2.27.1（apt） |
-| 2 | 配置镜像加速 `https://docker.m.daocloud.io` —— 该服务器**直连 Docker Hub 不通**，不加这个拉不到镜像 |
-| 3 | 基础镜像：`mysql:8.0`、`redis:7.4-alpine`、`nginx:1.27-alpine` 由服务器自行拉取 |
-| 4 | 后端镜像 `hz-delivery-server:1.0.0` 在开发机构建后 `docker save` → SFTP → `docker load`（**服务器上不需要 JDK/Maven/外网依赖**） |
-| 5 | 生成生产 `.env`（密码在服务器上随机生成，权限 600） |
-| 6 | 启动四个容器，`db/init.sql` 自动建表并导入演示数据 |
-| 7 | 验证：网关健康、后台登录、C 端登录、越权拦截、开机自启 |
+## 目录与运行方式
 
-**初始凭据**在服务器上：`/root/hz-initial-credentials.txt`（权限 600，含后台初始密码与数据库密码）。
-用你的 SSH 工具 `cat /root/hz-initial-credentials.txt` 查看。**首次登录后台后请立即修改密码。**
+保留完整仓库结构。所有 Compose 命令在仓库的 `deploy/server/` 目录执行：
 
----
-
-## 二、目录结构
-
-```
-/opt/hz-delivery/
-├── db/init.sql                        建表 + 演示数据（只在数据库卷为空时执行一次）
-├── miniapp/index.html                 教职工端 H5
-├── admin/index.html                   管理后台
+```text
+仓库根目录/
+├── server/                         Dockerfile、pom.xml、settings.xml、src/
+├── admin/index.html                管理后台
+├── miniapp/index.html              教职工端 H5
+├── db/init-production.sql          正式空库初始化
 └── deploy/
-    ├── nginx/nginx.conf               反向代理（/api → hz-api:8080）
+    ├── nginx/nginx.conf
     └── server/
-        ├── docker-compose.yml         服务器编排（只暴露 80）
-        ├── .env                       ★ 生产配置（含密码，权限 600）
-        └── .env.example               配置模板
+        ├── docker-compose.yml     唯一 Compose 入口
+        ├── .env.example           配置模板
+        ├── .env                   本机/服务器单独创建，不提交 Git
+        └── README.md
 ```
 
----
-
-## 三、端口与安全
-
-| 容器 | 对外端口 | 说明 |
-| --- | --- | --- |
-| hz-nginx | **80** | 唯一对外入口 |
-| hz-api | 无 | 仅内部网络，由 Nginx 反代 |
-| hz-mysql | 无 | 仅内部网络 —— **校园网内其他机器扫不到数据库** |
-| hz-redis | 无 | 仅内部网络 |
-
-> 这是与开发机 `docker-compose.yml` 的关键差异。开发机上为了方便调试会映射 3306/6379/8080，
-> **服务器上不要这样做**。
-
----
-
-## 四、常用运维命令
-
-```bash
-cd /opt/hz-delivery/deploy/server
-
-# 查看状态与健康
-docker compose ps
-docker inspect --format '{{.State.Health.Status}}' hz-api
-
-# 看日志
-docker compose logs -f api          # 后端
-docker logs hz-nginx 2>&1 | tail -50  # Nginx 访问日志（含来源 IP、UA）
-docker logs hz-mysql 2>&1 | tail -30
-
-# 重启 / 停止 / 启动
-docker compose restart api
-docker compose stop
-docker compose up -d
-
-# 进数据库
-docker exec -it hz-mysql mysql -uroot -p hz_delivery
-
-# 备份数据库（建议加进 crontab）
-docker exec hz-mysql mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" hz_delivery \
-  | gzip > /root/backup/hz_$(date +%F_%H%M).sql.gz
-```
-
----
-
-## 五、更新部署（改了后端代码怎么办）
-
-后端镜像是在**开发机**构建的，服务器不参与编译。所以流程是：
-
-```bash
-# ① 开发机：重新构建镜像
-docker compose build api
-docker save hz-delivery-server:1.0.0 | gzip -1 > hz-api.tar.gz
-# 把 hz-api.tar.gz 传到服务器（scp / sftp）
-# ② 服务器：加载并重启
-docker load -i /tmp/hz-api.tar.gz
-cd /opt/hz-delivery/deploy/server && docker compose up -d
-```
-
-前端（`miniapp/` / `admin/`）是静态文件，直接覆盖对应目录即可，**无需重启容器**
-（Nginx 以只读方式挂载，改完刷新浏览器就生效）。
-
----
-
-## 六、复位演示数据
-
-⚠️ **会清空所有数据**（包括已提交的领取信息与订单）。
-
-```bash
-cd /opt/hz-delivery/deploy/server
-docker compose down
-docker volume rm hz-mysql-data        # 删掉数据卷，下次启动会重新执行 init.sql
-docker compose up -d
-docker compose exec mysql mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD"   # 等 healthy
-```
-
-> 注意：`db/init.sql` **不含后台账号种子**，后台账号由应用启动时的 `DataInitializer` 创建
-> （仅当 `t_admin` 为空）。所以复位后必须让 `hz-api` 也重新启动一次，否则后台登录会失败。
-
----
-
-## 七、访问入口与上线到外面
-
-**已做端口映射**：内网 `10.191.19.25:80` → 公网 **`http://221.192.236.175/`**
-（经 5 个海外节点实测 80 端口连通，接口契约检查在公网地址上 44/44 通过）。
-
-| 场景 | 能否访问 |
-| --- | --- |
-| 校园网内 / 校外浏览器访问 H5、后台 | ✅ 可以 |
-| 开发者工具模拟器、真机调试（勾「不校验合法域名」） | ✅ 可以 |
-| 云函数转发后端 | ✅ 可以 |
-| **体验版 / 正式版小程序的 `wx.request`** | ❌ **不可以** |
-
-**为什么正式版不行**：微信要求 `wx.request` 的目标必须同时满足
-**HTTPS + 已 ICP 备案的域名**，而 **IP 地址不能登记为合法域名**、http 也会被拒。
-所以 `http://221.192.236.175` 只能用于开发调试。正式上线二选一：
-
-| 路径 | 做法 | 备案 | HTTPS 证书 |
+| 服务 | 镜像/来源 | 对宿主机映射端口 | 持久化 |
 | --- | --- | --- | --- |
-| **① 云函数转发**（推荐） | 小程序 → `wx.cloud.callFunction` → 云函数 → `http://221.192.236.175/api` | 不需要 | 不需要 |
-| ② 直连 | 申请域名 → ICP 备案 → 配 HTTPS → 登记「服务器域名」 | 必须 | 必须 |
+| MySQL | `mysql:8.0` | 无 | `hz-mysql-data` |
+| Redis | `redis:7.4-alpine` | 无 | `hz-redis-data`，AOF |
+| API | 从 `../../server` 构建 `hz-delivery-server:<APP_VERSION>` | 无 | `hz-api-logs` 挂载 `/app/logs` |
+| Nginx | `nginx:1.27-alpine` | `WEB_PORT`，默认 80 | 页面、配置为只读绑定挂载 |
 
-> 走 ① 时，小程序端只需把 `miniprogram/config.js` 的 `useCloud` 改为 `true` 并填云环境 ID，
-> 云函数环境变量 `BACKEND_BASE_URL` 填 `http://221.192.236.175`（不带 `/api`）。
+容器名仍为 `hz-mysql`、`hz-redis`、`hz-api`、`hz-nginx`，卷名与原配置一致。四个容器均配置 stdout/stderr 日志轮转，每个容器最多 3 个 10 MB 日志文件。应用主要输出到容器日志；`/app/logs` 挂载不代表应用已配置文件日志。
 
-**安全提醒（站点已暴露在公网）**
+MySQL、Redis 健康后 API 才启动；API 健康后 Nginx 才启动。页面文件直接挂载源码目录，所以切换 Git 版本时页面内容也会变化，更新流程按短暂停服安排。
 
-- 只有 80 端口对外开放，MySQL/Redis/API 均不可从外部直连 ✔
-- 后台已用 12 位随机密码，且登录失败 5 次锁定 10 分钟 ✔
-- ⚠️ 目前是 **HTTP 明文**，登录凭据在链路上不加密。正式对外使用前建议上 HTTPS
-  （需要先有域名；Let's Encrypt 无法给纯 IP 签发证书）
+## 首次部署准备
 
----
+宿主机需有 Git、Docker Engine 和支持本配置的 Docker Compose v2（建议 v2.20 或更新版本，使用 `docker compose`）。服务器无需单独安装 Java、Maven 或 Node。
 
-## 八、排错
+首次构建需要联网获取 Docker 基础镜像、阿里云 Maven 依赖以及 Alpine 系统包。镜像仓库、Maven 地址的连通性要在目标服务器单独验证；旧环境的镜像加速配置不能直接视为当前可用。
 
-| 现象 | 原因与处理 |
+Linux 示例中的仓库地址和版本号需替换为实际值，当前尚未创建发布标签：
+
+```bash
+git clone <GitHub仓库地址> /opt/hz-delivery
+cd /opt/hz-delivery
+git fetch --tags
+git switch --detach v1.0.0
+cd deploy/server
+cp .env.example .env
+chmod 600 .env
+```
+
+Windows 本地验证在项目根目录执行：
+
+```powershell
+Set-Location deploy/server
+Copy-Item .env.example .env
+```
+
+仅在目标 `.env` 不存在时复制，已有配置直接编辑，不用模板覆盖。根目录原有 `.env` 不会自动供此入口读取，也不要把开发密码直接沿用到服务器。
+
+## 配置 `.env`
+
+| 配置项 | 处理方式 |
 | --- | --- |
-| 拉镜像超时 | 镜像加速未生效。检查 `/etc/docker/daemon.json` 后 `systemctl restart docker` |
-| MySQL 反复重启、日志报 `01-init.sql: Permission denied` | 挂载的 `init.sql` 权限过严。`chmod 644 /opt/hz-delivery/db/init.sql`，然后删数据卷重启 |
-| 后台登录提示密码错误 | 复位数据后 `t_admin` 为空，需重启 `hz-api` 让 `DataInitializer` 建账号 |
-| 页面 502 | 后端未就绪。`docker logs hz-api` 看启动是否正常 |
-| 手机真机预览打不开接口 | 手机不在校园网内，或开发者工具未勾选「不校验合法域名」 |
-| 容器 `unhealthy` 但服务可用 | 检查内存上限：`docker stats`；本机 8G，四个容器上限合计约 4.2G |
-| 开发者工具「预览 / 上传 / 自动化」报 `ECONNREFUSED 127.0.0.1:7890` | **开发者工具自己配了手动代理且该代理没运行**（常见于装过 Clash 的机器）。到「设置 → 代理设置」改为**不使用任何代理**，或先把代理软件启动起来 |
-| 手机打开页面顶部有一大块演示信息、底部导航被截断 | 已修复（H5 加了手机端全屏适配）。若仍出现，检查浏览器是否命中了 `@media (max-width:640px),(pointer:coarse),(max-height:520px)` |
+| `APP_VERSION` | 本地验证用 `local`；服务器用对应 Git 发布标签，例如 `v1.0.0`。不要把不同代码反复构建成同一个发布版本 |
+| `MYSQL_ROOT_PASSWORD` | 必填。留空会拒绝启动；新建库时使用，不能通过改此项直接修改已有数据库密码 |
+| `ADMIN_INIT_PASSWORD` | 必填。用于应用启动时补齐缺失账号，不重置已有账号密码 |
+| `WEB_PORT` | 默认 80；若占用则修改，并同步实际访问地址 |
+| `MYSQL_DATABASE` | 默认 `hz_delivery`；已有数据卷沿用原库名，不能靠改变量迁移数据库 |
+| `LOGIN_MODE` | 正式环境保持 `sms`；`name` 仅用于隔离演示 |
+| `SMS_AUTH_PROVIDER` | `local` 兼容旧通道；阿里云登录验证码选 `aliyun-pnvs`，配置密钥、PNVS 签名与模板，详见[阿里云认证接入](../../docs/阿里云短信认证接入.md) |
+| `SMS_PROVIDER` | 独立的通知短信通道；`mock` 不真实发送，`hbu` 需配置平台密钥。选择 PNVS 不会自动开通通知短信 |
+| `MOCK_SMS_CODE` | 模板留空；本地 mock 联调若需固定验证码可显式设置，正式使用时留空 |
+| `SMS_TEST_ENABLED` | 默认 `false` |
+| `LOGISTICS_PROVIDER` | 默认 `disabled`；开通真实查询后再填密钥并切换 |
 
-> **排查小技巧**：想知道小程序/浏览器到底有没有打到后端，看 Nginx 日志即可分辨来源 ——
-> `docker logs hz-nginx 2>&1 | tail -30`。
-> UA 里带 `wechatdevtools` 的是开发者工具模拟器，带 `MicroMessenger` 的是微信内浏览器，
-> `curl` / `Python-urllib` 是我的自动化校验。
+模板中的两个密码故意留空，避免用占位密码直接启动。配置语法为 `KEY=value`；含 `$` 等特殊字符的字面值建议使用单引号，避免 Compose 插值。不要把真实配置提交 Git 或粘贴到文档。
+
+其他业务参数沿用模板说明。云函数与小程序配置不受此 `.env` 自动控制。
+
+## 检查、构建与启动
+
+以下命令均在 `deploy/server/` 执行：
+
+```bash
+# 仅校验配置，不输出包含密码的完整配置
+docker compose config --quiet
+
+# 构建阶段使用 Java 17，无需修改本机默认 Java
+docker compose build api
+
+# 构建成功后启动；等待服务就绪
+docker compose up -d --no-build --wait
+docker compose ps
+```
+
+API 配置 `pull_policy: never`，后端镜像由上一步本地构建；不会尝试从 Docker Hub 拉取同名业务镜像。MySQL、Redis、Nginx 镜像仍需首次拉取。已有离线业务镜像也可 `docker load` 后运行，但镜像标签必须与 `APP_VERSION` 一致。
+
+Dockerfile 默认跳过 Maven 测试，发布前应先在本地运行对应测试；配置解析成功不等于服务器构建或 HTTP 验证成功。当前本地测试记录见[本地部署验证记录](../../docs/本地部署验证记录-20261022.md)，目标服务器仍需独立验收。
+
+首次空库只建立表和承运商基础数据，无演示人员、套餐、公告或订单。首次登录后台修改密码，然后建立正式套餐、公告，导入人员名单，最后开放领取。详见[数据库说明](../../db/README.md)。
+
+## 访问与验证
+
+将 `<服务器地址>` 替换为 IP 或域名；`WEB_PORT` 不是 80 时带上端口。
+
+| 路径 | 含义 |
+| --- | --- |
+| `http://<服务器地址>/` | 教职工端 H5 |
+| `http://<服务器地址>/admin/` | 管理后台 |
+| `http://<服务器地址>/api/…` | 实际业务接口路径，`/api/` 本身不是健康端点 |
+| `http://<服务器地址>/healthz` | Nginx 存活，应返回 `ok`，不能证明后端正常 |
+| `http://<服务器地址>/actuator/health` | 后端健康，应返回 `status: UP`，含数据源/Redis 健康检查 |
+
+当前 Nginx 模板只提供 HTTP；公网正式部署时还需配置 HTTPS。后台账号为 `admin`、`operator`、`viewer`，初始密码取自配置，首次登录需修改。
+
+微信原生小程序与云函数需另外发布：核对 `miniprogram/config.js` 中的云环境 ID、AppID 和调试地址，在云函数配置 `BACKEND_BASE_URL` 为新后端根地址（不带 `/api`）。当前源码仍有旧环境地址作为注释或兜底，本次不自动改为未知服务器地址。详见[小程序说明](../../miniprogram/README.md)与[云函数说明](../../cloudfunctions/api/README.md)。
+
+## 数据库备份
+
+在 Linux/Bash 中，于 `deploy/server/` 执行。密码从容器环境读取，无需把 `.env` 导出到宿主 shell：
+
+```bash
+umask 077
+mkdir -p ../../backups
+backup_file="../../backups/hz_$(date +%F_%H%M%S).sql"
+docker compose exec -T mysql sh -c 'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --no-tablespaces --routines --triggers --events "$MYSQL_DATABASE"' > "$backup_file"
+```
+
+确认命令退出码为 0、文件非空，并定期在隔离数据库演练恢复。失败命令可能留下不完整 SQL 文件。备份包含业务与个人数据，`backups/` 已忽略，不提交 Git；应另存到服务器之外。Windows PowerShell 不直接照搬上述重定向命令，避免旧版本 PowerShell 改写 SQL 编码。
+
+## 更新与回滚
+
+以下为后续发布路线，版本号只是示例。先记录当前 Git 标签、`APP_VERSION`，完成数据库备份并核对 `git status --short`，不要在服务器直接修改业务源码。
+
+由于静态页面绑定源码目录，安排维护窗口，先停止入口再切换代码：
+
+```bash
+# deploy/server/ 下先执行备份，再停止访问入口
+docker compose stop nginx
+cd ../..
+git fetch --tags
+git switch --detach v1.0.1
+cd deploy/server
+# 编辑 .env：APP_VERSION=v1.0.1；同步新版本新增的配置项，保留原密码
+docker compose config --quiet
+docker compose build api
+docker compose up -d --no-build --wait
+docker compose ps
+```
+
+每条命令成功后再执行下一条。构建失败时停止更新，排查后重试或按下面步骤回滚。更新后核对后端健康、页面、登录和关键业务，再结束维护窗口；配置修改通过 `up -d` 重建相关容器生效，仅 `restart` 不会读取新的环境变量。
+
+回滚时保持相同部署目录、容器名和数据卷：停止 Nginx，Git 切回上一标签，将 `.env` 中 `APP_VERSION` 改回原版本，确认旧镜像仍存在后执行 `docker compose up -d --no-build --wait`。静态页面与后端应切回同一发布版本；若旧镜像已清理，需要从旧版源码重新构建。
+
+回滚应用不会还原数据库。涉及表结构变化时，先明确迁移和恢复兼容性再发布。普通更新不执行初始化 SQL，不使用 `down -v` 或删除数据卷。
+
+## 常用维护与排错
+
+```bash
+docker compose logs --tail=100 api
+docker compose logs --tail=100 nginx
+docker compose logs --tail=100 mysql
+docker compose stop
+docker compose up -d --no-build --wait
+```
+
+| 现象 | 处理 |
+| --- | --- |
+| 提示缺少密码或 `APP_VERSION` | 检查当前目录及 `deploy/server/.env`，填好后重新校验 |
+| 后端镜像不存在 | 核对版本号，先执行 `docker compose build api` |
+| 镜像/Maven 下载失败 | 核对目标服务器到对应仓库的网络；不要假定旧代理或镜像源仍有效 |
+| 绑定挂载文件不存在 | 确保完整仓库目录存在；配置故意不自动创建缺失的文件路径 |
+| API 不健康、Nginx 等待 | 查看 API、MySQL、Redis 日志及内存；不要只检查 `/healthz` |
+| 改密码变量后数据库连接失败 | 旧数据卷的数据库密码未随变量改变，恢复一致配置或单独安排数据库改密 |
+| 初始化中断 | 先查 MySQL 日志和已有表，按实际状态处理，不直接删卷 |
+
+旧材料引用的 `.workbuddy/tools/` 脚本当前未交付，不作为本手册的依赖。仓库根目录旧 Compose 文件在本次整理前已删除，当前统一使用此目录。

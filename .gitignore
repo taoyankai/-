@@ -24,3 +24,11 @@ project.private.config.json
 *.log
 *.tmp
 *.temp
+
+# Runtime data, backups and optional offline image packages
+logs/
+backups/
+*.sql.gz
+*.dump
+hz-api*.tar
+hz-api*.tar.gz

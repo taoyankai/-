@@ -82,6 +82,26 @@ class AdminAuthServiceTest {
         assertTrue(PasswordUtil.matches("NewSecurePass!2026", captor.getValue().getPassword()));
     }
 
+    @Test
+    void requireAdminAllowsSystemAdministrator() {
+        Admin admin = admin("admin", "InitialPass!2026", 0);
+        when(adminMapper.selectById(1L)).thenReturn(admin);
+
+        assertDoesNotThrow(() -> service.requireAdmin(1L));
+    }
+
+    @Test
+    void requireAdminRejectsOperator() {
+        Admin operator = admin("operator", "InitialPass!2026", 0);
+        operator.setRole("operator");
+        when(adminMapper.selectById(1L)).thenReturn(operator);
+
+        BizException error = assertThrows(BizException.class, () -> service.requireAdmin(1L));
+
+        assertEquals(403, error.getCode());
+        assertEquals("仅系统管理员可删除教职工", error.getMessage());
+    }
+
     private Admin admin(String username, String password, int mustChangePassword) {
         Admin admin = new Admin();
         admin.setId(1L);

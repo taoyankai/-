@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AdminAuthService {
 
+    private static final String ROLE_ADMIN = "admin";
     private static final String FAIL_USER_PREFIX = "hz:login:admin:fail:user:";
     private static final String FAIL_IP_PREFIX = "hz:login:admin:fail:ip:";
     private static final String LOCK_USER_PREFIX = "hz:login:admin:lock:user:";
@@ -121,6 +122,20 @@ public class AdminAuthService {
     public String operatorName(Long adminId) {
         Admin a = adminMapper.selectById(adminId);
         return a == null ? "未知" : (StringUtils.hasText(a.getRealName()) ? a.getRealName() : a.getUsername());
+    }
+
+    /**
+     * 校验当前账号是否为系统管理员。用于少数高风险操作的服务端强制授权，
+     * 不能只依赖前端隐藏按钮。
+     */
+    public void requireAdmin(Long adminId) {
+        Admin a = adminMapper.selectById(adminId);
+        if (a == null || a.getStatus() == null || a.getStatus() != 1) {
+            throw BizException.of(ErrorCode.UNAUTHORIZED);
+        }
+        if (!ROLE_ADMIN.equalsIgnoreCase(a.getRole())) {
+            throw BizException.of(ErrorCode.FORBIDDEN, "仅系统管理员可删除教职工");
+        }
     }
 
     private void recordFailure(String userTag, String ipTag) {

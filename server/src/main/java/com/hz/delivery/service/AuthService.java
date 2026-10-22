@@ -6,7 +6,8 @@ import com.hz.delivery.common.ErrorCode;
 import com.hz.delivery.config.BizProperties;
 import com.hz.delivery.entity.Grantee;
 import com.hz.delivery.mapper.GranteeMapper;
-import com.hz.delivery.service.sms.SmsSender;
+import com.hz.delivery.service.sms.auth.SmsVerificationService;
+import com.hz.delivery.service.sms.auth.SmsVerificationException;
 import com.hz.delivery.vo.ClientLoginVO;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +31,12 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
     private static final String SMS_LIMIT_KEY = "hz:sms:limit:";
     private static final String SMS_DAILY_KEY = "hz:sms:daily:";
     private static final String LOGIN_FAIL_KEY = "hz:login:fail:";
     private static final String LOGIN_LOCK_KEY = "hz:login:lock:";
 
-    /** 免短信登录：手机号 + 姓名核验（当前默认） */
+    /** 免短信登录：手机号 + 姓名核验（仅演示）。 */
     public static final String MODE_NAME = "name";
     /** 短信验证码登录：接入真实短信通道后启用 */
     public static final String MODE_SMS = "sms";
@@ -44,7 +44,7 @@ public class AuthService {
     private final GranteeMapper granteeMapper;
     private final StringRedisTemplate redis;
     private final BizProperties props;
-    private final SmsSender smsSender;
+    private final SmsVerificationService smsVerification;
 
     /** 当前是否为短信验证码登录方式 */
     public boolean smsMode() {
@@ -66,28 +66,20 @@ public class AuthService {
         if (sms) {
             m.put("codeTtl", props.getCodeTtl());
             // 仅演示通道才下发固定验证码提示，接入真实通道后绝不会返回
-            if (isMockChannel() && StringUtils.hasText(props.getMockSmsCode())) {
-                m.put("mockCode", props.getMockSmsCode());
+            if (smsVerification.mockCodeHint() != null) {
+                m.put("mockCode", smsVerification.mockCodeHint());
             }
         }
         return m;
     }
 
-    /** 当前是否为演示短信通道（决定是否启用固定验证码） */
-    private boolean isMockChannel() {
-        return "mock".equalsIgnoreCase(props.getSms().getProvider());
-    }
-
     @PostConstruct
     void selfCheck() {
-        String provider = props.getSms().getProvider();
-        if (!isMockChannel() && StringUtils.hasText(props.getMockSmsCode())) {
-            log.warn("已启用真实短信通道（provider={}），固定验证码 MOCK_SMS_CODE 将被忽略，验证码改为随机生成", provider);
+        if (smsVerification.mockCodeHint() == null && StringUtils.hasText(props.getMockSmsCode())) {
+            log.warn("登录认证 provider={}，忽略演示固定验证码 MOCK_SMS_CODE", smsVerification.provider());
         }
-        if (smsMode() && "aliyun".equalsIgnoreCase(provider)) {
-            log.warn("登录方式为短信验证码，但 aliyun 通道尚未接入 SDK，C 端将无法登录");
-        }
-        log.info("C 端登录方式={}，短信通道={}", props.getLoginMode(), provider);
+        log.info("C 端登录方式={}，验证码认证={}，通知短信={}",
+                props.getLoginMode(), smsVerification.provider(), props.getSms().getProvider());
     }
 
     /**
@@ -107,7 +99,8 @@ public class AuthService {
         }
 
         String limitKey = SMS_LIMIT_KEY + phone;
-        if (Boolean.TRUE.equals(redis.hasKey(limitKey))) {
+        String reservation = UUID.randomUUID().toString();
+        if (!Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(limitKey, reservation, Duration.ofSeconds(60)))) {
             throw BizException.of(ErrorCode.CODE_TOO_FREQUENT);
         }
 
@@ -120,51 +113,37 @@ public class AuthService {
         }
         if (todaySent != null && todaySent > props.getSmsDailyLimit()) {
             // 超限的这次不计入配额，否则计数会被越推越高
-            Long back = redis.opsForValue().decrement(dailyKey);
-            if (back != null && back <= 0) {
-                redis.delete(dailyKey);
-            }
+            redis.opsForValue().decrement(dailyKey);
+            releaseCooldown(limitKey, reservation);
             log.warn("验证码发送触发每日上限 phone={} limit={}", maskPhone(phone), props.getSmsDailyLimit());
             throw BizException.of(ErrorCode.CODE_TOO_FREQUENT,
                     "今日验证码发送次数已达上限（" + props.getSmsDailyLimit()
                             + " 次），请明日再试，或联系本单位工会核实");
         }
 
-        String code = isMockChannel() && StringUtils.hasText(props.getMockSmsCode())
-                ? props.getMockSmsCode()
-                : String.format("%06d", RANDOM.nextInt(1000000));
-
-        String codeKey = Constants.KEY_SMS_CODE + phone;
-        redis.opsForValue().set(codeKey, code, props.getCodeTtl(), TimeUnit.SECONDS);
-        redis.opsForValue().set(limitKey, "1", 60, TimeUnit.SECONDS);
-
-        // 通过短信通道真实下发（演示通道仅写日志）
-        String channelResp;
+        SmsVerificationService.SendCodeResult sent;
         try {
-            channelResp = smsSender.sendCode(phone, code);
+            sent = smsVerification.sendCode(phone);
         } catch (RuntimeException e) {
-            // 发送失败就撤掉验证码与频控键，让用户能立即重试，而不是干等 60 秒
-            redis.delete(codeKey);
-            redis.delete(limitKey);
-            // 通道故障不该占用用户当天的发送额度
-            Long back = redis.opsForValue().decrement(dailyKey);
-            if (back != null && back <= 0) {
-                redis.delete(dailyKey);
+            // 只有明确未发送才退回额度；超时/未知结果保留60秒冷却及当天额度。
+            if (e instanceof SmsVerificationException failure && !failure.isDeliveryUncertain()) {
+                redis.opsForValue().decrement(dailyKey);
+                releaseCooldown(limitKey, reservation);
             }
-            log.error("验证码下发失败 phone={} provider={} err={}",
-                    maskPhone(phone), smsSender.provider(), e.getMessage());
+            log.warn("验证码下发未确认 phone={} provider={} type={}",
+                    maskPhone(phone), smsVerification.provider(), e.getClass().getSimpleName());
             throw e;
         }
-        log.info("验证码已下发 phone={} provider={} resp={}", maskPhone(phone), smsSender.provider(), channelResp);
+        log.info("验证码已下发 phone={} provider={}", maskPhone(phone), sent.provider());
 
         Map<String, Object> result = new HashMap<>();
         result.put("sent", true);
-        result.put("ttl", props.getCodeTtl());
-        result.put("provider", smsSender.provider());
+        result.put("ttl", sent.ttl());
+        result.put("provider", sent.provider());
         // 仅演示通道回传验证码，方便联调；真实通道下绝不回传
-        if (isMockChannel() && StringUtils.hasText(props.getMockSmsCode())) {
-            result.put("mockCode", code);
-            result.put("tip", "当前为演示通道，验证码固定为 " + code);
+        if (sent.mockCode() != null) {
+            result.put("mockCode", sent.mockCode());
+            result.put("tip", "当前为演示通道，验证码固定为 " + sent.mockCode());
         }
         return result;
     }
@@ -174,7 +153,7 @@ public class AuthService {
      *
      * <p>核验方式由 {@code hz.delivery.login-mode} 决定：
      * <ul>
-     *   <li>{@code name}（默认）：手机号 + 姓名，二者须与甲方名单同时匹配，不依赖短信通道；</li>
+     *   <li>{@code name}：手机号 + 姓名，仅演示，二者须与甲方名单同时匹配；</li>
      *   <li>{@code sms}：手机号 + 短信验证码，接入真实短信服务后启用。</li>
      * </ul>
      *
@@ -202,8 +181,7 @@ public class AuthService {
         boolean pass;
         String failReason;
         if (sms) {
-            String cached = redis.opsForValue().get(Constants.KEY_SMS_CODE + phone);
-            pass = cached != null && cached.equals(code);
+            pass = smsVerification.verifyCode(phone, code);
             failReason = "验证码错误或已失效";
         } else {
             pass = StringUtils.hasText(name) && normalizeName(name).equals(normalizeName(g.getName()));
@@ -227,9 +205,6 @@ public class AuthService {
         }
 
         redis.delete(LOGIN_FAIL_KEY + phone);
-        if (sms) {
-            redis.delete(Constants.KEY_SMS_CODE + phone);
-        }
 
         String token = UUID.randomUUID().toString().replace("-", "");
         redis.opsForValue().set(Constants.KEY_CLIENT_TOKEN + token, String.valueOf(g.getId()),
@@ -247,6 +222,12 @@ public class AuthService {
             redis.expire(key, props.getLoginLockMinutes(), TimeUnit.MINUTES);
         }
         return n == null ? 1L : n;
+    }
+
+    private void releaseCooldown(String key, String owner) {
+        var script = new org.springframework.data.redis.core.script.DefaultRedisScript<Long>(
+                "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end", Long.class);
+        redis.execute(script, java.util.List.of(key), owner);
     }
 
     /** 姓名归一化：去掉首尾与中间的所有空白（含全角空格），避免因空格录入差异被误拒 */

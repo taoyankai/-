@@ -9,6 +9,10 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 
 WORKDIR /build
 
+# 构建 JVM 与运行 JVM 独立配置；2GB 主机通过 Compose 传入更小的编译堆上限。
+ARG MAVEN_JAVA_OPTS="-Xms64m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC"
+ENV MAVEN_OPTS="${MAVEN_JAVA_OPTS}"
+
 # 先复制 pom 与 Maven 配置，利用 Docker 层缓存：源码变动时不必重新下载依赖
 COPY settings.xml /root/.m2/settings.xml
 COPY pom.xml ./

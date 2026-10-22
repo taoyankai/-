@@ -26,8 +26,7 @@ public class BizProperties {
 
     /**
      * 演示环境固定验证码。
-     * 仅在短信通道为 mock 时生效；一旦接入真实通道（provider≠mock），本项会被忽略，
-     * 验证码改为随机 6 位，避免「真实短信 + 固定验证码」并存造成的越权风险。
+     * 仅在认证为 local 且发送通道为 mock 时生效；真实通道忽略本项。
      */
     private String mockSmsCode = "123456";
 
@@ -76,6 +75,21 @@ public class BizProperties {
     /** 短信通道配置 */
     private Sms sms = new Sms();
 
+    /** 登录验证码认证，与通知短信发送通道独立。 */
+    private SmsAuth smsAuth = new SmsAuth();
+
+    @Data
+    public static class SmsAuth {
+        /** local=兼容原通道；aliyun-pnvs=阿里云托管生成与核验。 */
+        private String provider = "local";
+        private boolean testEnabled = false;
+        private String accessKeyId = "";
+        private String accessKeySecret = "";
+        private String signName = "";
+        private String templateCode = "";
+        private String schemeName = "hz-client-login";
+    }
+
     /** 真实物流轨迹查询配置 */
     private Logistics logistics = new Logistics();
 
@@ -114,7 +128,7 @@ public class BizProperties {
     @Data
     public static class Sms {
 
-        /** 通道标识：mock=演示 / hbu=河北大学统一短信平台 / aliyun=阿里云 */
+        /** 通知通道：mock=演示 / hbu=河北大学平台 / aliyun=传统短信占位，尚未实现。 */
         private String provider = "mock";
 
         /** 是否开放后台「短信通道自检」接口；生产环境建议关闭 */

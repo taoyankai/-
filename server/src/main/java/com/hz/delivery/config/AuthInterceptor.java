@@ -69,6 +69,9 @@ public class AuthInterceptor implements HandlerInterceptor {
                         "首次登录必须修改初始密码后才能使用后台");
             }
             // 只读账号（viewer）禁止一切写操作，避免误改名单 / 套餐 / 发货数据
+            if (path.startsWith("/api/admin/sms/auth/") && !"admin".equalsIgnoreCase(admin.getRole())) {
+                return reject(response, ErrorCode.FORBIDDEN, "验证码认证自检仅限管理员使用");
+            }
             if (!"GET".equalsIgnoreCase(request.getMethod())
                     && !path.startsWith("/api/admin/auth")) {
                 if (ROLE_VIEWER.equalsIgnoreCase(admin.getRole())) {
