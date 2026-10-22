@@ -1,0 +1,31 @@
+# 与docker-compose.yml、compose.2gb.yml依次合并；由deploy-version.sh读取TLS_ENABLED启用。
+services:
+  nginx:
+    ports: !override
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    volumes:
+      - type: bind
+        source: ../nginx/nginx.https.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/hz-delivery/tls/letsencrypt/live
+        target: /etc/letsencrypt/live
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/hz-delivery/tls/letsencrypt/archive
+        target: /etc/letsencrypt/archive
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/hz-delivery/tls/webroot
+        target: /var/www/acme
+        read_only: true
+        bind:
+          create_host_path: false

@@ -162,6 +162,10 @@ docker compose ps
 
 ## 常用维护与排错
 
+IP地址HTTPS及证书自动续期见[IP地址HTTPS部署](../../docs/IP地址HTTPS部署.md)。2GB版本部署脚本通过私密配置的 `TLS_ENABLED=true` 保留HTTPS覆盖，证书不进入Git。
+
+首次服务器部署遇到的 SSH、镜像下载、Buildx、APK 源、源码解包权限和空库初始化问题，见[部署问题与排查记录](../../docs/部署问题与排查记录.md)，其中包含已完成的 `v1.0.1` 运行验收结果。
+
 ```bash
 docker compose logs --tail=100 api
 docker compose logs --tail=100 nginx

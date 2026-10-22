@@ -9,7 +9,7 @@ main() {
         printf '%s\n' 'Usage: bash deploy/server/deploy-version.sh v1.0.0' >&2
         return 2
     fi
-    local script_dir repo_root state_dir env_file commit release_dir backup_file container volume owner tracked_env
+    local script_dir repo_root state_dir env_file commit release_dir backup_file container volume owner tracked_env tls_enabled
     script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     repo_root="$(git -C "$script_dir" rev-parse --show-toplevel)"
     state_dir="${HZ_DEPLOY_ROOT:-$HOME/hz-delivery}"
@@ -58,7 +58,23 @@ main() {
     local compose=(sudo env "APP_VERSION=$version" COMPOSE_PARALLEL_LIMIT=1 docker compose -p hz-delivery
         --env-file "$env_file" -f "$release_dir/deploy/server/docker-compose.yml"
         -f "$release_dir/deploy/server/compose.2gb.yml")
+    tls_enabled="$(sed -n 's/^TLS_ENABLED=//p' "$env_file" | tr -d '\r' | tail -1)"
+    case "${tls_enabled:-false}" in
+        true)
+            [[ -f "$release_dir/deploy/server/compose.https.yml" ]] || { printf '%s\n' 'Release does not support HTTPS.' >&2; return 1; }
+            sudo openssl x509 -in /var/lib/hz-delivery/tls/letsencrypt/live/hz-delivery-ip/fullchain.pem -noout -checkend 3600
+            sudo openssl x509 -in /var/lib/hz-delivery/tls/letsencrypt/live/hz-delivery-ip/fullchain.pem -noout -checkip 118.89.27.5
+            compose+=(-f "$release_dir/deploy/server/compose.https.yml")
+            ;;
+        false)
+            [[ ! -e "$state_dir/tls-enabled" ]] || { printf '%s\n' 'HTTPS was enabled previously; refusing an implicit HTTP downgrade.' >&2; return 1; }
+            ;;
+        *) printf '%s\n' 'TLS_ENABLED must be an unquoted true or false.' >&2; return 1 ;;
+    esac
     "${compose[@]}" config --quiet
+    if [[ "$tls_enabled" == true ]]; then
+        "${compose[@]}" run --rm --no-deps --pull never nginx nginx -t
+    fi
     # 先完成依赖拉取与编译，期间原版本入口及源码目录保持不变。
     "${compose[@]}" pull mysql redis nginx
     "${compose[@]}" build api
@@ -84,6 +100,9 @@ main() {
     fi
     printf '%s\n' "$version" "$commit" "$release_dir" >"$state_dir/current-release.new"
     mv -- "$state_dir/current-release.new" "$state_dir/current-release"
+    if [[ "$tls_enabled" == true ]]; then
+        printf '%s\n' 'true' >"$state_dir/tls-enabled"
+    fi
     "${compose[@]}" ps
     printf 'Deployed %s (%s). Release directory: %s\n' "$version" "$commit" "$release_dir"
 }
