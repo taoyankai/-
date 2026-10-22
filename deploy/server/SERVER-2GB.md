@@ -2,15 +2,17 @@
 
 当前路线由用户确定：**本地修改并测试 → 提交 GitHub → 发布版本标签 → 服务器拉取指定标签 → Docker 构建 → 更新容器**。原离线镜像上传方案已停用，不运行旧的 upload.ps1。
 
-服务器为 Ubuntu 24.04.4、x86_64、2核、约2GB内存、约2GB swap，已安装 Docker 29.1.3 与 Compose 2.40.3。2026-10-22 发布准备阶段已登录检查：腾讯云镜像加速已配置，项目需要的5个基础镜像均已实际下载；GitHub HTTPS（HTTP/1.1）读取及克隆成功，阿里云 Maven 实际依赖文件下载成功。业务容器在发布前尚未启动，Alpine 系统包和完整后端编译在实际部署时继续验证。
+服务器为 Ubuntu 24.04.4、x86_64、2核、约2GB内存、约2GB swap，已安装 Docker 29.1.3 与 Compose 2.40.3。2026-10-22 发布准备阶段已登录检查：腾讯云镜像加速已配置，项目需要的5个基础镜像均已实际下载；GitHub HTTPS（HTTP/1.1）读取及克隆成功，阿里云 Maven 实际依赖文件下载成功。首轮构建已通过；启动时发现的源码解包权限问题已在 v1.0.1 修正，具体见服务器发布准备记录，最终状态以健康检查为准。
 
 ## 本地发布
 
 先检查差异、完成对应测试，确认提交范围包含源码、部署配置与文档，排除 .env、密钥、编译缓存、镜像包、备份和本地测试数据。提交到现有仓库 `taoyankai/-`，创建明确版本标签，再将提交与标签推送 GitHub。
 
-下文 `v1.0.0` 是待发布的示例标签，不表示该版本已经创建或推送。正式操作使用最终确认的标签，不在服务器部署浮动的“最新代码”。标签发布后不移动、不强推。
+本次首次部署使用修复后的 `v1.0.1`；`v1.0.0` 保留为首轮发布记录，勿作为本次启动版本。后续更新另发新标签，不部署浮动的“最新代码”，不移动已发布标签、不强推。
 
 ## 网络前提
+
+Alpine软件包源通过构建参数 `ALPINE_MIRROR` 配置，默认阿里云；Docker镜像加速不会改变apk软件包源。源码解包使用022，保证MySQL与Nginx容器中的非root用户可读；私密配置仍为600。
 
 服务器必须能取得 GitHub 源码、Docker 基础镜像和运行镜像、阿里云 Maven 依赖及 Alpine 软件包。Docker 安装成功不能证明这些地址可访问。先通过实际连通与下载检查，再开始部署。
 
@@ -70,13 +72,13 @@ git fetch --tags origin
 ```
 
 ```bash
-git switch --detach v1.0.0
+git switch --detach v1.0.1
 ```
 
 确认私密配置已到位，然后执行：
 
 ```bash
-bash deploy/server/deploy-version.sh v1.0.0
+bash deploy/server/deploy-version.sh v1.0.1
 ```
 
 脚本拒绝脏工作区、未知标签、被Git跟踪的私密.env，以及其他项目占用的同名容器/数据卷。它用 `git archive` 建立标签对应的独立源码目录，在服务器拉取运行依赖并构建后端；已有运行版本的页面不会因源码准备而改变。
@@ -85,18 +87,18 @@ bash deploy/server/deploy-version.sh v1.0.0
 
 ## 后续发布
 
-本地修改、测试、提交与推送新标签（例如v1.0.1）后，服务器先进入repo目录获取并切到该标签，再执行相同部署脚本：
+本地修改、测试、提交与推送新标签（例如v1.0.2）后，服务器先进入repo目录获取并切到该标签，再执行相同部署脚本：
 
 ```bash
 git fetch --tags origin
 ```
 
 ```bash
-git switch --detach v1.0.1
+git switch --detach v1.0.2
 ```
 
 ```bash
-bash deploy/server/deploy-version.sh v1.0.1
+bash deploy/server/deploy-version.sh v1.0.2
 ```
 
 每次发布使用新标签。服务器不直接修改业务源码，不在含未提交变更的目录强行切换，不用 git reset --hard 清理问题。新增环境变量按版本说明加入独立 server.env，已有数据库口令保持一致。
@@ -122,11 +124,11 @@ cat ~/hz-delivery/previous-release
 核对旧镜像存在后，将下面示例路径替换为该记录中的真实值，用旧目录的两份Compose配置恢复：
 
 ```bash
-sudo docker image inspect hz-delivery-server:v1.0.0 --format '{{.Id}}'
+sudo docker image inspect hz-delivery-server:v1.0.1 --format '{{.Id}}'
 ```
 
 ```bash
-sudo env APP_VERSION=v1.0.0 docker compose -p hz-delivery --env-file "$HOME/.config/hz-delivery/server.env" -f "$HOME/hz-delivery/releases/实际旧目录/deploy/server/docker-compose.yml" -f "$HOME/hz-delivery/releases/实际旧目录/deploy/server/compose.2gb.yml" up -d --no-build --pull never --wait
+sudo env APP_VERSION=v1.0.1 docker compose -p hz-delivery --env-file "$HOME/.config/hz-delivery/server.env" -f "$HOME/hz-delivery/releases/实际旧目录/deploy/server/docker-compose.yml" -f "$HOME/hz-delivery/releases/实际旧目录/deploy/server/compose.2gb.yml" up -d --no-build --pull never --wait
 ```
 
 执行前替换版本和路径。回滚后核对健康、页面与业务，并记录人工回滚情况；脚本不会假设数据库可以跟随镜像安全倒退。

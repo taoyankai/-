@@ -28,7 +28,9 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # 时区与健康检查依赖
-RUN apk add --no-cache tzdata curl \
+ARG ALPINE_MIRROR="https://mirrors.aliyun.com/alpine"
+RUN sed -i "s#https://dl-cdn.alpinelinux.org/alpine#${ALPINE_MIRROR%/}#g" /etc/apk/repositories \
+    && apk --timeout 20 add --no-cache tzdata curl \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && rm -rf /var/cache/apk/*

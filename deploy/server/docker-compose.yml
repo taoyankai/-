@@ -51,7 +51,13 @@ services:
         bind:
           create_host_path: false
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test:
+        - CMD-SHELL
+        - >-
+          export MYSQL_PWD="$$MYSQL_ROOT_PASSWORD";
+          mysql -h 127.0.0.1 -uroot --database="$$MYSQL_DATABASE"
+          --execute='SELECT 1 FROM t_admin LIMIT 0; SELECT 1 FROM t_order LIMIT 0; SELECT 1 FROM t_carrier LIMIT 0'
+          >/dev/null
       interval: 10s
       timeout: 5s
       retries: 12

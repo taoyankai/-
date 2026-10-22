@@ -48,7 +48,12 @@ main() {
         fi
     done
     release_dir="$(mktemp -d "$state_dir/releases/${version}-${commit:0:8}.XXXXXX")"
-    git -C "$repo_root" archive "$commit" | tar -x -C "$release_dir"
+    # 源码需要由 MySQL / Nginx 容器中的非 root 用户读取；仅归档解包用022。
+    # 私密配置、备份、版本元数据及release根目录仍沿用外层077。
+    (
+        umask 022
+        git -C "$repo_root" archive "$commit" | tar --no-same-owner --no-same-permissions -x -C "$release_dir"
+    )
     printf '%s\n' "$version" "$commit" >"$release_dir/RELEASE"
     local compose=(sudo env "APP_VERSION=$version" COMPOSE_PARALLEL_LIMIT=1 docker compose -p hz-delivery
         --env-file "$env_file" -f "$release_dir/deploy/server/docker-compose.yml"
