@@ -36,6 +36,7 @@ public class Kuaidi100LogisticsProvider implements LogisticsProvider {
             "YTO", "yuantong",
             "ZTO", "zhongtong",
             "STO", "shentong",
+            "YD", "yunda",
             "EMS", "ems"
     );
 
@@ -68,6 +69,9 @@ public class Kuaidi100LogisticsProvider implements LogisticsProvider {
 
     @Override
     public LogisticsQueryResult query(Order order) {
+        if (DemoLogisticsGuard.isDemo(order)) {
+            return LogisticsQueryResult.failed("演示订单或演示运单禁止查询真实物流平台");
+        }
         if (!isEnabled()) {
             return LogisticsQueryResult.failed("真实物流通道未启用或缺少 KUAIDI100_KEY/KUAIDI100_CUSTOMER");
         }

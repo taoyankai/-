@@ -8,12 +8,19 @@ import com.hz.delivery.mapper.OrderMapper;
 import com.hz.delivery.mapper.OrderTrackMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -95,5 +102,124 @@ class LogisticsTrackingServiceTest {
         props.getLogistics().setValidateOnShip(true);
         return new LogisticsTrackingService(mock(OrderMapper.class), mock(OrderTrackMapper.class),
                 mock(StringRedisTemplate.class), provider, props);
+    }
+
+    @Test
+    void demoMarkersSkipAccessManualBatchAndScheduledSyncWithoutQueryOrRedis() {
+        OrderMapper orders = mock(OrderMapper.class);
+        OrderTrackMapper tracks = mock(OrderTrackMapper.class);
+        StringRedisTemplate redis = mock(StringRedisTemplate.class);
+        LogisticsProvider provider = mock(LogisticsProvider.class);
+        when(provider.isEnabled()).thenReturn(true);
+        LogisticsTrackingService service = new LogisticsTrackingService(orders, tracks, redis,
+                provider, new BizProperties());
+        for (int marker = 0; marker < 3; marker++) {
+            Order order = shippedOrder();
+            if (marker == 0) order.setOrderNo(" demo202610230001 ");
+            if (marker == 1) order.setEmpNo("DEMO-10000");
+            if (marker == 2) order.setWaybillNo("demo-SF123456");
+            when(orders.selectById(1L)).thenReturn(order);
+            assertTrue(service.syncOnAccess(order).isSkipped());
+            assertTrue(service.syncByOrderId(1L).isSkipped());
+            assertEquals(1, service.syncBatch(List.of(1L)).get("skippedCount"));
+            // 即使查询层返回演示记录，服务层仍须阻断。
+            when(orders.selectList(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(order));
+            service.syncInTransitOrders();
+            assertTrue(service.applyValidatedResult(order, LogisticsQueryResult.failed("unused")).isSkipped());
+        }
+        verify(provider, org.mockito.Mockito.never()).query(org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(redis, tracks);
+    }
+
+    @Test
+    void demoShipmentIsRejectedEvenWhenShipmentValidationIsDisabled() {
+        LogisticsProvider provider = mock(LogisticsProvider.class);
+        BizProperties props = new BizProperties();
+        props.getLogistics().setValidateOnShip(false);
+        LogisticsTrackingService service = new LogisticsTrackingService(mock(OrderMapper.class),
+                mock(OrderTrackMapper.class), mock(StringRedisTemplate.class), provider, props);
+        Order order = shippedOrder();
+        order.setOrderNo("DEMO202610230001");
+        assertThrows(BizException.class, () -> service.validateForShipment(order, "SF", "123456789"));
+        assertThrows(BizException.class, () -> service.validateForShipment(shippedOrder(), "SF", " demo-SF123 "));
+        verifyNoInteractions(provider);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void realOrderStillQueriesProviderWithThirtyMinuteLimit() {
+        Order order = shippedOrder();
+        LogisticsProvider provider = mock(LogisticsProvider.class);
+        StringRedisTemplate redis = mock(StringRedisTemplate.class);
+        ValueOperations<String, String> values = mock(ValueOperations.class);
+        when(provider.isEnabled()).thenReturn(true);
+        when(redis.opsForValue()).thenReturn(values);
+        when(values.setIfAbsent("hz:logistics:query:SF:123456789", "1", 30, TimeUnit.MINUTES)).thenReturn(true);
+        when(provider.query(order)).thenReturn(LogisticsQueryResult.failed("test response"));
+        LogisticsTrackingService service = new LogisticsTrackingService(mock(OrderMapper.class),
+                mock(OrderTrackMapper.class), redis, provider, new BizProperties());
+        assertEquals("test response", service.sync(order).getMessage());
+        verify(provider).query(order);
+        verify(values).setIfAbsent("hz:logistics:query:SF:123456789", "1", 30, TimeUnit.MINUTES);
+    }
+
+    @Test
+    void providerRejectsDemoBeforeOpeningHttpConnection() {
+        Kuaidi100LogisticsProvider provider = new Kuaidi100LogisticsProvider(new BizProperties(), new ObjectMapper());
+        Order order = shippedOrder();
+        order.setWaybillNo("DEMO-SF123456");
+        assertEquals("演示订单或演示运单禁止查询真实物流平台", provider.query(order).getMessage());
+    }
+
+    @Test
+    void yundaQuerySendsMappedCarrierAndParsesTraceFromHttpResponse() throws Exception {
+        var received = new java.util.concurrent.atomic.AtomicReference<String>();
+        var http = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        http.createContext("/query", exchange -> {
+            received.set(new String(exchange.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            byte[] response = ("{\"status\":\"200\",\"message\":\"ok\",\"com\":\"yunda\","
+                    + "\"nu\":\"123456789\",\"state\":\"3\",\"data\":[{\"time\":\"2026-10-23 08:00:00\","
+                    + "\"context\":\"测试签收节点\",\"statusCode\":\"304\"}]}").getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length);
+            try (var output = exchange.getResponseBody()) {
+                output.write(response);
+            }
+        });
+        http.start();
+        try {
+            BizProperties props = new BizProperties();
+            props.getLogistics().setProvider("kuaidi100");
+            var cfg = props.getLogistics().getKuaidi100();
+            cfg.setKey("unit-test-key");
+            cfg.setCustomer("unit-test-customer");
+            cfg.setBaseUrl("http://127.0.0.1:" + http.getAddress().getPort() + "/query");
+            var provider = new Kuaidi100LogisticsProvider(props, new ObjectMapper());
+            Order order = shippedOrder();
+            order.setCarrier("YD");
+            LogisticsQueryResult result = provider.query(order);
+            assertTrue(result.isSuccess());
+            assertEquals("yunda", result.getCompanyCode());
+            assertEquals("123456789", result.getWaybillNo());
+            assertEquals("3", result.getState());
+            assertEquals(1, result.getTraces().size());
+            assertEquals("304", result.getTraces().get(0).getStatusCode());
+            String form = java.net.URLDecoder.decode(received.get(), java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(form.contains("\"com\":\"yunda\""));
+            assertTrue(form.contains("customer=unit-test-customer"));
+        } finally {
+            http.stop(0);
+        }
+    }
+
+    private Order shippedOrder() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setOrderNo("HZ202610230001");
+        order.setEmpNo("10000");
+        order.setCarrier("SF");
+        order.setWaybillNo("123456789");
+        order.setStatus(Constants.ORDER_SHIPPED);
+        return order;
     }
 }

@@ -63,6 +63,10 @@ public class LogisticsTrackingService {
      * 避免“校验一次、拉轨迹再查一次”造成重复请求。
      */
     public LogisticsQueryResult validateForShipment(Order source, String carrierCode, String waybillNo) {
+        if (DemoLogisticsGuard.isDemo(source) || DemoLogisticsGuard.hasDemoPrefix(waybillNo)) {
+            throw BizException.of(ErrorCode.WAYBILL_VERIFY_FAILED,
+                    "演示订单或演示运单不能用于真实发货，请使用正式人员和订单");
+        }
         if (!props.getLogistics().isValidateOnShip()) {
             return null;
         }
@@ -101,6 +105,9 @@ public class LogisticsTrackingService {
 
     /** 发货落库后复用预校验结果，立即生成首批真实轨迹。 */
     public SyncResult applyValidatedResult(Order order, LogisticsQueryResult result) {
+        if (DemoLogisticsGuard.isDemo(order)) {
+            return SyncResult.skipped("演示订单不参与真实物流同步");
+        }
         if (result == null) {
             return SyncResult.skipped("未启用发货前真实校验");
         }
@@ -109,6 +116,9 @@ public class LogisticsTrackingService {
     }
 
     public SyncResult sync(Order order) {
+        if (DemoLogisticsGuard.isDemo(order)) {
+            return SyncResult.skipped("演示订单不查询真实物流平台");
+        }
         if (!provider.isEnabled()) {
             return SyncResult.skipped("真实物流通道未启用或密钥未配置");
         }
@@ -223,6 +233,9 @@ public class LogisticsTrackingService {
                 .in(Order::getStatus, Constants.ORDER_SHIPPED, Constants.ORDER_TRANSIT,
                         Constants.ORDER_DELIVERING, Constants.ORDER_EXCEPTION)
                 .isNotNull(Order::getWaybillNo)
+                .notLikeRight(Order::getOrderNo, "DEMO")
+                .notLikeRight(Order::getWaybillNo, "DEMO")
+                .and(q -> q.isNull(Order::getEmpNo).or().notLikeRight(Order::getEmpNo, "DEMO"))
                 .orderByAsc(Order::getUpdateTime)
                 .last("LIMIT " + size));
         for (Order order : orders) {

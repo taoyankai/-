@@ -37,6 +37,7 @@ public class DataInitializer implements ApplicationRunner {
         ensureAdminPasswordFlag();
         ensureUniqueConstraints();
         ensureCarrier("STO", "申通快递", "https://www.sto.cn/", "95543", 5);
+        ensureCarrier("YD", "韵达快递", "https://www.yundaex.com/", "95546", 7);
         String pwd = env.getProperty("ADMIN_INIT_PASSWORD", "hz@2026");
         boolean created = ensureAdmin("admin", pwd, "系统管理员", "admin")
                 | ensureAdmin("operator", pwd, "运营专员", "operator")

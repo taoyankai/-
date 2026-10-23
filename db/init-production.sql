@@ -1,6 +1,6 @@
 -- 华中商贸配送中心：正式环境首次初始化（MySQL 8.0）
 -- 仅供全新空数据库；不是升级/迁移脚本，不要手动导入已有业务数据库。
--- 保留与 init.sql 一致的 12 张表，仅写入承运商基础数据。
+-- 保留与 init.sql 一致的 12 张表，写入承运商基础数据（含新增韵达）。
 -- 不包含演示名单、套餐、公告、订单或轨迹；后台账号由应用启动时补齐。
 -- 刻意不使用 DROP TABLE 或 IF NOT EXISTS：已存在表时应报错，避免掩盖结构差异。
 
@@ -235,4 +235,5 @@ INSERT INTO `t_carrier` (`code`, `name`, `track_url`, `phone`, `sort`, `status`)
 ('YTO', '圆通速递', 'https://www.yto.net.cn/query.html?no={no}',                      '95554', 3, 1),
 ('ZTO', '中通快递', 'https://www.zto.com/express/expressCheck.html?txtBill={no}',     '95311', 4, 1),
 ('STO', '申通快递', 'https://www.sto.cn/',                                             '95543', 5, 1),
-('EMS', '中国邮政', 'https://www.ems.com.cn/queryList?mailNum={no}',                  '11183', 6, 1);
+('EMS', '中国邮政', 'https://www.ems.com.cn/queryList?mailNum={no}',                  '11183', 6, 1),
+('YD',  '韵达快递', 'https://www.yundaex.com/',                                      '95546', 7, 1);
