@@ -2,6 +2,7 @@ package com.hz.delivery.common;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -36,6 +37,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ApiResult<Void> handleMissing(MissingServletRequestParameterException e) {
         return ApiResult.fail(ErrorCode.PARAM_ERROR, "缺少必要参数：" + e.getParameterName());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ApiResult<Void> handleUnreadable(HttpMessageNotReadableException e) {
+        return ApiResult.fail(ErrorCode.PARAM_ERROR, "请求内容格式错误，请检查填写内容");
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

@@ -9,9 +9,29 @@ import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 @Mapper
 public interface OrderMapper extends BaseMapper<Order> {
+
+    /** 收货确认使用当前读，串行处理同一订单的重复确认。 */
+    @Select("SELECT * FROM t_order WHERE id = #{id} AND deleted = 0 FOR UPDATE")
+    Order selectByIdForUpdate(@Param("id") Long id);
+
+    @Update("<script>UPDATE t_order SET status = 40, sign_time = COALESCE(sign_time, #{signTime}), "
+            + "update_time = NOW() WHERE id = #{id} AND deleted = 0 AND status IN (10,20,30) "
+            + "AND waybill_no IS NOT NULL AND TRIM(waybill_no) != '' AND ship_time IS NOT NULL "
+            + "<if test='granteeId != null'>AND grantee_id = #{granteeId}</if></script>")
+    int confirmReceipt(@Param("id") Long id, @Param("granteeId") Long granteeId,
+                       @Param("signTime") LocalDateTime signTime);
+
+    /** 仅更新查询时仍匹配的在途运单，防止旧查询覆盖人工或平台已经完成的签收。 */
+    @Update("UPDATE t_order SET status = #{status}, sign_time = COALESCE(sign_time, #{signTime}), "
+            + "update_time = NOW() WHERE id = #{id} AND deleted = 0 AND status = #{expectedStatus} "
+            + "AND status IN (10,20,30,60) AND carrier = #{carrier} AND waybill_no = #{waybillNo}")
+    int updateLogisticsStatus(@Param("id") Long id, @Param("expectedStatus") Integer expectedStatus,
+                              @Param("status") int status, @Param("signTime") LocalDateTime signTime,
+                              @Param("carrier") String carrier, @Param("waybillNo") String waybillNo);
 
     @Select("SELECT * FROM t_order WHERE order_no = #{orderNo} AND deleted = 0 LIMIT 1")
     Order selectByOrderNo(@Param("orderNo") String orderNo);

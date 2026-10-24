@@ -323,30 +323,6 @@ public class ShipmentService {
     /* ==================== 物流跟踪 ==================== */
 
     /**
-     * 手动推进物流状态（真实项目由承运商回调或轨迹查询接口驱动）
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void pushStatus(Long orderId, Integer status, String description, String operator) {
-        if (orderId == null) {
-            throw BizException.of(ErrorCode.PARAM_ERROR, "缺少订单 ID");
-        }
-        Order o = orderMapper.selectById(orderId);
-        if (o == null) {
-            throw BizException.of(ErrorCode.ORDER_NOT_FOUND);
-        }
-        if (o.getStatus() == null || o.getStatus() < Constants.ORDER_SHIPPED) {
-            throw BizException.of(ErrorCode.ORDER_STATUS_ERROR, "订单尚未发货，无法推进物流状态");
-        }
-        o.setStatus(status);
-        if (status == Constants.ORDER_SIGNED) {
-            // 招标要求：核实是否真正入户送达
-            o.setSignTime(LocalDateTime.now());
-        }
-        orderMapper.updateById(o);
-        addTrack(o, status, description, "manual");
-    }
-
-    /**
      * 批量补录轨迹节点
      */
     @Transactional(rollbackFor = Exception.class)
