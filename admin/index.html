@@ -1385,7 +1385,8 @@ function orderDetail(id){
       <div class="sub-h">物流轨迹（${esc(o.carrierName)} ${esc(o.waybillNo)}）</div>
       <div class="tl">${o.traces.map(t=>`<div class="n"><div class="tx">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}</div>`:''}
   `, `<button class="btn sec" onclick="closeModal()">关闭</button>
-      ${o.status===0?`<button class="btn" onclick="closeModal();shipOne(${o.id})">立即发货</button>`:''}`);
+      ${o.status===0?`<button class="btn" onclick="closeModal();shipOne(${o.id})">立即发货</button>`:''}
+      ${canConfirmReceipt(o)?`<button class="btn" onclick="openReceiptConfirm(${o.id})">代确认收货</button>`:''}`);
 }
 async function exportOrders(){
   const f = F.order, qs = [];
@@ -1785,7 +1786,8 @@ function pageLogistics(){
             <td class="nowrap"><span class="tag ${dur<=10?'t-ok':'t-danger'}">${dur.toFixed(1)} 天</span></td>
             <td class="nowrap">${stTag(o)}${o.allowStation?'':' <span class="tag t-ok">禁投代收点</span>'}</td>
             <td style="max-width:290px;font-size:11.5px;color:var(--text-2)">${latest?esc(latest.desc).slice(0,32)+'…':'—'}</td>
-            <td class="nowrap"><span class="link" onclick="trackDetail(${o.id})">轨迹</span></td>
+            <td class="nowrap"><span class="link" onclick="trackDetail(${o.id})">轨迹</span>
+              ${canConfirmReceipt(o)?`<span class="link" style="margin-left:10px" onclick="openReceiptConfirm(${o.id})">代确认收货</span>`:''}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -1804,7 +1806,43 @@ function trackDetail(id){
     <div class="sub-h">轨迹明细</div>
     <div class="tl">${o.traces.map(t=>`<div class="n"><div class="tx">${esc(t.desc)}</div><div class="tm">${fmt(t.time)}</div></div>`).join('')}</div>
   `, `<button class="btn sec" onclick="closeModal()">关闭</button>
-      <button class="btn" onclick="syncTracks(${o.id})">同步最新轨迹</button>`);
+      <button class="btn" onclick="syncTracks(${o.id})">同步最新轨迹</button>
+      ${canConfirmReceipt(o)?`<button class="btn" onclick="openReceiptConfirm(${o.id})">代确认收货</button>`:''}`);
+}
+function canConfirmReceipt(o){
+  return !!(canWrite() && o && [10,20,30].includes(o.status) && o.waybillNo && o.shipTime);
+}
+let receiptSubmitting = false;
+function openReceiptConfirm(id){
+  const o = ORDERS.find(x=>x.id===id);
+  if(!canConfirmReceipt(o)){ toast('当前订单不可代确认收货，请刷新后重试'); return; }
+  openModal('代确认收货 · ' + o.orderNo, `
+    <div class="notice">请核实收货人已实际收到商品。确认后订单将更新为已签收。</div>
+    <dl class="dl"><dt>收货人</dt><dd>${esc(o.receiver)}</dd>
+      <dt>运单号</dt><dd class="mono">${esc(o.waybillNo)}</dd></dl>
+    <div class="field" style="margin-top:16px"><label for="receiptRemark">备注（选填）</label>
+      <textarea id="receiptRemark" rows="3" maxlength="200" placeholder="如有需要，可填写备注，最多200字"></textarea></div>
+  `, `<button class="btn sec" onclick="closeModal()">取消</button>
+      <button id="receiptConfirmBtn" class="btn" onclick="submitReceiptConfirm(${o.id})">确认已收货</button>`);
+}
+async function submitReceiptConfirm(id){
+  if(receiptSubmitting) return;
+  const remark = (document.getElementById('receiptRemark')?.value || '').trim();
+  const button = document.getElementById('receiptConfirmBtn');
+  receiptSubmitting = true;
+  if(button){ button.disabled = true; button.textContent = '提交中…'; }
+  try {
+    const result = await API.post('/admin/orders/' + id + '/confirm-receipt', {remark});
+    closeModal();
+    try { await reload(); }
+    catch(e){ toast('收货状态已确认，页面刷新失败，请刷新页面查看'); return; }
+    toast(result.changed ? '已代确认收货' : '订单已签收，无需重复确认');
+  } catch(e) {
+    toast('代确认收货失败：' + e.message);
+  } finally {
+    receiptSubmitting = false;
+    if(button){ button.disabled = false; button.textContent = '确认已收货'; }
+  }
 }
 /* 调用真实物流平台同步该单，再刷新页面数据（后端仍执行 30 分钟限频）。 */
 async function syncTracks(id){
@@ -2210,7 +2248,7 @@ let AUDIT = {list:[], total:0, loaded:false, loading:false};
 const AUDIT_MODULES = {grantee:'教职工名单', order:'配送订单', package:'套餐', notice:'公告', sla:'SLA 预警', sms:'短信'};
 const AUDIT_ACTIONS = {
   'export':'导出', 'export-pending':'导出待发货清单', 'import':'导入',
-  'delete':'删除', 'reset-quota':'重置额度', 'scan':'扫描'
+  'delete':'删除', 'reset-quota':'重置额度', 'scan':'扫描', 'confirm-receipt':'代确认收货'
 };
 
 function pageAudit(){

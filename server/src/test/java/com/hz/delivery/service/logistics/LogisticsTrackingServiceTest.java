@@ -172,6 +172,37 @@ class LogisticsTrackingServiceTest {
     }
 
     @Test
+    void carrierSignatureUsesConditionalUpdateAndLatestTraceTime() {
+        var orders = mock(OrderMapper.class);
+        var tracks = mock(OrderTrackMapper.class);
+        var order = shippedOrder(); order.setStatus(Constants.ORDER_DELIVERING);
+        var time = java.time.LocalDateTime.of(2026, 10, 24, 10, 0);
+        when(orders.updateLogisticsStatus(1L, 30, 40, time, "SF", "123456789")).thenReturn(1);
+        var service = new LogisticsTrackingService(orders, tracks, mock(StringRedisTemplate.class),
+                mock(LogisticsProvider.class), new BizProperties());
+        var response = new LogisticsQueryResult(true, "ok", "3", "shunfeng", "123456789",
+                List.of(new LogisticsQueryResult.Trace("已签收", time, "签收", "304")));
+        assertEquals(40, service.applyValidatedResult(order, response).getStatus());
+        assertEquals(time, order.getSignTime());
+        verify(orders).updateLogisticsStatus(1L, 30, 40, time, "SF", "123456789");
+        verify(orders, org.mockito.Mockito.never()).updateById(org.mockito.ArgumentMatchers.any(Order.class));
+    }
+
+    @Test
+    void staleCarrierResponseCannotOverwriteReceiptConfirmedWhileQueryWasRunning() {
+        var orders = mock(OrderMapper.class);
+        var order = shippedOrder();
+        var signed = shippedOrder(); signed.setStatus(40);
+        when(orders.selectById(1L)).thenReturn(signed);
+        var service = new LogisticsTrackingService(orders, mock(OrderTrackMapper.class),
+                mock(StringRedisTemplate.class), mock(LogisticsProvider.class), new BizProperties());
+        var response = new LogisticsQueryResult(true, "ok", "0", "shunfeng", "123456789", List.of());
+        assertEquals(40, service.applyValidatedResult(order, response).getStatus());
+        verify(orders).updateLogisticsStatus(1L, 10, 20, null, "SF", "123456789");
+        verify(orders, org.mockito.Mockito.never()).updateById(org.mockito.ArgumentMatchers.any(Order.class));
+    }
+
+    @Test
     void yundaQuerySendsMappedCarrierAndParsesTraceFromHttpResponse() throws Exception {
         var received = new java.util.concurrent.atomic.AtomicReference<String>();
         var http = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);

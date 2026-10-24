@@ -181,14 +181,23 @@ public class LogisticsTrackingService {
 
         int newStatus = mapOrderStatus(response.getState(), order.getStatus());
         if (newStatus != order.getStatus()) {
-            order.setStatus(newStatus);
-            if (newStatus == Constants.ORDER_SIGNED && order.getSignTime() == null) {
-                order.setSignTime(latestTraceTime(response.getTraces()));
-                if (order.getSignTime() == null) {
-                    order.setSignTime(LocalDateTime.now());
+            LocalDateTime signTime = null;
+            if (newStatus == Constants.ORDER_SIGNED) {
+                signTime = latestTraceTime(response.getTraces());
+                if (signTime == null) signTime = LocalDateTime.now();
+            }
+            int updated = orderMapper.updateLogisticsStatus(order.getId(), order.getStatus(), newStatus,
+                    signTime, order.getCarrier(), order.getWaybillNo());
+            if (updated == 1) {
+                order.setStatus(newStatus);
+                if (order.getSignTime() == null) order.setSignTime(signTime);
+            } else {
+                // 查询期间可能已由用户或后台确认收货，保持数据库中的最新结果。
+                Order current = orderMapper.selectById(order.getId());
+                if (current != null && current.getStatus() != null) {
+                    newStatus = current.getStatus();
                 }
             }
-            orderMapper.updateById(order);
         }
         log.info("真实物流同步完成 orderNo={} waybill={} 新增轨迹={} 状态={}",
                 order.getOrderNo(), order.getWaybillNo(), inserted, newStatus);

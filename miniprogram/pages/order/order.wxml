@@ -65,6 +65,12 @@
       <text class="v">{{o.waybillNo}}</text>
     </view>
     <view class="row"><text class="k">提交时间</text><text class="v">{{o.createTimeText}}</text></view>
+    <view class="row" wx:if="{{o.signTime}}"><text class="k">签收时间</text><text class="v">{{o.signTimeText}}</text></view>
+  </view>
+
+  <view class="card" wx:if="{{o.canConfirmReceipt}}">
+    <view class="hint" style="margin-bottom:24rpx">实际收到商品后，可点击下方按钮确认收货。</view>
+    <button class="btn" bindtap="confirmReceipt" loading="{{receiptSubmitting}}" disabled="{{receiptSubmitting}}">确认收货</button>
   </view>
 
   <block wx:if="{{o.status === 0}}">

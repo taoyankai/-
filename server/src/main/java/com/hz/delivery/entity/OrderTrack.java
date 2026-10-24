@@ -30,6 +30,6 @@ public class OrderTrack {
     /** 轨迹发生时间 */
     private LocalDateTime trackTime;
 
-    /** 数据来源：system 系统 / manual 人工录入 / carrier 承运商回传 */
+    /** 数据来源：system 系统 / manual 后台操作 / client 用户确认 / carrier 承运商回传 */
     private String source;
 }

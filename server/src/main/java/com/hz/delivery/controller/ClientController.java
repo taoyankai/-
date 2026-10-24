@@ -32,6 +32,7 @@ public class ClientController {
     private final AddressService addressService;
     private final NoticeService noticeService;
     private final ShipmentService shipmentService;
+    private final OrderReceiptService orderReceiptService;
 
     /* ---------- 个人信息 ---------- */
 
@@ -128,6 +129,12 @@ public class ClientController {
                                        @RequestBody(required = false) Map<String, String> body) {
         orderService.cancel(granteeId, id, body == null ? null : body.get("reason"));
         return ApiResult.ok();
+    }
+
+    @PostMapping("/orders/{id}/confirm-receipt")
+    public ApiResult<OrderReceiptService.Confirmation> confirmReceipt(
+            @RequestAttribute(Constants.ATTR_GRANTEE_ID) Long granteeId, @PathVariable Long id) {
+        return ApiResult.ok(orderReceiptService.confirmForClient(granteeId, id));
     }
 
     /**

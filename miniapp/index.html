@@ -1399,6 +1399,7 @@ function pageOrderDetail(id){
   const o = S.orders.find(x=>String(x.id)===String(id));
   if(!o) return `<div class="center"><h3>订单不存在</h3></div>`;
   const remain = o.status===0 ? remainText(o.slaDeadline) : null;
+  const canConfirmReceipt = [10,20,30].includes(o.status) && o.waybillNo && o.shipTime;
 
   return `
   <div class="page">
@@ -1446,10 +1447,13 @@ function pageOrderDetail(id){
         <div class="row"><span class="k">配送备注</span><span class="v ${o.remark?'':'muted'}">${o.remark?esc(o.remark):'无'}</span></div>
         ${o.expectCarrierName?`<div class="row"><span class="k">期望承运商</span><span class="v">${esc(o.expectCarrierName)}${o.waybillNo && o.carrierName && o.carrier!==o.expectCarrier?`<span style="color:var(--text-3);font-size:11.5px">（实际由 ${esc(o.carrierName)} 承运）</span>`:''}</span></div>`:''}
         <div class="row"><span class="k">提交时间</span><span class="v">${fmt(o.createTime)}</span></div>
+        ${o.signTime?`<div class="row"><span class="k">签收时间</span><span class="v">${fmt(o.signTime)}</span></div>`:''}
         ${o.waybillNo?`<div class="row"><span class="k">承运商</span><span class="v">${esc(o.carrierName)}</span></div>
         <div class="row"><span class="k">运单号</span><span class="v">${esc(o.waybillNo)}</span></div>`:''}
       </div>
 
+      ${canConfirmReceipt?`<div class="card"><div class="hint" style="margin-bottom:14px">实际收到商品后，可点击下方按钮确认收货。</div>
+        <button id="clientReceiptBtn" class="btn" onclick="confirmReceipt('${o.id}')" ${clientReceiptSubmitting?'disabled':''}>${clientReceiptSubmitting?'提交中…':'确认收货'}</button></div>`:''}
       ${o.status===0 ? `
       <div style="display:flex;gap:10px">
         ${(o.addrChangeCount||0) < 1 ? `<button class="btn line" onclick="editAddress('${o.id}')">修改地址</button>` : ''}
@@ -1459,6 +1463,33 @@ function pageOrderDetail(id){
       <div class="hint" style="margin-top:12px;text-align:center">订单已发货，如需修改地址请联系客服 400-000-0000</div>`}
     </div>
   </div>`;
+}
+let clientReceiptSubmitting = false;
+async function confirmReceipt(id){
+  if(clientReceiptSubmitting) return;
+  const o = S.orders.find(x=>String(x.id)===String(id));
+  if(!o || ![10,20,30].includes(o.status) || !o.waybillNo || !o.shipTime){
+    toast('当前订单不可确认收货，请刷新后重试'); return;
+  }
+  if(!confirm('请确认您已实际收到商品。确认后订单将更新为已签收。')) return;
+  clientReceiptSubmitting = true;
+  const button = document.getElementById('clientReceiptBtn');
+  if(button){ button.disabled = true; button.textContent = '提交中…'; }
+  try {
+    const result = await API.post('/client/orders/' + id + '/confirm-receipt', {});
+    try {
+      await loadAll();
+      const full = normOrder(await API.get('/client/orders/' + id));
+      const index = S.orders.findIndex(x=>String(x.id)===String(id));
+      if(index >= 0) S.orders[index] = full;
+      render();
+    } catch(e){ toast('收货状态已确认，页面刷新失败，请刷新页面查看'); return; }
+    toast(result.changed ? '已确认收货' : '订单已签收，无需重复确认');
+  } catch(e) { toast(e.message); }
+  finally {
+    clientReceiptSubmitting = false;
+    if(button){ button.disabled = false; button.textContent = '确认收货'; }
+  }
 }
 async function cancelOrder(id){
   const o = S.orders.find(x=>String(x.id)===String(id));

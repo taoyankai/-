@@ -6,6 +6,9 @@ import com.hz.delivery.common.ExcelUtil;
 import com.hz.delivery.common.PageResult;
 import com.hz.delivery.dto.ShipDTO;
 import com.hz.delivery.dto.BatchShipDTO;
+import com.hz.delivery.dto.ReceiptConfirmDTO;
+import com.hz.delivery.dto.OrderStatusPushDTO;
+import com.hz.delivery.common.ErrorCode;
 import com.hz.delivery.entity.Carrier;
 import com.hz.delivery.entity.Order;
 import com.hz.delivery.entity.OrderTrack;
@@ -15,6 +18,7 @@ import com.hz.delivery.service.AdminAuthService;
 import com.hz.delivery.service.OperationLogService;
 import com.hz.delivery.service.ShipmentService;
 import com.hz.delivery.service.ShipmentBatchService;
+import com.hz.delivery.service.OrderReceiptService;
 import com.hz.delivery.service.logistics.LogisticsTrackingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,6 +50,7 @@ public class AdminOrderController {
     private final AdminAuthService adminAuthService;
     private final OperationLogService operationLogService;
     private final LogisticsTrackingService logisticsTrackingService;
+    private final OrderReceiptService orderReceiptService;
 
     /* ---------- 查询 ---------- */
 
@@ -183,20 +188,33 @@ public class AdminOrderController {
         return ApiResult.ok(logisticsTrackingService.syncBatch(ids));
     }
 
-    /**
-     * 推进物流状态（真实项目由承运商回调驱动，此处支持人工补录）
-     */
+    /** 后台代确认收货，备注选填。 */
+    @PostMapping("/{id}/confirm-receipt")
+    public ApiResult<OrderReceiptService.Confirmation> confirmReceipt(
+            @RequestAttribute(Constants.ATTR_ADMIN_ID) Long adminId, @PathVariable Long id,
+            @RequestBody(required = false) @Valid ReceiptConfirmDTO body, HttpServletRequest request) {
+        return confirmReceiptAndLog(adminId, id, body == null ? null : body.getRemark(), request);
+    }
+
+    /** 兼容旧入口，仅支持代确认收货，其他人工状态推进暂不开放。 */
     @PostMapping("/{id}/push-status")
-    public ApiResult<Void> pushStatus(@RequestAttribute(Constants.ATTR_ADMIN_ID) Long adminId,
-                                      @PathVariable Long id,
-                                      @RequestBody Map<String, Object> body) {
-        Integer status = body.get("status") == null ? null : Integer.valueOf(String.valueOf(body.get("status")));
-        String desc = body.get("description") == null ? null : String.valueOf(body.get("description"));
-        if (status == null || desc == null) {
-            return ApiResult.fail(com.hz.delivery.common.ErrorCode.PARAM_ERROR, "请填写状态与轨迹说明");
+    public ApiResult<OrderReceiptService.Confirmation> pushStatus(
+            @RequestAttribute(Constants.ATTR_ADMIN_ID) Long adminId, @PathVariable Long id,
+            @RequestBody @Valid OrderStatusPushDTO body, HttpServletRequest request) {
+        if (!Integer.valueOf(Constants.ORDER_SIGNED).equals(body.getStatus())) {
+            return ApiResult.fail(ErrorCode.PARAM_ERROR, "暂仅支持代确认收货，其他人工状态推进未开放");
         }
-        shipmentService.pushStatus(id, status, desc, adminAuthService.operatorName(adminId));
-        return ApiResult.ok();
+        return confirmReceiptAndLog(adminId, id, body.getDescription(), request);
+    }
+
+    private ApiResult<OrderReceiptService.Confirmation> confirmReceiptAndLog(
+            Long adminId, Long id, String remark, HttpServletRequest request) {
+        OrderReceiptService.Confirmation result = orderReceiptService.confirmForAdmin(adminId, id, remark);
+        if (result.changed()) {
+            operationLogService.success(adminId, "order", "confirm-receipt", result.orderNo(),
+                    "后台代确认收货" + (StringUtils.hasText(remark) ? "；备注：" + remark.trim() : ""), 1, request);
+        }
+        return ApiResult.ok(result);
     }
 
     /**
