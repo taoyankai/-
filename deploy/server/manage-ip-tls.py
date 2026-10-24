@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Host-side IP certificate lifecycle. Run with sudo; private keys never enter Git."""
+"""Host-side IP and domain certificate lifecycle; the filename preserves the existing timer path."""
 import argparse
 import fcntl
 import hashlib
@@ -15,6 +15,8 @@ DEPLOY_ROOT = Path('/home/ubuntu/hz-delivery')
 IMAGE = 'certbot/certbot:v5.8.0'
 IP = '118.89.27.5'
 NAME = 'hz-delivery-ip'
+DOMAIN_NAME = 'heytao.top'
+DOMAIN_HOSTS = ('heytao.top', 'www.heytao.top')
 MARKER = '.hz-reload-needed'
 
 
@@ -58,7 +60,7 @@ def issue(staging):
     if staging:
         args += ['--staging']
     client(paths, args)
-    status(staging)
+    status(staging, include_domain=False)
 
 
 def assert_gateway():
@@ -75,31 +77,59 @@ def assert_gateway():
 def renew(dry_run):
     paths = directories()
     assert_gateway()
-    args = ['renew', '--cert-name', NAME, '--non-interactive', '--no-random-sleep-on-renew',
-            '--deploy-hook', f'touch /etc/letsencrypt/{MARKER}']
-    if dry_run:
-        args += ['--dry-run', '--run-deploy-hooks']
-    client(paths, args)
+    failures = []
+    # The existing domain lineage was issued using manual DNS validation. Override both
+    # authenticator and challenge preference so future renewals use the served HTTP webroot.
+    # Select our two lineages explicitly; unrelated certificates must not be renewed here.
+    for name in (NAME, DOMAIN_NAME):
+        if not (paths['letsencrypt'] / 'renewal' / f'{name}.conf').is_file():
+            failures.append(name)
+            continue
+        args = ['renew', '--cert-name', name, '--non-interactive', '--no-random-sleep-on-renew',
+                '--authenticator', 'webroot', '--preferred-challenges', 'http',
+                '--webroot-path', '/var/www/acme',
+                '--deploy-hook', f'touch /etc/letsencrypt/{MARKER}']
+        if dry_run:
+            args += ['--dry-run', '--run-deploy-hooks']
+        try:
+            client(paths, args)
+        except subprocess.CalledProcessError:
+            failures.append(name)
     if (paths['letsencrypt'] / MARKER).exists():
         # A failed reload leaves this marker for the next attempt, even when renewal is not due.
         run(['docker', 'exec', 'hz-nginx', 'nginx', '-t'])
         run(['docker', 'exec', 'hz-nginx', 'nginx', '-s', 'reload'])
         (paths['letsencrypt'] / MARKER).unlink()
         print('Renewal hook verified: Nginx configuration checked and reloaded.', flush=True)
+    if failures:
+        raise RuntimeError('Certificate renewal failed or renewal configuration missing: ' + ', '.join(failures))
     status(False)
 
 
-def status(staging):
+def status(staging, include_domain=True):
     directory = ROOT / ('letsencrypt-staging' if staging else 'letsencrypt')
-    certificate = directory / 'live' / NAME / 'fullchain.pem'
-    if not certificate.exists():
-        raise RuntimeError('Certificate is missing')
-    if not staging:
-        run(['openssl', 'x509', '-in', str(certificate), '-noout', '-checkend', '3600'])
-    run(['openssl', 'x509', '-in', str(certificate), '-noout', '-checkip', IP])
-    run(['openssl', 'x509', '-in', str(certificate), '-noout', '-issuer', '-dates', '-ext', 'subjectAltName'])
-    print(json.dumps({'staging': staging, 'ip': IP, 'cert_name': NAME,
-                      'leaf_chain_sha256': hashlib.sha256(certificate.read_bytes()).hexdigest()}), flush=True)
+    certificates = [(NAME, [('-verify_ip', IP)])]
+    if include_domain and not staging:
+        certificates.append((DOMAIN_NAME, [('-verify_hostname', host) for host in DOMAIN_HOSTS]))
+    for name, checks in certificates:
+        certificate = directory / 'live' / name / 'fullchain.pem'
+        if not certificate.is_file():
+            raise RuntimeError(f'Certificate is missing: {name}')
+        if not staging:
+            run(['openssl', 'x509', '-in', str(certificate), '-noout', '-checkend', '3600'])
+        # x509 -checkhost/-checkip may exit zero on mismatch. verify rejects both name
+        # mismatches and untrusted chains using the host trust store. Staging is IP-only
+        # and deliberately untrusted, so only there is the test leaf a trust anchor.
+        for option, value in checks:
+            if staging:
+                run(['openssl', 'verify', '-trusted', str(certificate), '-partial_chain',
+                     '-purpose', 'sslserver', option, value, str(certificate)])
+            else:
+                run(['openssl', 'verify', '-untrusted', str(certificate), '-purpose', 'sslserver',
+                     option, value, str(certificate)])
+        run(['openssl', 'x509', '-in', str(certificate), '-noout', '-issuer', '-dates', '-ext', 'subjectAltName'])
+        print(json.dumps({'staging': staging, 'cert_name': name,
+                          'leaf_chain_sha256': hashlib.sha256(certificate.read_bytes()).hexdigest()}), flush=True)
 
 
 def install_timer():
@@ -112,7 +142,7 @@ def install_timer():
     unit = Path('/etc/systemd/system/hz-delivery-cert-renew.service')
     timer = Path('/etc/systemd/system/hz-delivery-cert-renew.timer')
     unit.write_text('''[Unit]
-Description=Renew hz-delivery IP certificate and reload Nginx
+Description=Renew hz-delivery IP and domain certificates and reload Nginx
 Wants=network-online.target docker.service
 After=network-online.target docker.service
 StartLimitIntervalSec=6h
@@ -122,12 +152,12 @@ StartLimitBurst=3
 Type=oneshot
 UMask=0077
 ExecStart=/usr/bin/python3 /usr/local/lib/hz-delivery/manage-ip-tls.py renew
-TimeoutStartSec=300
+TimeoutStartSec=600
 Restart=on-failure
 RestartSec=15min
 ''', encoding='utf-8')
     timer.write_text('''[Unit]
-Description=Check hz-delivery IP certificate four times daily
+Description=Check hz-delivery IP and domain certificates four times daily
 
 [Timer]
 OnCalendar=*-*-* 00,06,12,18:00:00
@@ -176,5 +206,5 @@ if __name__ == '__main__':
     try:
         main()
     except (RuntimeError, subprocess.CalledProcessError) as error:
-        print(f'IP TLS operation failed: {error}', file=sys.stderr)
+        print(f'TLS operation failed: {error}', file=sys.stderr)
         sys.exit(1)

@@ -9,6 +9,8 @@ dist/
 build/
 target/
 coverage/
+__pycache__/
+*.py[cod]
 
 # IDE and OS files
 .idea/

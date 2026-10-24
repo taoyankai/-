@@ -22,7 +22,7 @@ Alpine软件包源通过构建参数 `ALPINE_MIRROR` 配置，默认阿里云；
 
 ## 2GB 配置
 
-本机回环地址上的版本验收通过后，可按[IP地址HTTPS部署](../../docs/IP地址HTTPS部署.md)启用公网HTTPS。启用后私密配置保持 `TLS_ENABLED=true`，版本脚本自动叠加 `compose.https.yml`，后续发布不会切回明文入口。
+正式域名为 `heytao.top`，`www.heytao.top` 跳转至主域名，同时保留原 IP HTTPS 入口。现有服务器更新按[域名HTTPS发布与更新](../../docs/域名HTTPS发布与更新.md)执行；[IP地址HTTPS部署](../../docs/IP地址HTTPS部署.md)保留为早期引导记录。启用后私密配置保持 `TLS_ENABLED=true`，版本脚本自动叠加 `compose.https.yml`，同时检查 IP、主域名和 www 的证书及有效期，后续发布不会切回明文入口。
 
 每次启动均合并 `docker-compose.yml` 与 `compose.2gb.yml`，项目名固定 `hz-delivery`。
 
