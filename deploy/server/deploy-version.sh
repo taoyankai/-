@@ -9,7 +9,7 @@ main() {
         printf '%s\n' 'Usage: bash deploy/server/deploy-version.sh v1.0.0' >&2
         return 2
     fi
-    local script_dir repo_root state_dir env_file commit release_dir backup_file container volume owner tracked_env tls_enabled
+    local script_dir repo_root state_dir env_file commit release_dir backup_file container volume owner tracked_env tls_enabled cert_root
     script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     repo_root="$(git -C "$script_dir" rev-parse --show-toplevel)"
     state_dir="${HZ_DEPLOY_ROOT:-$HOME/hz-delivery}"
@@ -62,8 +62,12 @@ main() {
     case "${tls_enabled:-false}" in
         true)
             [[ -f "$release_dir/deploy/server/compose.https.yml" ]] || { printf '%s\n' 'Release does not support HTTPS.' >&2; return 1; }
-            sudo openssl x509 -in /var/lib/hz-delivery/tls/letsencrypt/live/hz-delivery-ip/fullchain.pem -noout -checkend 3600
-            sudo openssl x509 -in /var/lib/hz-delivery/tls/letsencrypt/live/hz-delivery-ip/fullchain.pem -noout -checkip 118.89.27.5
+            cert_root=/var/lib/hz-delivery/tls/letsencrypt/live
+            sudo openssl x509 -in "$cert_root/hz-delivery-ip/fullchain.pem" -noout -checkend 3600
+            sudo openssl verify -untrusted "$cert_root/hz-delivery-ip/fullchain.pem" -purpose sslserver -verify_ip 118.89.27.5 "$cert_root/hz-delivery-ip/fullchain.pem"
+            sudo openssl x509 -in "$cert_root/heytao.top/fullchain.pem" -noout -checkend 3600
+            sudo openssl verify -untrusted "$cert_root/heytao.top/fullchain.pem" -purpose sslserver -verify_hostname heytao.top "$cert_root/heytao.top/fullchain.pem"
+            sudo openssl verify -untrusted "$cert_root/heytao.top/fullchain.pem" -purpose sslserver -verify_hostname www.heytao.top "$cert_root/heytao.top/fullchain.pem"
             compose+=(-f "$release_dir/deploy/server/compose.https.yml")
             ;;
         false)
@@ -85,6 +89,16 @@ main() {
             return 1
         fi
         [[ -s "$backup_file.partial" ]] || { printf '%s\n' 'Database backup is empty.' >&2; return 1; }
+        mv -- "$backup_file.partial" "$backup_file"
+    fi
+    # 旧入口可能含尚未同步回Git的域名配置。先独立备份，失败则不停止旧入口。
+    if sudo docker container inspect hz-nginx >/dev/null 2>&1; then
+        backup_file="$state_dir/backups/nginx-before-${version}-$(date +%Y%m%d-%H%M%S).conf"
+        if ! sudo docker exec hz-nginx cat /etc/nginx/nginx.conf >"$backup_file.partial"; then
+            printf '%s\n' 'Nginx configuration backup failed. Existing containers have not been updated.' >&2
+            return 1
+        fi
+        [[ -s "$backup_file.partial" ]] || { printf '%s\n' 'Nginx configuration backup is empty.' >&2; return 1; }
         mv -- "$backup_file.partial" "$backup_file"
     fi
     # 短暂维护窗口：构建和备份成功后，才停止旧入口并切换整套服务。
